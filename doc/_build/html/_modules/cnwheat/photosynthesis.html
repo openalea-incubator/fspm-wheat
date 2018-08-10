@@ -108,7 +108,7 @@
                   <span class="s">&#39;Tref&#39;</span><span class="p">:</span> <span class="mf">298.15</span><span class="p">,</span> <span class="s">&#39;R&#39;</span><span class="p">:</span> <span class="mf">8.3145E-03</span><span class="p">}</span>
 
     <span class="n">LEAF_WIDTH</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="c">#: m</span>
-    <span class="n">H_CANOPY</span> <span class="o">=</span> <span class="mi">1</span>      <span class="c">#: m</span>
+    <span class="n">height_canopy</span> <span class="o">=</span> <span class="mi">1</span>      <span class="c">#: m</span>
     <span class="n">H_ORGAN</span> <span class="o">=</span> <span class="mf">0.5</span>     <span class="c">#: m</span>
     <span class="n">NA_INIT</span> <span class="o">=</span> <span class="mf">2.5</span>     <span class="c">#: g m-2</span>
 
@@ -301,7 +301,7 @@
                 <span class="c"># New value of Ci</span>
                 <span class="n">Ci</span> <span class="o">=</span> <span class="n">Ca</span> <span class="o">-</span> <span class="n">An</span> <span class="o">*</span> <span class="p">((</span><span class="mf">1.6</span><span class="o">/</span><span class="n">gs</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.37</span><span class="o">/</span><span class="n">cls</span><span class="o">.</span><span class="n">GB</span><span class="p">))</span> <span class="c"># gs and GB in mol m-2 s-1</span>
                 <span class="c"># New value of Tleaf</span>
-                <span class="n">Tleaf</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">leaf_temperature</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">LEAF_WIDTH</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">H_ORGAN</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">H_CANOPY</span><span class="p">,</span> <span class="n">wind0</span><span class="p">,</span> <span class="n">PAR</span><span class="p">,</span> <span class="n">gs</span><span class="p">,</span> <span class="n">Ta</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">,</span> <span class="n">RH</span><span class="p">)</span>
+                <span class="n">Tleaf</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">leaf_temperature</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">LEAF_WIDTH</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">H_ORGAN</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">height_canopy</span><span class="p">,</span> <span class="n">wind0</span><span class="p">,</span> <span class="n">PAR</span><span class="p">,</span> <span class="n">gs</span><span class="p">,</span> <span class="n">Ta</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">,</span> <span class="n">RH</span><span class="p">)</span>
                 <span class="n">count</span> <span class="o">+=</span><span class="mi">1</span>
 
         <span class="k">return</span> <span class="n">An</span>
