@@ -1,0 +1,455 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>cnwheat.organ &mdash; CN-Wheat 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="CN-Wheat 0.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">CN-Wheat 0.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for cnwheat.organ</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: latin-1 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    cnwheat.organ</span>
+<span class="sd">    ~~~~~~~~~~~~~</span>
+
+<span class="sd">    The classes of the organs.</span>
+
+<span class="sd">    :copyright: Copyright 2014 INRA-EGC, see AUTHORS.</span>
+<span class="sd">    :license: TODO, see LICENSE for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span> <span class="c"># use &quot;//&quot; to do integer division</span>
+
+
+<div class="viewcode-block" id="Organ"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Organ">[docs]</a><span class="k">class</span> <span class="nc">Organ</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="n">MSTRUCT_AXIS</span> <span class="o">=</span> <span class="mf">2.08</span>             <span class="c">#: Structural mass  of a plant (g) (Bertheloot, 2011)</span>
+    <span class="n">ALPHA_AXIS</span> <span class="o">=</span> <span class="mi">1</span>                  <span class="c">#: Proportion of the structural mass containing the substrates</span>
+    <span class="n">DELTA_T</span> <span class="o">=</span> <span class="mi">3600</span>                  <span class="c">#: Timestep of the model (s)</span>
+
+    <span class="n">ALPHA</span> <span class="o">=</span> <span class="mi">1</span> <span class="c">#: Proportion of leaf structural mass containing substrate # TODO: is it really common to all organs? NOTE: I think this parameter is unneeded</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+</div>
+<div class="viewcode-block" id="PhotosyntheticOrgan"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan">[docs]</a><span class="k">class</span> <span class="nc">PhotosyntheticOrgan</span><span class="p">(</span><span class="n">Organ</span><span class="p">):</span>
+    
+    <span class="c"># sucrose</span>
+    <span class="n">VMAX_SUCROSE</span> <span class="o">=</span> <span class="mi">1</span>                <span class="c">#: Maximal rate of sucrose synthesis (µmol C s-1 g-1 MS)</span>
+    <span class="n">K_SUCROSE</span> <span class="o">=</span> <span class="mf">0.66</span>                <span class="c">#: Affinity coefficient of sucrose synthesis (µmol C g-1 MS)</span>
+    
+    <span class="c"># storage</span>
+    <span class="n">VMAX_STORAGE</span> <span class="o">=</span> <span class="mi">2</span>                <span class="c">#: Maximal rate of storage synthesis (µmol C s-1 g-1 MS)</span>
+    <span class="n">K_STORAGE</span> <span class="o">=</span> <span class="mi">20</span>                  <span class="c">#: Affinity coefficient of storage synthesis (µmol C g-1 MS)</span>
+    <span class="n">DELTA_DSTORAGE</span> <span class="o">=</span> <span class="mf">0.0001</span>         <span class="c">#: Rate of storage degradation (µmol C storage s-1 g-1 MS)</span>
+    
+    <span class="c"># fructans</span>
+    <span class="n">VMAX_SFRUCTAN</span> <span class="o">=</span> <span class="mf">0.2</span>             <span class="c">#: Maximal rate of fructan synthesis (µmol C s-1 g-1 MS)</span>
+    <span class="n">K_SFRUCTAN</span> <span class="o">=</span> <span class="mi">20000</span>              <span class="c">#: Affinity coefficient of fructan synthesis (µmol C g-1 MS)</span>
+    <span class="n">N_SFRUCTAN</span> <span class="o">=</span> <span class="mi">3</span>                  <span class="c">#: Number of &quot;substrates&quot; for fructan synthesis (dimensionless)</span>
+    <span class="n">VMAX_REGUL_SFRUCTAN</span> <span class="o">=</span> <span class="mi">1</span>         <span class="c">#: Maximal value of the regulation function of fructan synthesis (dimensionless)</span>
+    <span class="n">K_REGUL_SFRUCTAN</span> <span class="o">=</span> <span class="mi">8</span>            <span class="c">#: Affinity coefficient of the regulation function of fructan synthesis (dimensionless)</span>
+    <span class="n">N_REGUL_SFRUCTAN</span> <span class="o">=</span> <span class="mi">15</span>           <span class="c">#: Parameter of the regulation function of fructan synthesis (dimensionless)</span>
+    <span class="n">VMAX_DFRUCTAN</span> <span class="o">=</span> <span class="mf">0.035</span>           <span class="c">#: Maximal rate of fructan degradation (µmol C s-1 g-1 MS)</span>
+    <span class="n">K_DFRUCTAN</span> <span class="o">=</span> <span class="mi">100</span>                <span class="c">#: Affinity coefficient of fructan degradation (µmol C g-1 MS)</span>
+    
+    <span class="n">SIGMA</span> <span class="o">=</span> <span class="mf">1.85e-07</span>                <span class="c">#: Conductivity of an organ-phloem pathway (g mol-1 m-2 s-1) ; used to compute the sucrose loaded to the phloem</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">area</span><span class="p">,</span> <span class="n">mstruct</span><span class="p">,</span> <span class="n">PAR</span><span class="p">,</span> <span class="n">storage_0</span><span class="p">,</span>
+                 <span class="n">sucrose_0</span><span class="p">,</span> <span class="n">triosesP_0</span><span class="p">,</span> <span class="n">fructan_0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        
+        <span class="nb">super</span><span class="p">(</span><span class="n">PhotosyntheticOrgan</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        
+        <span class="c"># parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">area</span> <span class="o">=</span> <span class="n">area</span>                    <span class="c">#: area (m-2)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span> <span class="o">=</span> <span class="n">mstruct</span>              <span class="c">#: Structural mass (g)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PAR</span> <span class="o">=</span> <span class="n">PAR</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">PAR_linear_interpolation</span> <span class="o">=</span> <span class="bp">None</span> <span class="c">#: linear interpolation of PAR</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">photosynthesis_mapping</span> <span class="o">=</span> <span class="p">{}</span> <span class="c">#: mapping to store the computed photosynthesis</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">loading_sucrose</span> <span class="o">=</span> <span class="mi">0</span> <span class="c">#: current rate of sucrose loading to phloem</span>
+
+        <span class="c"># initialize the compartments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">triosesP_0</span> <span class="o">=</span> <span class="n">triosesP_0</span> <span class="c">#: initial value of compartment triosesP</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storage_0</span> <span class="o">=</span> <span class="n">storage_0</span> <span class="c">#: initial value of compartment storage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sucrose_0</span> <span class="o">=</span> <span class="n">sucrose_0</span> <span class="c">#: initial value of compartment sucrose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fructan_0</span> <span class="o">=</span> <span class="n">fructan_0</span> <span class="c">#: initial value of compartment fructan</span>
+        
+<div class="viewcode-block" id="PhotosyntheticOrgan.get_initial_conditions"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.get_initial_conditions">[docs]</a>    <span class="k">def</span> <span class="nf">get_initial_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sucrose_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">triosesP_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fructan_0</span><span class="p">]</span> <span class="c"># keep this order ! TODO: pas le plus &quot;logique&quot; mais ok si trop complique a modifier</span>
+    
+    <span class="c"># VARIABLES</span>
+    </div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_photosynthesis"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_photosynthesis">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_photosynthesis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">An</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Total photosynthesis of an organ integrated over DELTA_T (µmol CO2 on organ area integrated over delat_t)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">An</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_green_area</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="n">Organ</span><span class="o">.</span><span class="n">DELTA_T</span>
+    </div>
+    <span class="k">def</span> <span class="nf">_calculate_green_area</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute green area of the organ.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">area</span>
+    
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_conc_triosesP"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_conc_triosesP">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_conc_triosesP</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">triosesP</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Trioses Phosphate concentration (µmol triosesP g-1 MS).</span>
+<span class="sd">        This is a concentration output (expressed in amount of substance g-1 MS).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">triosesP</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span>
+</div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_conc_sucrose"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_conc_sucrose">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_conc_sucrose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sucrose</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;sucrose concentration (µmol sucrose g-1 MS).</span>
+<span class="sd">        This is a concentration output (expressed in amount of substance g-1 MS).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">sucrose</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="p">)</span><span class="o">/</span><span class="mi">12</span>
+</div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_conc_storage"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_conc_storage">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_conc_storage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">storage</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;storage concentration (µmol storage g-1 MS (eq glucose)).</span>
+<span class="sd">        This is a concentration output (expressed in amount of substance g-1 MS).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">storage</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="p">)</span><span class="o">/</span><span class="mi">6</span>
+    </div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_conc_fructan"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_conc_fructan">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_conc_fructan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fructan</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;fructan concentration (µmol fructan g-1 MS (eq glucose))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">fructan</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="p">)</span><span class="o">/</span><span class="mi">6</span>
+</div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_regul_s_fructan"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_regul_s_fructan">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_regul_s_fructan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loading_sucrose</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inhibition of fructan synthesis by the loading of sucrose to phloem</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">VMAX_REGUL_SFRUCTAN</span> <span class="o">*</span> <span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">K_REGUL_SFRUCTAN</span><span class="o">**</span><span class="p">(</span><span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">N_REGUL_SFRUCTAN</span><span class="p">))</span> <span class="o">/</span> <span class="p">((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">loading_sucrose</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">N_REGUL_SFRUCTAN</span><span class="p">)</span> <span class="o">+</span> <span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">K_REGUL_SFRUCTAN</span><span class="o">**</span><span class="p">(</span><span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">N_REGUL_SFRUCTAN</span><span class="p">)))</span>
+    
+    <span class="c"># FLOWS</span>
+</div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_s_sucrose"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_s_sucrose">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_s_sucrose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">triosesP</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rate of sucrose synthesis from triosesP (µmol C sucrose s-1 g-1 MS * DELTA_T).</span>
+<span class="sd">        This is a flow (expressed in amount of C substance g-1 MS integrated over DELTA_T).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">triosesP</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">))</span> <span class="o">*</span> <span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">VMAX_SUCROSE</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">triosesP</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">))</span> <span class="o">+</span> <span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">K_SUCROSE</span><span class="p">))</span> <span class="o">*</span> <span class="n">Organ</span><span class="o">.</span><span class="n">DELTA_T</span>
+</div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_s_storage"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_s_storage">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_s_storage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">triosesP</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rate of storage synthesis from triosesP (µmol C storage s-1 g-1 MS * DELTA_T).</span>
+<span class="sd">        This is a flow (expressed in amount of C substance g-1 MS integrated over DELTA_T).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">triosesP</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">))</span> <span class="o">*</span> <span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">VMAX_STORAGE</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">triosesP</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">))</span> <span class="o">+</span> <span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">K_STORAGE</span><span class="p">))</span> <span class="o">*</span> <span class="n">Organ</span><span class="o">.</span><span class="n">DELTA_T</span>
+</div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_d_storage"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_d_storage">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_d_storage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">storage</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rate of storage degradation from triosesP (µmol C storage s-1 g-1 MS * DELTA_T).</span>
+<span class="sd">        This is a flow (expressed in amount of C substance g-1 MS integrated over DELTA_T).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">DELTA_DSTORAGE</span> <span class="o">*</span> <span class="p">(</span><span class="n">storage</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">)))</span> <span class="o">*</span> <span class="n">Organ</span><span class="o">.</span><span class="n">DELTA_T</span>
+    </div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_loading_sucrose"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_loading_sucrose">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_loading_sucrose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sucrose</span><span class="p">,</span> <span class="n">sucrose_phloem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rate of sucrose loading to phloem (µmol C sucrose s-1 g-1 MS * DELTA_T).</span>
+<span class="sd">        This is a flow (expressed in amount of C substance g-1 MS integrated over DELTA_T).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">driving_sucrose_compartment</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">sucrose</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">),</span> <span class="n">sucrose_phloem</span><span class="o">/</span><span class="p">(</span><span class="n">Organ</span><span class="o">.</span><span class="n">MSTRUCT_AXIS</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA_AXIS</span><span class="p">))</span>
+        <span class="n">diff_sucrose</span> <span class="o">=</span> <span class="n">sucrose</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">)</span> <span class="o">-</span> <span class="n">sucrose_phloem</span><span class="o">/</span><span class="p">(</span><span class="n">Organ</span><span class="o">.</span><span class="n">MSTRUCT_AXIS</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA_AXIS</span><span class="p">)</span>
+        <span class="n">conductance</span> <span class="o">=</span> <span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">SIGMA</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">driving_sucrose_compartment</span> <span class="o">*</span> <span class="n">diff_sucrose</span> <span class="o">*</span> <span class="n">conductance</span> <span class="o">*</span> <span class="n">Organ</span><span class="o">.</span><span class="n">DELTA_T</span>
+    </div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_s_fructan"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_s_fructan">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_s_fructan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sucrose</span><span class="p">,</span> <span class="n">regul_s_fructan</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rate of fructan synthesis (µmol C fructan s-1 g-1 MS * DELTA_T)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sucrose</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">N_SFRUCTAN</span><span class="p">)</span> <span class="o">*</span> <span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">VMAX_SFRUCTAN</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sucrose</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">N_SFRUCTAN</span><span class="p">)</span> <span class="o">+</span> <span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">K_SFRUCTAN</span><span class="o">**</span><span class="p">(</span><span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">N_SFRUCTAN</span><span class="p">)))</span> <span class="o">*</span> <span class="n">regul_s_fructan</span> <span class="o">*</span> <span class="n">Organ</span><span class="o">.</span><span class="n">DELTA_T</span>
+</div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_d_fructan"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_d_fructan">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_d_fructan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sucrose</span><span class="p">,</span> <span class="n">fructan</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rate of fructan degradation (µmol C fructan s-1 g-1 MS)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">((</span><span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">K_DFRUCTAN</span> <span class="o">*</span> <span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">VMAX_DFRUCTAN</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sucrose</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">Organ</span><span class="o">.</span><span class="n">MSTRUCT_AXIS</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">))</span> <span class="o">+</span> <span class="n">PhotosyntheticOrgan</span><span class="o">.</span><span class="n">K_DFRUCTAN</span><span class="p">)</span> <span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">fructan</span><span class="p">))</span> <span class="o">*</span> <span class="n">Organ</span><span class="o">.</span><span class="n">DELTA_T</span>
+
+    <span class="c"># COMPARTMENTS</span>
+</div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_storage_derivative"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_storage_derivative">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_storage_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s_storage</span><span class="p">,</span> <span class="n">d_storage</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;delta storage of organ integrated over delta-1 (µmol C storage).</span>
+<span class="sd">        This is a differential equation of compartment expressed as a variation of the total amount of C substance in an organ per DELTA_T.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">s_storage</span> <span class="o">-</span> <span class="n">d_storage</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_sucrose_derivative"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_sucrose_derivative">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_sucrose_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s_sucrose</span><span class="p">,</span> <span class="n">d_storage</span><span class="p">,</span> <span class="n">loading_sucrose</span><span class="p">,</span> <span class="n">s_fructan</span><span class="p">,</span> <span class="n">d_fructan</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;delta sucrose of organ integrated over delta-1 (µmol C sucrose)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">s_sucrose</span> <span class="o">+</span> <span class="n">d_storage</span> <span class="o">+</span> <span class="n">d_fructan</span> <span class="o">-</span> <span class="n">s_fructan</span> <span class="o">-</span> <span class="n">loading_sucrose</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_triosesP_derivative"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_triosesP_derivative">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_triosesP_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photosynthesis</span><span class="p">,</span> <span class="n">s_sucrose</span><span class="p">,</span> <span class="n">s_storage</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; delta triosesP of organ integrated over delta-1 (µmol C triosesP).</span>
+<span class="sd">        This is a differential equation of compartment expressed as a variation of the total amount of C substance in an organ per DELTA_T.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">photosynthesis</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">s_sucrose</span> <span class="o">+</span> <span class="n">s_storage</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="PhotosyntheticOrgan.calculate_fructan_derivative"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.PhotosyntheticOrgan.calculate_fructan_derivative">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_fructan_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s_fructan</span><span class="p">,</span> <span class="n">d_fructan</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;delta fructan integrated over delta-1 (µmol C fructan)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">s_fructan</span> <span class="o">-</span> <span class="n">d_fructan</span><span class="p">)</span><span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Chaff"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Chaff">[docs]</a><span class="k">class</span> <span class="nc">Chaff</span><span class="p">(</span><span class="n">PhotosyntheticOrgan</span><span class="p">):</span> <span class="k">pass</span>
+    
+</div>
+<div class="viewcode-block" id="Lamina"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Lamina">[docs]</a><span class="k">class</span> <span class="nc">Lamina</span><span class="p">(</span><span class="n">PhotosyntheticOrgan</span><span class="p">):</span>
+    <span class="c">#: Temporary estimation of lamina senescence ({&#39;lamina_order&#39;: (time of senescence beginning (h), offset of the linear regression)})</span>
+    <span class="n">LAMINAE_INFLEXION_POINTS</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;lamina1&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mf">78.75</span><span class="p">),</span>
+                                <span class="s">&#39;lamina2&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">480</span><span class="p">,</span> <span class="mf">68.61</span><span class="p">),</span>
+                                <span class="s">&#39;lamina3&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">360</span><span class="p">,</span> <span class="mf">48.76</span><span class="p">)}</span>
+
+    <span class="c"># VARIABLES</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_green_area</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute green area of the organ.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t_inflexion</span><span class="p">,</span> <span class="n">value_inflexion</span> <span class="o">=</span> <span class="n">Lamina</span><span class="o">.</span><span class="n">LAMINAE_INFLEXION_POINTS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="s">&quot;inf&quot;</span><span class="p">),</span> <span class="bp">None</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">&lt;=</span> <span class="n">t_inflexion</span><span class="p">:</span> <span class="c"># Non-senescent lamina</span>
+            <span class="n">green_area</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">area</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c"># Senescent lamina</span>
+            <span class="n">green_area</span> <span class="o">=</span> <span class="p">((</span><span class="o">-</span><span class="mf">0.0721</span><span class="o">*</span><span class="n">t</span> <span class="o">+</span> <span class="n">value_inflexion</span><span class="p">)</span><span class="o">/</span><span class="mi">10000</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">green_area</span>
+
+</div>
+<div class="viewcode-block" id="Internode"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Internode">[docs]</a><span class="k">class</span> <span class="nc">Internode</span><span class="p">(</span><span class="n">PhotosyntheticOrgan</span><span class="p">):</span> <span class="k">pass</span>
+    
+</div>
+<div class="viewcode-block" id="Peduncle"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Peduncle">[docs]</a><span class="k">class</span> <span class="nc">Peduncle</span><span class="p">(</span><span class="n">PhotosyntheticOrgan</span><span class="p">):</span> <span class="k">pass</span>
+    
+</div>
+<div class="viewcode-block" id="Sheath"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Sheath">[docs]</a><span class="k">class</span> <span class="nc">Sheath</span><span class="p">(</span><span class="n">PhotosyntheticOrgan</span><span class="p">):</span> <span class="k">pass</span>
+    
+</div>
+<div class="viewcode-block" id="Phloem"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Phloem">[docs]</a><span class="k">class</span> <span class="nc">Phloem</span><span class="p">(</span><span class="n">Organ</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sucrose_0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Phloem</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        
+        <span class="c"># intialize the compartment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sucrose_0</span> <span class="o">=</span> <span class="n">sucrose_0</span>  <span class="c">#: initial value of compartment sucrose</span>
+
+<div class="viewcode-block" id="Phloem.get_initial_conditions"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Phloem.get_initial_conditions">[docs]</a>    <span class="k">def</span> <span class="nf">get_initial_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sucrose_0</span><span class="p">]</span>
+
+    <span class="c"># VARIABLES</span>
+</div>
+<div class="viewcode-block" id="Phloem.calculate_conc_sucrose"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Phloem.calculate_conc_sucrose">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_conc_sucrose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sucrose</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;sucrose concentration (µmol sucrose g-1 MS)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">sucrose</span><span class="o">/</span><span class="n">Organ</span><span class="o">.</span><span class="n">MSTRUCT_AXIS</span><span class="p">)</span><span class="o">/</span><span class="mi">12</span>
+</div>
+<div class="viewcode-block" id="Phloem.calculate_conc_c_sucrose"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Phloem.calculate_conc_c_sucrose">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_conc_c_sucrose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sucrose</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;sucrose concentration expressed in C (µmol C sucrose g-1 MS)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">sucrose</span><span class="o">/</span><span class="p">(</span><span class="n">Organ</span><span class="o">.</span><span class="n">MSTRUCT_AXIS</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA_AXIS</span><span class="p">)</span>
+
+    <span class="c"># COMPARTMENTS</span>
+</div>
+<div class="viewcode-block" id="Phloem.calculate_sucrose_derivative"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Phloem.calculate_sucrose_derivative">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_sucrose_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">organs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;delta sucrose of phloem integrated over delta-1 (µmol C sucrose)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sucrose_derivative</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">organ_</span> <span class="ow">in</span> <span class="n">organs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">organ_</span><span class="p">,</span> <span class="n">PhotosyntheticOrgan</span><span class="p">):</span>
+                <span class="n">sucrose_derivative</span> <span class="o">+=</span> <span class="n">organ_</span><span class="o">.</span><span class="n">loading_sucrose</span><span class="o">*</span><span class="n">organ_</span><span class="o">.</span><span class="n">mstruct</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">organ_</span><span class="p">,</span> <span class="n">Grains</span><span class="p">):</span>
+                <span class="n">sucrose_derivative</span> <span class="o">-=</span> <span class="p">(</span><span class="n">organ_</span><span class="o">.</span><span class="n">unloading_sucrose_structure</span> <span class="o">+</span> <span class="p">(</span><span class="n">organ_</span><span class="o">.</span><span class="n">unloading_sucrose_storage</span> <span class="o">*</span> <span class="p">((</span><span class="n">organ_</span><span class="o">.</span><span class="n">structure</span><span class="o">/</span><span class="mf">1E6</span><span class="p">)</span><span class="o">*</span><span class="mi">12</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">organ_</span><span class="p">,</span> <span class="n">Roots</span><span class="p">):</span>
+                <span class="n">sucrose_derivative</span> <span class="o">-=</span> <span class="p">(</span><span class="n">organ_</span><span class="o">.</span><span class="n">unloading_sucrose</span> <span class="o">*</span> <span class="n">organ_</span><span class="o">.</span><span class="n">mstruct</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sucrose_derivative</span>
+
+</div></div>
+<div class="viewcode-block" id="Grains"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Grains">[docs]</a><span class="k">class</span> <span class="nc">Grains</span><span class="p">(</span><span class="n">Organ</span><span class="p">):</span>
+
+    <span class="c"># Structure</span>
+    <span class="n">GRAIN_STRUCTURE</span> <span class="o">=</span> <span class="mi">0</span>     <span class="c">#: Initial value of structural mass of grains (µmol of C sucrose) TODO: initial value given in ModelMaker?</span>
+    <span class="n">VMAX_RGR</span> <span class="o">=</span> <span class="mf">1.9e-06</span>      <span class="c">#: Maximal value of the Relative Growth Rate of grain structure (dimensionless)</span>
+    <span class="n">K_RGR</span> <span class="o">=</span> <span class="mi">300</span>             <span class="c">#: Affinity coefficient of the Relative Growth Rate of grain structure (dimensionless)</span>
+
+    <span class="c"># storage</span>
+    <span class="n">GRAIN_STORAGE</span> <span class="o">=</span> <span class="mi">0</span>       <span class="c">#: Initial value of grain storage (µmol of C) TODO: needed?</span>
+    <span class="n">VMAX_STORAGE</span> <span class="o">=</span> <span class="mf">0.5</span>      <span class="c">#: Maximal rate of grain filling (µmol C s-1 g-1 MS)</span>
+    <span class="n">K_STORAGE</span> <span class="o">=</span> <span class="mi">100</span>         <span class="c">#: Affinity coefficient of grain filling (µmol C g-1 MS)</span>
+
+    <span class="n">Y_GRAINS</span> <span class="o">=</span> <span class="mf">0.75</span>         <span class="c">#: Proportion of C loaded from phloem actually used for grain structure and storage (1 - Y_GRAINS is a kind of growth respiration)</span>
+    <span class="n">FILLING_INIT</span> <span class="o">=</span> <span class="mi">360</span>      <span class="c">#: Time (h) at which phloem loading switch from grain structure to grain storage</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">storage_0</span><span class="p">,</span> <span class="n">structure_0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Grains</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="c"># flow to phloem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unloading_sucrose_structure</span> <span class="o">=</span> <span class="mi">0</span> <span class="c">#: current unloading of sucrose from phloem to grain structure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unloading_sucrose_storage</span> <span class="o">=</span> <span class="mi">0</span> <span class="c">#: current unloading of sucrose from phloem to grain storage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">structure</span> <span class="o">=</span> <span class="mi">0</span><span class="c"># TODO: utlisation valeur init??</span>
+        
+        <span class="c"># initialize the compartments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">storage_0</span> <span class="o">=</span> <span class="n">storage_0</span> <span class="c">#: initial value of compartment storage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">structure_0</span> <span class="o">=</span> <span class="n">structure_0</span> <span class="c">#: initial value of compartment structure</span>
+
+<div class="viewcode-block" id="Grains.get_initial_conditions"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Grains.get_initial_conditions">[docs]</a>    <span class="k">def</span> <span class="nf">get_initial_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">storage_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">structure_0</span><span class="p">]</span>
+
+    <span class="c"># VARIABLES</span>
+</div>
+<div class="viewcode-block" id="Grains.calculate_dry_mass"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Grains.calculate_dry_mass">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_dry_mass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">storage</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Grain total dry mass (g)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">structure</span> <span class="o">+</span> <span class="n">storage</span><span class="p">)</span><span class="o">/</span><span class="mi">1000000</span><span class="p">)</span><span class="o">*</span><span class="mi">12</span>
+</div>
+<div class="viewcode-block" id="Grains.calculate_RGR_structure"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Grains.calculate_RGR_structure">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_RGR_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sucrose_phloem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Relative Growth Rate of grain structure</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sucrose_phloem</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">Organ</span><span class="o">.</span><span class="n">MSTRUCT_AXIS</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA_AXIS</span><span class="p">))</span> <span class="o">*</span> <span class="n">Grains</span><span class="o">.</span><span class="n">VMAX_RGR</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sucrose_phloem</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">Organ</span><span class="o">.</span><span class="n">MSTRUCT_AXIS</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA_AXIS</span><span class="p">))</span> <span class="o">+</span> <span class="n">Grains</span><span class="o">.</span><span class="n">K_RGR</span><span class="p">)</span>
+
+    <span class="c"># FLOWS</span>
+</div>
+<div class="viewcode-block" id="Grains.calculate_unloading_sucrose_structure"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Grains.calculate_unloading_sucrose_structure">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_unloading_sucrose_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">RGR_structure</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unloading of sucrose from phloem to grain structure (µmol C unloaded sucrose s-1 g-1 MS * DELTA_T)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">t</span><span class="o">&lt;=</span><span class="n">Grains</span><span class="o">.</span><span class="n">FILLING_INIT</span><span class="p">:</span>
+            <span class="n">unloading_sucrose_structure</span> <span class="o">=</span> <span class="n">structure</span> <span class="o">*</span> <span class="n">RGR_structure</span> <span class="o">*</span> <span class="n">Organ</span><span class="o">.</span><span class="n">DELTA_T</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unloading_sucrose_structure</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">unloading_sucrose_structure</span>
+</div>
+<div class="viewcode-block" id="Grains.calculate_unloading_sucrose_storage"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Grains.calculate_unloading_sucrose_storage">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_unloading_sucrose_storage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">sucrose_phloem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unloading of sucrose from phloem to grain storage (µmol C unloaded sucrose s-1 g-1 MS * DELTA_T)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">t</span><span class="o">&lt;=</span><span class="n">Grains</span><span class="o">.</span><span class="n">FILLING_INIT</span><span class="p">:</span>
+            <span class="n">unloading_sucrose_storage</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unloading_sucrose_storage</span> <span class="o">=</span> <span class="p">(((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sucrose_phloem</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">Organ</span><span class="o">.</span><span class="n">MSTRUCT_AXIS</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA_AXIS</span><span class="p">))</span> <span class="o">*</span> <span class="n">Grains</span><span class="o">.</span><span class="n">VMAX_STORAGE</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sucrose_phloem</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">Organ</span><span class="o">.</span><span class="n">MSTRUCT_AXIS</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA_AXIS</span><span class="p">))</span> <span class="o">+</span> <span class="n">Grains</span><span class="o">.</span><span class="n">K_STORAGE</span><span class="p">))</span> <span class="o">*</span> <span class="n">Organ</span><span class="o">.</span><span class="n">DELTA_T</span>
+        <span class="k">return</span> <span class="n">unloading_sucrose_storage</span>
+
+    <span class="c"># COMPARTMENTS</span>
+</div>
+<div class="viewcode-block" id="Grains.calculate_structure_derivative"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Grains.calculate_structure_derivative">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_structure_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unloading_sucrose_structure</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;delta grain structure integrated over delta-1 (µmol C structure)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">unloading_sucrose_structure</span><span class="o">*</span><span class="n">Grains</span><span class="o">.</span><span class="n">Y_GRAINS</span>
+</div>
+<div class="viewcode-block" id="Grains.calculate_storage_derivative"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Grains.calculate_storage_derivative">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_storage_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unloading_sucrose_storage</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;delta grain storage integrated over delta-1 (µmol C storage)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">unloading_sucrose_storage</span><span class="o">*</span> <span class="n">Grains</span><span class="o">.</span><span class="n">Y_GRAINS</span> <span class="o">*</span> <span class="p">((</span><span class="n">structure</span><span class="o">/</span><span class="mf">1E6</span><span class="p">)</span><span class="o">*</span><span class="mi">12</span><span class="p">)</span> <span class="c"># Conversion of grain structure from µmol of C to g of C</span>
+
+</div></div>
+<div class="viewcode-block" id="Roots"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Roots">[docs]</a><span class="k">class</span> <span class="nc">Roots</span><span class="p">(</span><span class="n">Organ</span><span class="p">):</span>
+    <span class="n">VMAX_ROOTS</span> <span class="o">=</span> <span class="mf">0.015</span>  <span class="c">#: Maximal rate of sucrose unloading from phloem to roots (µmol C unloaded sucrose s-1 g-1 MS)</span>
+    <span class="n">K_ROOTS</span> <span class="o">=</span> <span class="mi">100</span>       <span class="c">#: Affinity coefficient of sucrose unloading from phloem to roots (µmol C unloaded sucrose g-1 MS)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mstruct</span><span class="p">,</span> <span class="n">sucrose_0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Roots</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="c"># parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span> <span class="o">=</span> <span class="n">mstruct</span> <span class="c">#: Structural mass (g)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">unloading_sucrose</span> <span class="o">=</span> <span class="mi">0</span> <span class="c">#: current unloading of sucrose from phloem to roots</span>
+
+        <span class="c"># initialize the compartment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sucrose_0</span> <span class="o">=</span> <span class="n">sucrose_0</span> <span class="c">#: initial value of compartment sucrose</span>
+
+<div class="viewcode-block" id="Roots.get_initial_conditions"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Roots.get_initial_conditions">[docs]</a>    <span class="k">def</span> <span class="nf">get_initial_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sucrose_0</span><span class="p">]</span> <span class="c"># keep this order !</span>
+
+    <span class="c"># VARIABLES</span>
+</div>
+<div class="viewcode-block" id="Roots.calculate_dry_mass"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Roots.calculate_dry_mass">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_dry_mass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sucrose</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Dry mass of roots (g)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">sucrose</span><span class="o">*</span><span class="mi">12</span><span class="p">)</span><span class="o">/</span><span class="mi">1000000</span>
+
+    <span class="c"># FLOWS</span>
+</div>
+<div class="viewcode-block" id="Roots.calculate_unloading_sucrose"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Roots.calculate_unloading_sucrose">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_unloading_sucrose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sucrose_phloem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unloading of sucrose from phloem to roots (µmol C unloaded sucrose s-1 g-1 MS * DELTA_T)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sucrose_phloem</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">Organ</span><span class="o">.</span><span class="n">MSTRUCT_AXIS</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA_AXIS</span><span class="p">))</span> <span class="o">*</span> <span class="n">Roots</span><span class="o">.</span><span class="n">VMAX_ROOTS</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sucrose_phloem</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">Organ</span><span class="o">.</span><span class="n">MSTRUCT_AXIS</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">ALPHA_AXIS</span><span class="p">))</span> <span class="o">+</span> <span class="n">Roots</span><span class="o">.</span><span class="n">K_ROOTS</span><span class="p">))</span><span class="o">*</span><span class="n">Organ</span><span class="o">.</span><span class="n">DELTA_T</span>
+
+    <span class="c"># COMPARTMENTS</span>
+</div>
+<div class="viewcode-block" id="Roots.calculate_sucrose_derivative"><a class="viewcode-back" href="../../ref.html#cnwheat.organ.Roots.calculate_sucrose_derivative">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_sucrose_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unloading_sucrose</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;delta root sucrose integrated over delta-1 (µmol C sucrose)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">unloading_sucrose</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mstruct</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">CN-Wheat 0.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, C.Chambon and R.Barillot.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
