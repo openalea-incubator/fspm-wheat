@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>cnwheat.post_processing &mdash; CN-Wheat 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="CN-Wheat 0.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">CN-Wheat 0.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for cnwheat.post_processing</h1><div class="highlight"><pre>
+<span class="c"># -*- coding: latin-1 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    cnwheat.post_processing</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Post processings to apply on cnwheat output.</span>
+
+<span class="sd">    :copyright: Copyright 2014 INRA-EGC, see AUTHORS.txt.</span>
+<span class="sd">    :license: TODO, see LICENSE.txt for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<div class="viewcode-block" id="plot_linear_regression"><a class="viewcode-back" href="../../ref.html#cnwheat.post_processing.plot_linear_regression">[docs]</a><span class="k">def</span> <span class="nf">plot_linear_regression</span><span class="p">(</span><span class="n">x_array</span><span class="p">,</span> <span class="n">y_array</span><span class="p">,</span> <span class="n">x_label</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">y_label</span><span class="o">=</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">plot_filepath</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform a linear regression of `x_array` vs `y_array` </span>
+<span class="sd">    and create a plot showing the fit against the original data.</span>
+<span class="sd">    If `plot_filepath` is not None, save the plot to a PNG file.</span>
+<span class="sd">    </span>
+<span class="sd">    This is derived from http://www.landmap.ac.uk/index.php/Learning-Materials/Python-Scripting/6.4-Fitting-linear-equations#sthash.wDZ5zBrD.dpuf, </span>
+<span class="sd">    which is: Copyright TODO</span>
+<span class="sd">    </span>
+<span class="sd">    :Parameters:</span>
+<span class="sd">    </span>
+<span class="sd">        - `x_array` (:class:`numpy.ndarray`) - The x.</span>
+<span class="sd">        </span>
+<span class="sd">        - `y_array` (:class:`numpy.ndarray`) - The y.</span>
+<span class="sd">        </span>
+<span class="sd">        - `x_label` (:class:`str`) - The label of the axis &#39;x&#39;. Default is &#39;x&#39;.</span>
+<span class="sd">        </span>
+<span class="sd">        - `y_label` (:class:`str`) - The label of the axis &#39;y&#39;. Default is &#39;y&#39;.</span>
+<span class="sd">        </span>
+<span class="sd">        - `plot_filepath` (:class:`str`) - The file path to save the plot in. </span>
+<span class="sd">            If `None`, do not save the plot.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Perform fit</span>
+    <span class="p">(</span><span class="n">aCoeff</span><span class="p">,</span> <span class="n">bCoeff</span><span class="p">,</span> <span class="n">rVal</span><span class="p">,</span> <span class="n">pVal</span><span class="p">,</span> <span class="n">stdError</span><span class="p">)</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">linregress</span><span class="p">(</span><span class="n">x_array</span><span class="p">,</span> <span class="n">y_array</span><span class="p">)</span>
+    
+    <span class="c"># Use fits to predict y output for a range of diameters</span>
+    <span class="n">x_samples_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">x_array</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">x_array</span><span class="p">),</span> <span class="mi">1000</span><span class="p">)</span>
+    <span class="n">y_predict_array</span> <span class="o">=</span> <span class="n">aCoeff</span> <span class="o">*</span> <span class="n">x_samples_array</span> <span class="o">+</span> <span class="n">bCoeff</span>
+
+    <span class="c"># Create a string, showing the form of the equation (with fitted coefficients) and r squared value.</span>
+    <span class="c"># Coefficients are rounded to two decimal places.</span>
+    <span class="n">equation</span> <span class="o">=</span> <span class="s">&#39;y = {} x + {} (R$^2$ = {})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">aCoeff</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">bCoeff</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">rVal</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    
+    <span class="c"># Plot fit against original data</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_array</span><span class="p">,</span> <span class="n">y_array</span><span class="p">,</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_samples_array</span><span class="p">,</span> <span class="n">y_predict_array</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;{} vs {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x_label</span><span class="p">,</span> <span class="n">y_label</span><span class="p">))</span>
+    
+    <span class="n">x_label</span> <span class="o">=</span> <span class="s">&#39;x = {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x_label</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">x_label</span><span class="p">)</span>
+    <span class="n">y_label</span> <span class="o">=</span> <span class="s">&#39;y = {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">y_label</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">y_label</span><span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s">&#39;x vs y&#39;</span><span class="p">,</span> <span class="n">equation</span><span class="p">])</span>
+
+    <span class="c"># Save plot</span>
+    <span class="k">if</span> <span class="n">plot_filepath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">plot_filepath</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;PNG&#39;</span><span class="p">)</span>
+        
+        </div>
+<div class="viewcode-block" id="plot_column"><a class="viewcode-back" href="../../ref.html#cnwheat.post_processing.plot_column">[docs]</a><span class="k">def</span> <span class="nf">plot_column</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_label</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">y_label</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">matplotlib_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">plot_filepath</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plot y = f(x), using `matplotlib_kwargs` to set the `kwargs` of :func:`matplotlib.pyplot.plot`.</span>
+<span class="sd">    If `matplotlib_kwargs` is empty, then use the default `kwargs` of :func:`matplotlib.pyplot.plot`.</span>
+<span class="sd">    If `plot_filepath` is not None, save the plot to a PNG file.</span>
+<span class="sd">    </span>
+<span class="sd">    :Parameters:</span>
+<span class="sd">    </span>
+<span class="sd">        - `x` (:class:`numpy.ndarray`) - The x.</span>
+<span class="sd">        </span>
+<span class="sd">        - `y` (:class:`numpy.ndarray`) - The y.</span>
+<span class="sd">        </span>
+<span class="sd">        - `title` (:class:`str`) - the title of the plot.</span>
+<span class="sd">        </span>
+<span class="sd">        - `matplotlib_kwargs` (:class:`dict`) - The `kwargs` of :func:`matplotlib.pyplot.plot`. </span>
+<span class="sd">            If `matplotlib_kwargs` is empty, then use the default `kwargs` of :func:`matplotlib.pyplot.plot`.</span>
+<span class="sd">        </span>
+<span class="sd">        - `plot_filepath` (:class:`str`) - The file path to save the plot in. If `None`, do not save the plot.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">matplotlib_kwargs</span><span class="p">[</span><span class="s">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_label</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">matplotlib_kwargs</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">x_label</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">y_label</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+    
+    <span class="c"># Save plot</span>
+    <span class="k">if</span> <span class="n">plot_filepath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">plot_filepath</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;PNG&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="plot_columns"><a class="viewcode-back" href="../../ref.html#cnwheat.post_processing.plot_columns">[docs]</a><span class="k">def</span> <span class="nf">plot_columns</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">column_to_matplotlib_kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">plot_filepath</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plot the columns in `column_to_matplotlib_kwargs`, with `x_label=&#39;t&#39;` and </span>
+<span class="sd">    `y_labels=column_to_matplotlib_kwargs.keys()`.</span>
+<span class="sd">    For each `column` in `column_to_matplotlib_kwargs`, use `kwargs=column_to_matplotlib_kwargs[column]` </span>
+<span class="sd">    to set the `kwargs` of :func:`matplotlib.pyplot.plot`.</span>
+<span class="sd">    If `column_to_matplotlib_kwargs` is empty, then plot all the columns of `dataframe` and use</span>
+<span class="sd">    the default `kwargs` of :func:`matplotlib.pyplot.plot`.</span>
+<span class="sd">    If `plot_filepath` is not None, save the plot to a PNG file.</span>
+<span class="sd">    </span>
+<span class="sd">    :Parameters:</span>
+<span class="sd">    </span>
+<span class="sd">        - `dataframe` (:class:`pandas.DataFrame`) - A dataframe with a column &#39;t&#39;.</span>
+<span class="sd">        </span>
+<span class="sd">        - `title` (:class:`str`) - the title of the plot.</span>
+<span class="sd">        </span>
+<span class="sd">        - `column_to_matplotlib_kwargs` (:class:`dict`) - A dictionary which keys are </span>
+<span class="sd">            the name of the columns to plot, and values are the `kwargs` of :func:`matplotlib.pyplot.plot`. </span>
+<span class="sd">            If `column_to_matplotlib_kwargs` is empty, then plot all the columns of `dataframe` and use</span>
+<span class="sd">            the default `kwargs` of :func:`matplotlib.pyplot.plot`.</span>
+<span class="sd">        </span>
+<span class="sd">        - `plot_filepath` (:class:`str`) - The file path to save the plot in. If `None`, do not save the plot.</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">column_to_matplotlib_kwargs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">column_to_matplotlib_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="p">{})</span>
+    
+    <span class="n">x_label</span> <span class="o">=</span> <span class="s">&#39;t&#39;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">x_label</span><span class="p">]</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    
+    <span class="k">for</span> <span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">matplotlib_kwargs</span><span class="p">)</span> <span class="ow">in</span> <span class="n">column_to_matplotlib_kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">column</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s">&#39;label&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">matplotlib_kwargs</span><span class="p">:</span>
+            <span class="n">matplotlib_kwargs</span><span class="p">[</span><span class="s">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">column</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">matplotlib_kwargs</span><span class="p">)</span>
+        
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">x_label</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;See the legend&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+    
+    <span class="c"># Save plot</span>
+    <span class="k">if</span> <span class="n">plot_filepath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">plot_filepath</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;PNG&#39;</span><span class="p">)</span>
+         
+         
+
+         
+         
+         
+         
+    
+    </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">CN-Wheat 0.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, C.Chambon and R.Barillot.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
