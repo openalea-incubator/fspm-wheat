@@ -1,0 +1,350 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>cnwheat.photosynthesis &mdash; CN-Wheat 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="CN-Wheat 0.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">CN-Wheat 0.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for cnwheat.photosynthesis</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/env python</span>
+<span class="c"># -*- coding: latin-1 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    cnwheat.photosynthesis</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Model of photosynthesis based on Farquhar&#39;s approach. The model includes the dependance of photosynthesis to organ temperature and nitrogen content. Internal CO2 and organ temperature are found numerically.</span>
+
+<span class="sd">    :copyright: Copyright 2014 INRA-EGC, see AUTHORS.</span>
+<span class="sd">    :license: TODO, see LICENSE for details.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span> <span class="c"># use &quot;//&quot; to do integer division</span>
+
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span>  <span class="n">exp</span>
+
+<div class="viewcode-block" id="PhotosynthesisModel"><a class="viewcode-back" href="../../ref.html#cnwheat.photosynthesis.PhotosynthesisModel">[docs]</a><span class="k">class</span> <span class="nc">PhotosynthesisModel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="n">O</span> <span class="o">=</span> <span class="mi">21000</span>      <span class="c">#: Photosynthetic parameter: Intercellular O2 concentration, umol mol(air)-1 or Pa, from Bernacchi et al. (2001)</span>
+    <span class="n">KC25</span> <span class="o">=</span> <span class="mi">404</span>     <span class="c">#: Photosynthetic parameter: Affinity constant of RuBisCO for C, umol mol-1 or Pa, from Bernacchi et al. (2001) (estimation in Braune et al. (2009) not enough accurate)</span>
+    <span class="n">KO25</span> <span class="o">=</span> <span class="mf">278.4E3</span> <span class="c">#: Photosynthetic parameter: Affinity constant of RuBisCO for O, umol mol-1 or Pa, from Bernacchi et al. (2001) (estimation in Braune et al. (2009) not enough accurate)</span>
+    <span class="n">GAMMA25</span> <span class="o">=</span> <span class="mi">39</span>   <span class="c">#: Photosynthetic parameter: CO2 compensation point, umol(CO2) mol-1 (air), from Braune et al. (2009)</span>
+    <span class="n">THETA</span> <span class="o">=</span> <span class="mf">0.72</span>    <span class="c">#: Photosynthetic parameter: curvature parameter of J, dimensionless</span>
+
+    <span class="c">#: Nitrogen dependance of photosynthetic parameters</span>
+    <span class="c">#: Derived from Braune et al. (2009):</span>
+    <span class="c">#:     * S_Na: slope of the relation between Na and the parameters (umol g-1 s-1)</span>
+    <span class="c">#:     * Na_min: minimum amount of leaf nitrogen below which photosynthesis rate is zero (g (N) m-2 leaf)</span>
+    <span class="c">#:     * Gamma_Na1 and Gamma_Na2: parameters of ALPHA dependance to Na (mol mol-1 and m2 g-1 respectively)</span>
+    <span class="c">#:     * delta1 and delta2: parameters of m (scaling factor of gs) dependance to Na (m2 g-1 and dimensionless respectively)</span>
+    <span class="n">PARAM_N</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;S_Na&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;Vc_max25&#39;</span><span class="p">:</span> <span class="mf">63.2</span><span class="p">,</span> <span class="s">&#39;Jmax25&#39;</span><span class="p">:</span> <span class="mi">151</span><span class="p">,</span> <span class="s">&#39;TPU25&#39;</span><span class="p">:</span> <span class="mf">9.25</span><span class="p">,</span> <span class="s">&#39;Rdark25&#39;</span><span class="p">:</span> <span class="mf">0.493</span><span class="p">},</span> <span class="s">&#39;Na_min&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;Vc_max25&#39;</span><span class="p">:</span> <span class="mf">0.198</span><span class="p">,</span> <span class="s">&#39;Jmax25&#39;</span><span class="p">:</span> <span class="mf">0.225</span><span class="p">,</span> <span class="s">&#39;TPU25&#39;</span><span class="p">:</span> <span class="mf">0.229</span><span class="p">,</span> <span class="s">&#39;Rdark25&#39;</span><span class="p">:</span> <span class="mf">0.118</span><span class="p">},</span>
+                <span class="s">&#39;Gamma_Na1&#39;</span><span class="p">:</span> <span class="mf">0.437</span><span class="p">,</span> <span class="s">&#39;Gamma_Na2&#39;</span><span class="p">:</span> <span class="mf">2.29</span><span class="p">,</span> <span class="s">&#39;delta1&#39;</span><span class="p">:</span> <span class="mf">14.7</span><span class="p">,</span> <span class="s">&#39;delta2&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.548</span><span class="p">}</span>
+
+    <span class="n">GSMIN</span> <span class="o">=</span> <span class="mf">0.05</span>            <span class="c">#: Stomatal conductance parameter: Minimum gs, measured in the dark (mol m-2 s-1). Braune et al. (2009).</span>
+    <span class="n">GB</span> <span class="o">=</span> <span class="mf">3.5</span>                <span class="c">#: Stomatal conductance parameter: Boundary layer conductance (mol m-2 s-1). Muller et al., (2005)</span>
+
+    <span class="n">SIGMA</span> <span class="o">=</span> <span class="mf">5.6704E-8</span>       <span class="c">#: Physical parameter: Stefan-Bolzmann constant (W-2 K-4)</span>
+    <span class="n">I0</span> <span class="o">=</span> <span class="mi">1370</span>               <span class="c">#: Physical parameter: Extraterrestrial solar radiation (W m-2)</span>
+    <span class="n">LAMBDA</span> <span class="o">=</span> <span class="mf">2260E3</span>         <span class="c">#: Physical parameter: Latent heat for vaporisation of water (J kg-1)</span>
+    <span class="n">RHOCP</span> <span class="o">=</span> <span class="mi">1256</span>            <span class="c">#: Physical parameter: Volumetric heat capacity of air (J m-3 K-1)</span>
+    <span class="n">GAMMA</span> <span class="o">=</span> <span class="mf">66E-3</span>           <span class="c">#: Physical parameter: Psychrometric constant (KPa K-1). Mean value</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="mf">2.5</span>                 <span class="c">#: Physical parameter: Attenuation coefficient of wind within a wheat canopy. From Campbell and Norman (1998), second edition. Can also be estimaed by: A = sqrt((0.2*LAI*h)/sqrt((4*width*h)/(pi*LAI))</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="mf">8.3144</span>              <span class="c">#: Physical parameter: Gas constant (J mol-1 K-1)</span>
+    <span class="n">PATM</span> <span class="o">=</span> <span class="mf">1.01325E5</span>        <span class="c">#: Physical parameter: Atmospheric pressure (Pa)</span>
+
+    <span class="c">#TODO: trouver des bonnes valeurs de FR, FT</span>
+    <span class="n">FR</span> <span class="o">=</span> <span class="mf">0.15</span>               <span class="c">#: Physical parameter: Leaf radiation reflectance</span>
+    <span class="n">FT</span> <span class="o">=</span> <span class="mf">0.15</span>               <span class="c">#: Physical parameter: Leaf radiation transmittance</span>
+
+    <span class="c">#: Temperature dependance of photosynthetic parameters</span>
+    <span class="c">#: Parameter values derived from Braune et al. (2009) except for Kc, Ko, and Rdark (Bernacchi et al., 2001)</span>
+    <span class="c">#:     * deltaHa, deltaHd: enthalpie of activation and deactivation respectively (kJ mol-1)</span>
+    <span class="c">#:     * deltaS: entropy term (kJ mol-1 K-1)</span>
+    <span class="c">#:     * Tref: reference temperature (K)</span>
+    <span class="c">#:     * R: universal gas constant (kJ mol-1 K-1)</span>
+    <span class="n">PARAM_TEMP</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;deltaHa&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;Vc_max&#39;</span><span class="p">:</span> <span class="mf">89.7</span><span class="p">,</span> <span class="s">&#39;Jmax&#39;</span><span class="p">:</span> <span class="mf">48.9</span><span class="p">,</span> <span class="s">&#39;TPU&#39;</span><span class="p">:</span> <span class="mf">47.</span><span class="p">,</span> <span class="s">&#39;Kc&#39;</span><span class="p">:</span> <span class="mf">79.43</span><span class="p">,</span> <span class="s">&#39;Ko&#39;</span><span class="p">:</span> <span class="mf">36.38</span><span class="p">,</span> <span class="s">&#39;Gamma&#39;</span><span class="p">:</span> <span class="mf">35.</span><span class="p">,</span> <span class="s">&#39;Rdark&#39;</span><span class="p">:</span> <span class="mf">46.39</span><span class="p">},</span>
+                  <span class="s">&#39;deltaHd&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;Vc_max&#39;</span><span class="p">:</span> <span class="mf">149.3</span><span class="p">,</span> <span class="s">&#39;Jmax&#39;</span><span class="p">:</span> <span class="mf">152.3</span><span class="p">,</span> <span class="s">&#39;TPU&#39;</span><span class="p">:</span> <span class="mf">152.3</span><span class="p">},</span>
+                  <span class="s">&#39;deltaS&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;Vc_max&#39;</span><span class="p">:</span> <span class="mf">0.486</span><span class="p">,</span> <span class="s">&#39;Jmax&#39;</span><span class="p">:</span> <span class="mf">0.495</span><span class="p">,</span> <span class="s">&#39;TPU&#39;</span><span class="p">:</span> <span class="mf">0.495</span><span class="p">},</span>
+                  <span class="s">&#39;Tref&#39;</span><span class="p">:</span> <span class="mf">298.15</span><span class="p">,</span> <span class="s">&#39;R&#39;</span><span class="p">:</span> <span class="mf">8.3145E-03</span><span class="p">}</span>
+
+    <span class="n">LEAF_WIDTH</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="c">#: m</span>
+    <span class="n">height_canopy</span> <span class="o">=</span> <span class="mi">1</span>      <span class="c">#: m</span>
+    <span class="n">H_ORGAN</span> <span class="o">=</span> <span class="mf">0.5</span>     <span class="c">#: m</span>
+    <span class="n">NA_INIT</span> <span class="o">=</span> <span class="mf">2.5</span>     <span class="c">#: g m-2</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="PhotosynthesisModel.leaf_temperature"><a class="viewcode-back" href="../../ref.html#cnwheat.photosynthesis.PhotosynthesisModel.leaf_temperature">[docs]</a>    <span class="k">def</span> <span class="nf">leaf_temperature</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">leaf_width</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">wind0</span><span class="p">,</span> <span class="n">PAR</span><span class="p">,</span> <span class="n">gs</span><span class="p">,</span> <span class="n">Ta</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">,</span> <span class="n">RH</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Energy balance for the estimation of leaf temperature</span>
+<span class="sd">            - leaf_width (m)</span>
+<span class="sd">            - z: height of leaf from soil (m)</span>
+<span class="sd">            - H: canopy height (m)</span>
+<span class="sd">            - Wind0: wind at the top of the canopy (m s-1)</span>
+<span class="sd">            - PAR (umol m-2 s-1)</span>
+<span class="sd">            - gs: stomatal conductance (mol m-2 s-1)</span>
+<span class="sd">            - Ta: air temperature (degree C)</span>
+<span class="sd">            - Tleaf: leaf temperature (degree C). Tleaf = Ta at the first iteration of the numeric resolution</span>
+<span class="sd">            - RH: Relative humidity (decimal fraction)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># Wind speed (m s-1)</span>
+        <span class="n">wind</span> <span class="o">=</span> <span class="n">wind0</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">A</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="o">/</span><span class="n">H</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>                      <span class="c"># From Campbell and Norman (1998), second edition. z: organ height, H: height of the canopy</span>
+
+        <span class="c"># Boundary layer restistance to heat (s m-1)</span>
+        <span class="n">rbh</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">leaf_width</span><span class="o">/</span><span class="n">wind</span><span class="p">)</span>
+
+        <span class="c"># Turbulence resistance to heat (s m-1)</span>
+        <span class="n">rt</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.74</span> <span class="o">*</span> <span class="n">log</span><span class="p">(((</span><span class="mi">2</span> <span class="o">-</span> <span class="mf">0.7</span><span class="o">*</span><span class="n">H</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">0.1</span><span class="o">*</span><span class="n">H</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mf">0.16</span><span class="o">*</span><span class="n">wind</span><span class="p">)</span>
+
+        <span class="c"># Net absorbed radiation Rn (PAR and NIR, J m-2 s-1)</span>
+        <span class="n">Iabs</span> <span class="o">=</span> <span class="p">(</span><span class="n">PAR</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">cls</span><span class="o">.</span><span class="n">FR</span><span class="o">-</span><span class="n">cls</span><span class="o">.</span><span class="n">FT</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mf">0.55</span><span class="o">*</span><span class="mf">4.55</span><span class="p">)</span>          <span class="c"># Global absorbed radiation by leaf (J m-2 s-1). TODO: relation a verifier</span>
+        <span class="n">es_Ta</span> <span class="o">=</span> <span class="mf">0.611</span> <span class="o">*</span> <span class="n">exp</span><span class="p">((</span><span class="mf">17.4</span><span class="o">*</span><span class="n">Ta</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">239</span><span class="o">+</span><span class="n">Ta</span><span class="p">))</span>             <span class="c"># Saturated vapour pressure of the air (kPa), Ta in degree Celsius</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="n">RH</span> <span class="o">*</span> <span class="n">es_Ta</span>                                      <span class="c"># Vapour pressure of the air (kPa)</span>
+        <span class="n">fvap</span> <span class="o">=</span> <span class="mf">0.56</span> <span class="o">-</span> <span class="mf">0.079</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">V</span><span class="p">)</span>                      <span class="c"># Fraction of vapour pressure</span>
+
+        <span class="n">tau</span> <span class="o">=</span> <span class="n">Iabs</span><span class="o">/</span><span class="n">cls</span><span class="o">.</span><span class="n">I0</span>                                   <span class="c"># Atmospheric transmissivity (dimensionless)</span>
+        <span class="n">fclear</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">+</span> <span class="mf">0.9</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">tau</span><span class="o">-</span><span class="mf">0.2</span><span class="p">)</span><span class="o">/</span><span class="mf">0.5</span><span class="p">))</span>    <span class="c"># Fraction sky clearness</span>
+
+        <span class="n">Rn</span> <span class="o">=</span> <span class="n">Iabs</span> <span class="o">-</span> <span class="n">cls</span><span class="o">.</span><span class="n">SIGMA</span> <span class="o">*</span> <span class="p">(</span><span class="n">Tleaf</span><span class="o">+</span><span class="mi">273</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span><span class="o">*</span><span class="n">fvap</span><span class="o">*</span><span class="n">fclear</span>
+
+        <span class="c"># Transpiration (mm s-1), Penman-Monteith</span>
+        <span class="k">if</span> <span class="n">Tleaf</span> <span class="o">==</span> <span class="n">Ta</span><span class="p">:</span>
+            <span class="n">Ta_K</span> <span class="o">=</span> <span class="n">Ta</span> <span class="o">+</span> <span class="mf">273.15</span>                              <span class="c"># Ta in kelvin</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="p">((</span><span class="mf">17.4</span><span class="o">*</span><span class="mi">239</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">Ta_K</span> <span class="o">+</span> <span class="mi">239</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">es_Ta</span>          <span class="c"># Slope of the curve relating saturation vapour pressure to temperature (kPa K-1)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">es_Tl</span> <span class="o">=</span> <span class="mf">0.611</span> <span class="o">*</span> <span class="n">exp</span><span class="p">((</span><span class="mf">17.4</span><span class="o">*</span><span class="n">Tleaf</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">239</span><span class="o">+</span><span class="n">Tleaf</span><span class="p">))</span>   <span class="c"># Saturated vapour pressure at leaf (kPa), Tleaf in degree Celsius</span>
+            <span class="n">Tleaf_K</span><span class="p">,</span> <span class="n">Ta_K</span> <span class="o">=</span> <span class="n">Tleaf</span> <span class="o">+</span> <span class="mf">273.15</span><span class="p">,</span> <span class="n">Ta</span> <span class="o">+</span> <span class="mf">273.15</span>     <span class="c"># Temperatures in kelvin</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">es_Tl</span> <span class="o">-</span> <span class="n">es_Ta</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">Tleaf_K</span> <span class="o">-</span> <span class="n">Ta_K</span><span class="p">)</span>            <span class="c"># Slope of the curve relating saturation vapour pressure to temperature (kPa K-1)</span>
+
+        <span class="n">VPDa</span> <span class="o">=</span> <span class="n">es_Ta</span> <span class="o">-</span> <span class="n">V</span>
+        <span class="n">rbw</span> <span class="o">=</span> <span class="mf">0.96</span> <span class="o">*</span> <span class="n">rbh</span>                                    <span class="c"># Boundary layer resistance for water (s m-1)</span>
+        <span class="n">gsw</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.6</span><span class="o">*</span><span class="n">gs</span> <span class="o">*</span> <span class="n">cls</span><span class="o">.</span><span class="n">R</span> <span class="o">*</span> <span class="p">(</span><span class="n">Tleaf</span><span class="o">+</span><span class="mf">273.15</span><span class="p">))</span> <span class="o">/</span> <span class="n">cls</span><span class="o">.</span><span class="n">PATM</span>  <span class="c"># Stomatal conductance to water (m s-1). 1.6 convert gs_CO2 in gs_water. Relation given by A. Tuzet (2003)</span>
+        <span class="n">rswp</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">gsw</span>                                        <span class="c"># Stomatal resistance for water (s m-1)</span>
+
+        <span class="n">Ep</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="n">Rn</span> <span class="o">+</span> <span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">RHOCP</span> <span class="o">*</span> <span class="n">VPDa</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">rbh</span> <span class="o">+</span> <span class="n">rt</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">LAMBDA</span> <span class="o">*</span> <span class="p">(</span><span class="n">s</span> <span class="o">+</span> <span class="n">cls</span><span class="o">.</span><span class="n">GAMMA</span><span class="o">*</span><span class="p">((</span><span class="n">rbw</span> <span class="o">+</span> <span class="n">rt</span> <span class="o">+</span> <span class="n">rswp</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">rbh</span> <span class="o">+</span> <span class="n">rt</span><span class="p">))))</span>
+
+        <span class="c"># Leaf temperature</span>
+        <span class="n">Tleaf</span> <span class="o">=</span> <span class="n">Ta</span> <span class="o">+</span> <span class="p">((</span><span class="n">rbh</span> <span class="o">+</span> <span class="n">rt</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">Rn</span> <span class="o">-</span> <span class="n">cls</span><span class="o">.</span><span class="n">LAMBDA</span><span class="o">*</span><span class="n">Ep</span><span class="p">))</span> <span class="o">/</span> <span class="n">cls</span><span class="o">.</span><span class="n">RHOCP</span>
+        <span class="k">return</span> <span class="n">Tleaf</span><span class="p">,</span> <span class="n">Ep</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="PhotosynthesisModel.stomatal_conductance"><a class="viewcode-back" href="../../ref.html#cnwheat.photosynthesis.PhotosynthesisModel.stomatal_conductance">[docs]</a>    <span class="k">def</span> <span class="nf">stomatal_conductance</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">Ag</span><span class="p">,</span> <span class="n">An</span><span class="p">,</span> <span class="n">Na</span><span class="p">,</span> <span class="n">Ca</span><span class="p">,</span> <span class="n">RH</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        BWB model of stomatal conductance</span>
+<span class="sd">            - Ag: global assimilation (umol m-2 s-1)</span>
+<span class="sd">            - An: net assimilation (umol m-2 s-1)</span>
+<span class="sd">            - Na: nitrogen content of leaf (g m-2)</span>
+<span class="sd">            - Ca: Air CO2 (umol mol-1)</span>
+<span class="sd">            - RH: Relative humidity (decimal fraction)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">Cs</span> <span class="o">=</span> <span class="n">Ca</span> <span class="o">-</span> <span class="n">An</span> <span class="o">*</span><span class="p">(</span><span class="mf">1.37</span><span class="o">/</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">GB</span><span class="p">))</span>                            <span class="c"># CO2 concentration at leaf surface (umol mol-1 or Pa). From Prieto et al. (2012). GB in mol m-2 s-1</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">PARAM_N</span><span class="p">[</span><span class="s">&#39;delta1&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">Na</span><span class="o">**</span><span class="n">cls</span><span class="o">.</span><span class="n">PARAM_N</span><span class="p">[</span><span class="s">&#39;delta2&#39;</span><span class="p">]</span>    <span class="c"># Scaling factor dependance to Na (dimensionless). This focntion is maintained although I&#39;m not sure that it should be taken into account</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">GSMIN</span> <span class="o">+</span> <span class="n">m</span><span class="o">*</span><span class="p">((</span><span class="n">Ag</span><span class="o">*</span><span class="n">RH</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">Cs</span><span class="p">)))</span>                      <span class="c"># Stomatal conductance (mol m-2 s-1), from Braune et al. (2009), Muller et al. (2005): using Ag rather than An. Would be better with a function of VPD and with (Ci-GAMMA) instead of Cs.</span>
+        <span class="k">return</span> <span class="n">gs</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="PhotosynthesisModel.f_temperature"><a class="viewcode-back" href="../../ref.html#cnwheat.photosynthesis.PhotosynthesisModel.f_temperature">[docs]</a>    <span class="k">def</span> <span class="nf">f_temperature</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">pname</span><span class="p">,</span> <span class="n">p25</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Photosynthetic parameters relation to temperature</span>
+<span class="sd">            - pname: name of parameter</span>
+<span class="sd">            - p25: parameter value at 25 degree C</span>
+<span class="sd">            - T: leaf temperature (degree C)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Tk</span> <span class="o">=</span> <span class="n">T</span> <span class="o">+</span> <span class="mf">273.15</span>
+        <span class="n">deltaHa</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">PARAM_TEMP</span><span class="p">[</span><span class="s">&#39;deltaHa&#39;</span><span class="p">][</span><span class="n">pname</span><span class="p">]</span>
+        <span class="n">Tref</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">PARAM_TEMP</span><span class="p">[</span><span class="s">&#39;Tref&#39;</span><span class="p">]</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">PARAM_TEMP</span><span class="p">[</span><span class="s">&#39;R&#39;</span><span class="p">]</span>
+
+        <span class="n">f_activation</span> <span class="o">=</span> <span class="n">exp</span><span class="p">((</span><span class="n">deltaHa</span> <span class="o">*</span> <span class="p">(</span><span class="n">Tk</span> <span class="o">-</span> <span class="n">Tref</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">R</span> <span class="o">*</span> <span class="n">Tref</span> <span class="o">*</span> <span class="n">Tk</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">pname</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;Vc_max&#39;</span><span class="p">,</span> <span class="s">&#39;Jmax&#39;</span><span class="p">,</span> <span class="s">&#39;TPU&#39;</span><span class="p">):</span>
+            <span class="n">deltaS</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">PARAM_TEMP</span><span class="p">[</span><span class="s">&#39;deltaS&#39;</span><span class="p">][</span><span class="n">pname</span><span class="p">]</span>
+            <span class="n">deltaHd</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">PARAM_TEMP</span><span class="p">[</span><span class="s">&#39;deltaHd&#39;</span><span class="p">][</span><span class="n">pname</span><span class="p">]</span>
+            <span class="n">f_deactivation</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">exp</span><span class="p">((</span><span class="n">Tref</span><span class="o">*</span><span class="n">deltaS</span> <span class="o">-</span> <span class="n">deltaHd</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">Tref</span><span class="o">*</span><span class="n">R</span><span class="p">)))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">exp</span><span class="p">((</span><span class="n">Tk</span><span class="o">*</span><span class="n">deltaS</span> <span class="o">-</span> <span class="n">deltaHd</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">Tk</span><span class="o">*</span><span class="n">R</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f_deactivation</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">p25</span> <span class="o">*</span> <span class="n">f_activation</span> <span class="o">*</span> <span class="n">f_deactivation</span>
+
+        <span class="k">return</span> <span class="n">p</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="PhotosynthesisModel.photosynthesis"><a class="viewcode-back" href="../../ref.html#cnwheat.photosynthesis.PhotosynthesisModel.photosynthesis">[docs]</a>    <span class="k">def</span> <span class="nf">photosynthesis</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">PAR</span><span class="p">,</span> <span class="n">Na</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">,</span> <span class="n">Ci</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Estimation of C02 assimilation. In this version, most of parameters are derived from Braune et al. (2009) on barley</span>
+<span class="sd">            - PAR: PAR intercepted by leaf (umol m-2 s-1)</span>
+<span class="sd">            - Na: nitrogen content of leaf (g m-2)</span>
+<span class="sd">            - Tleaf: leaf temperature (degree C)</span>
+<span class="sd">            - Ci: internal CO2 (umol mol-1), by default = 0.7*CO2air</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">### # RuBisCO-limited carboxylation rate ###</span>
+        <span class="c"># RuBisCO parameters dependance to temperature</span>
+        <span class="n">Kc</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">f_temperature</span><span class="p">(</span><span class="s">&#39;Kc&#39;</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">KC25</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">)</span>
+        <span class="n">Ko</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">f_temperature</span><span class="p">(</span><span class="s">&#39;Ko&#39;</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">KO25</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">)</span>
+        <span class="n">Gamma</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">f_temperature</span><span class="p">(</span><span class="s">&#39;Gamma&#39;</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">GAMMA25</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">)</span>
+
+        <span class="c"># Vcmax</span>
+        <span class="n">Vc_max25</span> <span class="o">=</span> <span class="mf">84.965</span> <span class="o">*</span> <span class="p">(</span><span class="n">Na</span> <span class="o">-</span> <span class="mf">0.17</span><span class="p">)</span>                                                     <span class="c"># Relation between Vc_max25 and Na</span>
+        <span class="n">Vc_max</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">f_temperature</span> <span class="p">(</span><span class="s">&#39;Vc_max&#39;</span><span class="p">,</span> <span class="n">Vc_max25</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">)</span>                              <span class="c"># Relation between Vc_max and temperature</span>
+        <span class="n">Ac</span> <span class="o">=</span> <span class="p">(</span><span class="n">Vc_max</span> <span class="o">*</span> <span class="p">(</span><span class="n">Ci</span><span class="o">-</span><span class="n">Gamma</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">Ci</span> <span class="o">+</span> <span class="n">Kc</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">cls</span><span class="o">.</span><span class="n">O</span><span class="o">/</span><span class="n">Ko</span><span class="p">))</span>                             <span class="c"># Rate of assimilation under Vc_max limitation</span>
+        <span class="c">### RuBP regeneration-limited carboxylation rate via electron transport ###</span>
+        <span class="n">ALPHA</span> <span class="o">=</span> <span class="mf">0.0413</span> <span class="o">*</span> <span class="n">Na</span> <span class="o">+</span> <span class="mf">0.2101</span>                                                        <span class="c"># Relation between ALPHA and Na</span>
+        <span class="n">Jmax25</span> <span class="o">=</span> <span class="mf">117.6</span> <span class="o">*</span> <span class="p">(</span><span class="n">Na</span> <span class="o">-</span> <span class="mf">0.17</span><span class="p">)</span>                                                        <span class="c"># Relation between Jmax25 and Na</span>
+        <span class="n">Jmax</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">f_temperature</span><span class="p">(</span><span class="s">&#39;Jmax&#39;</span><span class="p">,</span> <span class="n">Jmax25</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">)</span>                                     <span class="c"># Relation between Jmax and temperature</span>
+
+        <span class="c"># Electron transport rate</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="p">((</span><span class="n">Jmax</span><span class="o">+</span><span class="n">ALPHA</span><span class="o">*</span><span class="n">PAR</span><span class="p">)</span> <span class="o">-</span> <span class="n">sqrt</span><span class="p">((</span><span class="n">Jmax</span><span class="o">+</span><span class="n">ALPHA</span><span class="o">*</span><span class="n">PAR</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">cls</span><span class="o">.</span><span class="n">THETA</span><span class="o">*</span><span class="n">ALPHA</span><span class="o">*</span><span class="n">PAR</span><span class="o">*</span><span class="n">Jmax</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">cls</span><span class="o">.</span><span class="n">THETA</span><span class="p">)</span> <span class="c"># Muller et al. (2005), Evers et al. (2010)</span>
+        <span class="n">Aj</span> <span class="o">=</span> <span class="p">(</span><span class="n">J</span> <span class="o">*</span> <span class="p">(</span><span class="n">Ci</span><span class="o">-</span><span class="n">Gamma</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">Ci</span> <span class="o">+</span> <span class="mi">8</span><span class="o">*</span><span class="n">Gamma</span><span class="p">)</span>                                            <span class="c"># Rate of assimilation under RuBP regeneration limitation</span>
+        <span class="c">### Triose phosphate utilisation-limited carboxylation rate ###</span>
+        <span class="n">TPU25</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">PARAM_N</span><span class="p">[</span><span class="s">&#39;S_Na&#39;</span><span class="p">][</span><span class="s">&#39;TPU25&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">Na</span> <span class="o">-</span> <span class="n">cls</span><span class="o">.</span><span class="n">PARAM_N</span><span class="p">[</span><span class="s">&#39;Na_min&#39;</span><span class="p">][</span><span class="s">&#39;TPU25&#39;</span><span class="p">])</span>        <span class="c"># Relation between TPU25 and Na</span>
+        <span class="n">TPU</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">f_temperature</span><span class="p">(</span><span class="s">&#39;TPU&#39;</span><span class="p">,</span> <span class="n">TPU25</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">)</span>                                        <span class="c"># Relation between TPU and temperature</span>
+        <span class="n">Vomax</span> <span class="o">=</span> <span class="p">(</span><span class="n">Vc_max</span><span class="o">*</span><span class="n">Ko</span><span class="o">*</span><span class="n">Gamma</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="n">Kc</span><span class="o">*</span><span class="n">cls</span><span class="o">.</span><span class="n">O</span><span class="p">)</span>                                            <span class="c"># Maximum rate of Vo (umol m-2 s-1)</span>
+        <span class="n">Vo</span> <span class="o">=</span> <span class="p">(</span><span class="n">Vomax</span> <span class="o">*</span> <span class="n">cls</span><span class="o">.</span><span class="n">O</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">O</span> <span class="o">+</span> <span class="n">Ko</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">Ci</span><span class="o">/</span><span class="n">Kc</span><span class="p">))</span>                                       <span class="c"># Rate of oxygenation of RuBP (umol m-2 s-1)</span>
+        <span class="n">Ap</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">Gamma</span><span class="o">/</span><span class="n">Ci</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">TPU</span><span class="p">)</span> <span class="o">+</span> <span class="n">Vo</span>                                                      <span class="c"># Rate of assimilation under TPU limitation</span>
+
+        <span class="c"># Gross assimilation rate</span>
+        <span class="n">Ag</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">Ac</span><span class="p">,</span> <span class="n">Aj</span><span class="p">,</span> <span class="n">Ap</span><span class="p">)</span>
+
+        <span class="c"># Mitochondrial respiration rate of leaf in light Rd (processes other than photorespiration)</span>
+        <span class="n">Rdark25</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">PARAM_N</span><span class="p">[</span><span class="s">&#39;S_Na&#39;</span><span class="p">][</span><span class="s">&#39;Rdark25&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">Na</span> <span class="o">-</span> <span class="n">cls</span><span class="o">.</span><span class="n">PARAM_N</span><span class="p">[</span><span class="s">&#39;Na_min&#39;</span><span class="p">][</span><span class="s">&#39;Rdark25&#39;</span><span class="p">])</span>  <span class="c"># Relation between Rdark25 (respiration in obscurity at 25 degree C) and Na</span>
+        <span class="n">Rdark</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">f_temperature</span><span class="p">(</span><span class="s">&#39;Rdark&#39;</span><span class="p">,</span> <span class="n">Rdark25</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">)</span>                                  <span class="c"># Relation between Rdark and temperature</span>
+        <span class="n">Rd</span> <span class="o">=</span> <span class="n">Rdark</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.33</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mf">0.33</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">PAR</span><span class="o">/</span><span class="mi">15</span><span class="p">))</span>                                      <span class="c"># Found in Muller et al. (2005), eq. 19</span>
+        <span class="c"># Net C assimilation</span>
+        <span class="n">An</span> <span class="o">=</span> <span class="n">Ag</span> <span class="o">-</span> <span class="n">Rd</span>
+        <span class="k">return</span> <span class="n">An</span><span class="p">,</span> <span class="n">Ag</span><span class="p">,</span> <span class="n">Rd</span>
+
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="PhotosynthesisModel.calculate_An"><a class="viewcode-back" href="../../ref.html#cnwheat.photosynthesis.PhotosynthesisModel.calculate_An">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_An</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">PAR</span><span class="p">,</span> <span class="n">Ta</span><span class="p">,</span> <span class="n">Ca</span><span class="p">,</span> <span class="n">RH</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute CO2 assimilation following Farquhar&#39;s model and estimate internal CO2 and organ temperature numerically.</span>
+
+<span class="sd">        :Parameters:</span>
+
+<span class="sd">            - `PAR` (:class:`float`) - PAR</span>
+
+<span class="sd">            - `Ta` (:class:`float`) - Air temperature (degree Celsius)</span>
+
+<span class="sd">            - `Ca` (:class:`float`) - Air CO2 (umol mol-1)</span>
+
+<span class="sd">            - `RH` (:class:`float`) - Relative humidity (decimal fraction)</span>
+
+<span class="sd">        :Returns:</span>
+<span class="sd">            An</span>
+
+<span class="sd">        :Returns Type:</span>
+<span class="sd">            :class:`float`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c">### Physical parameters ###</span>
+        <span class="n">wind0</span> <span class="o">=</span> <span class="mi">5</span> <span class="c">#: Wind speed at the top of the canopy (m s-1)</span>
+
+        <span class="c">### Iterations to find leaf temperature and Ci ###</span>
+        <span class="n">Ci</span><span class="p">,</span> <span class="n">Tleaf</span> <span class="o">=</span> <span class="mf">0.7</span><span class="o">*</span><span class="n">Ca</span><span class="p">,</span> <span class="n">Ta</span> <span class="c"># Initial values</span>
+        <span class="n">prec_Ci</span><span class="p">,</span> <span class="n">prec_Tleaf</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="nb">abs</span><span class="p">((</span><span class="n">Ci</span> <span class="o">-</span> <span class="n">prec_Ci</span><span class="p">)</span><span class="o">/</span><span class="n">prec_Ci</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">0.01</span> <span class="ow">or</span> <span class="nb">abs</span><span class="p">((</span><span class="n">Tleaf</span> <span class="o">-</span> <span class="n">prec_Tleaf</span><span class="p">)</span><span class="o">/</span><span class="n">prec_Tleaf</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">0.01</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;=</span><span class="mi">30</span><span class="p">:</span> <span class="c"># TODO: test a faire? Semble prendre du tps de calcul</span>
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">((</span><span class="n">Ci</span> <span class="o">-</span> <span class="n">prec_Ci</span><span class="p">)</span><span class="o">/</span><span class="n">prec_Ci</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">0.01</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="s">&quot;Ci cannot converge at t= </span><span class="si">%s</span><span class="s">, prec_Ci= </span><span class="si">%s</span><span class="s">, Ci= </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">prec_Ci</span><span class="p">,</span> <span class="n">Ci</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="s">&quot;Tleaf cannot converge at t= </span><span class="si">%s</span><span class="s">, prec_Tleaf= </span><span class="si">%s</span><span class="s">, Tleaf= </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">prec_Tleaf</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">prec_Ci</span><span class="p">,</span> <span class="n">prec_Tleaf</span> <span class="o">=</span> <span class="n">Ci</span><span class="p">,</span> <span class="n">Tleaf</span>
+                <span class="n">An</span><span class="p">,</span> <span class="n">Ag</span><span class="p">,</span> <span class="n">Rd</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">photosynthesis</span><span class="p">(</span><span class="n">PAR</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">NA_INIT</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">,</span> <span class="n">Ci</span><span class="p">)</span>
+                <span class="c"># Stomatal conductance</span>
+                <span class="n">gs</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">stomatal_conductance</span><span class="p">(</span><span class="n">Ag</span><span class="p">,</span> <span class="n">An</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">NA_INIT</span><span class="p">,</span> <span class="n">Ca</span><span class="p">,</span> <span class="n">RH</span><span class="p">)</span>
+                <span class="c"># New value of Ci</span>
+                <span class="n">Ci</span> <span class="o">=</span> <span class="n">Ca</span> <span class="o">-</span> <span class="n">An</span> <span class="o">*</span> <span class="p">((</span><span class="mf">1.6</span><span class="o">/</span><span class="n">gs</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.37</span><span class="o">/</span><span class="n">cls</span><span class="o">.</span><span class="n">GB</span><span class="p">))</span> <span class="c"># gs and GB in mol m-2 s-1</span>
+                <span class="c"># New value of Tleaf</span>
+                <span class="n">Tleaf</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">leaf_temperature</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">LEAF_WIDTH</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">H_ORGAN</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">height_canopy</span><span class="p">,</span> <span class="n">wind0</span><span class="p">,</span> <span class="n">PAR</span><span class="p">,</span> <span class="n">gs</span><span class="p">,</span> <span class="n">Ta</span><span class="p">,</span> <span class="n">Tleaf</span><span class="p">,</span> <span class="n">RH</span><span class="p">)</span>
+                <span class="n">count</span> <span class="o">+=</span><span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">An</span>
+</pre></div></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">CN-Wheat 0.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, C.Chambon and R.Barillot.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
