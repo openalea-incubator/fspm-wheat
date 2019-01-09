@@ -7,8 +7,7 @@ Default Tr value = 0.1
 ** ---- ELONG-WHEATH
 
 ** Leaves
-#- calculate_deltaL_preE : Kn = 100// ^3 | Kc = 100
-- RER fixe par phytomère
+- RER width, et masses surfacic fixes par phytomère
 
 ** ---- GROWTH-WHEATH
 
@@ -38,15 +37,16 @@ Default Tr value = 0.1
 - calculate_S_Fructans * 1.5
 
 ** Roots
-- calculate_Unloading_Sucrose : VMAX_SUCROSE_UNLOADING * 1
-- calculate_S_cytokinins : VMAX_S_CYTOKININS *3
-- calculate_S_amino_acids : VMAX_AMINO_ACIDS * 2 
+- calculate_Unloading_Sucrose : VMAX_SUCROSE_UNLOADING
+- calculate_S_cytokinins : VMAX_S_CYTOKININS
+- calculate_S_amino_acids : VMAX_AMINO_ACIDS 
 - calculate_Uptake_Nitrates : net_nitrate_uptake 
-- calculate_exudation : C_EXUDATION * 1
+- calculate_exudation : C_EXUDATION
 
-- calculate_Export_Nitrates : K_NITRATE_EXPORT * 4
-- calculate_Export_Amino_Acids : K_AMINO_ACIDS_EXPORT * 4
-- calculate_Export_cytokinins : K_CYTOKININS_EXPORT * 4
+- >> calculate_regul_transpiration : total_transpiration * 25
+- calculate_Export_Nitrates : K_NITRATE_EXPORT * 5
+- calculate_Export_Amino_Acids : K_AMINO_ACIDS_EXPORT
+- calculate_Export_cytokinins : K_CYTOKININS_EXPORT
 
 ** ---- SENESC-WHEATH
 - SENESCENCE_ROOTS = 0 
@@ -58,7 +58,7 @@ Default Tr value = 0.1
 -----------------------------------------------------------------------------------
 A CORRIGER :
 
-- On a bcp trop C => Tallage
+- Pas assez N
 
 -----------------------------------------------------------------------------------
 TARGETS
