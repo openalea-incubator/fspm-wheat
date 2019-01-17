@@ -326,7 +326,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                         # run ElongWheat
                         print('t elongwheat is {}'.format(t_elongwheat))
                         Tair, Tsoil = meteo.loc[t_elongwheat, ['air_temperature', 'soil_temperature']]
-                        elongwheat_facade_.run(Tair, Tsoil)
+                        elongwheat_facade_.run(Tair, Tsoil,opt_croiss_fix=False)
 
                         # Update geometry
                         adel_wheat.update_geometry(g)  # SI_units=True, properties_to_convert=properties_to_convert) # Return mtg with non-SI units
@@ -676,4 +676,4 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         plt.savefig(os.path.join(GRAPHS_DIRPATH, 'SumTT.PNG'), dpi=200, format='PNG', bbox_inches='tight')
 
 if __name__ == '__main__':
-    main(100, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False)
+    main(1500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=True)
