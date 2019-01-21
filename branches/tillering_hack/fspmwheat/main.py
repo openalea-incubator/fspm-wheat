@@ -63,7 +63,7 @@ ORGANS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'organs_inputs.csv')
 HIDDENZONE_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'hiddenzones_inputs.csv')
 ELEMENTS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'elements_inputs.csv')
 SOILS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'soils_inputs.csv')
-METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')# os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')
+METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_smooth.csv') #  os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')#os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')
 
 # the path of the CSV files where to save the states of the modeled system at each step
 OUTPUTS_DIRPATH = 'outputs'
@@ -112,10 +112,10 @@ def save_df_to_csv(df, states_filepath):
 
 LOGGING_CONFIG_FILEPATH = os.path.join('..', '..', 'logging.json')
 
-LOGGING_LEVEL = logging.INFO  # can be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL
+LOGGING_LEVEL = logging.DEBUG  # can be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL
 
 
-def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False):
+def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False):
     if run_simu:
         meteo = pd.read_csv(METEO_FILEPATH, index_col='t')
 
@@ -326,7 +326,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                         # run ElongWheat
                         print('t elongwheat is {}'.format(t_elongwheat))
                         Tair, Tsoil = meteo.loc[t_elongwheat, ['air_temperature', 'soil_temperature']]
-                        elongwheat_facade_.run(Tair, Tsoil,opt_croiss_fix=False)
+                        elongwheat_facade_.run(Tair, Tsoil,opt_croiss_fix=opt_croiss_fix)
 
                         # Update geometry
                         adel_wheat.update_geometry(g)  # SI_units=True, properties_to_convert=properties_to_convert) # Return mtg with non-SI units
@@ -676,4 +676,4 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         plt.savefig(os.path.join(GRAPHS_DIRPATH, 'SumTT.PNG'), dpi=200, format='PNG', bbox_inches='tight')
 
 if __name__ == '__main__':
-    main(1500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=True)
+    main(1500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=True, opt_croiss_fix=True)

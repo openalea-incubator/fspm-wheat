@@ -224,6 +224,9 @@ class GrowthWheatFacade(object):
                         mtg_metamer_properties = self._shared_mtg.get_vertex_property(mtg_metamer_vid)
                         if 'hiddenzone' not in mtg_metamer_properties:  # MG : when is it used ?
                             self._shared_mtg.property('hiddenzone')[mtg_metamer_vid] = {}
+                        elif growthwheat_hiddenzone_data_dict.get('is_over',False):
+                            del self._shared_mtg.property('hiddenzone')[mtg_metamer_vid]
+                            continue
                         for hiddenzone_data_name, hiddenzone_data_value in growthwheat_hiddenzone_data_dict.items():
                             self._shared_mtg.property('hiddenzone')[mtg_metamer_vid][hiddenzone_data_name] = hiddenzone_data_value
 

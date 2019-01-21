@@ -75,6 +75,10 @@ def combine_dataframes_inplace(model_dataframe, shared_column_indexes, shared_da
     else:
         new_shared_dataframe = model_dataframe_reindexed.combine_first(shared_dataframe_to_update_reindexed)
 
+    # Suppress lines if 'is_over' is True
+    if 'is_over' in new_shared_dataframe.columns:
+        new_shared_dataframe.drop( new_shared_dataframe[new_shared_dataframe.is_over == 1].index, inplace=True )
+
     # reset to the right types in the combined dataframe
     dtypes = model_dataframe_reindexed.dtypes.combine_first(shared_dataframe_to_update_reindexed.dtypes)
     for column_name, data_type in dtypes.items():
@@ -86,6 +90,8 @@ def combine_dataframes_inplace(model_dataframe, shared_column_indexes, shared_da
     new_shared_dataframe = new_shared_dataframe.reindex(shared_column_indexes + sorted(new_shared_dataframe.columns.difference(shared_column_indexes)), axis=1)
 
     # update the shared dataframe in-place
+    if 'is_over' in shared_dataframe_to_update.columns:
+        shared_dataframe_to_update.drop( shared_dataframe_to_update[shared_dataframe_to_update.is_over].index, inplace=True )
     shared_dataframe_to_update.drop(shared_dataframe_to_update.index, axis=0, inplace=True)
     shared_dataframe_to_update.drop(shared_dataframe_to_update.columns, axis=1, inplace=True)
     shared_dataframe_to_update['dataframe_to_update_index'] = new_shared_dataframe.index

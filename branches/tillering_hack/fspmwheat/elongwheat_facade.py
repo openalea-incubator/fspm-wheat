@@ -94,7 +94,7 @@ class ElongWheatFacade(object):
             - `Tsoil` (:class:`float`) - soil temperature at t (degree Celsius)
         """
         self._initialize_model()
-        self._simulation.run(Tair, Tsoil, opt_croiss_fix)
+        self._simulation.run(Tair, Tsoil)
         self._update_shared_MTG(self._simulation.outputs['hiddenzone'], self._simulation.outputs['elements'], self._simulation.outputs['SAM'], opt_static)
         elongwheat_hiddenzones_outputs_df, elongwheat_elements_outputs_df, elongwheaSAM_temperature_outputs_df = converter.to_dataframes(self._simulation.outputs)
 
