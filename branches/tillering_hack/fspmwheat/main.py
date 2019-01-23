@@ -181,6 +181,26 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             soils_inputs_t0 = pd.read_csv(SOILS_INPUTS_FILEPATH)
 
         # create the facades
+        # elongwheat (created first because it is the only facade to add new metamers)
+        elongwheat_hiddenzones_inputs_t0 = hiddenzones_inputs_t0[
+            elongwheat_facade.converter.HIDDENZONE_TOPOLOGY_COLUMNS + [i for i in elongwheat_facade.simulation.HIDDENZONE_INPUTS if i in
+                                                                       hiddenzones_inputs_t0.columns]]
+        elongwheat_elements_inputs_t0 = elements_inputs_t0[
+            elongwheat_facade.converter.ELEMENT_TOPOLOGY_COLUMNS + [i for i in elongwheat_facade.simulation.ELEMENT_INPUTS if i in
+                                                                    elements_inputs_t0.columns]]
+        elongwheat_SAM_inputs_t0 = SAM_inputs_t0[
+            elongwheat_facade.converter.SAM_TOPOLOGY_COLUMNS + [i for i in elongwheat_facade.simulation.SAM_INPUTS if i in SAM_inputs_t0.columns]]
+
+        elongwheat_facade_ = elongwheat_facade.ElongWheatFacade(g,
+                                                                elongwheat_ts * HOUR_TO_SECOND_CONVERSION_FACTOR,
+                                                                elongwheat_SAM_inputs_t0,
+                                                                elongwheat_hiddenzones_inputs_t0,
+                                                                elongwheat_elements_inputs_t0,
+                                                                shared_SAM_inputs_outputs_df,
+                                                                shared_hiddenzones_inputs_outputs_df,
+                                                                shared_elements_inputs_outputs_df,
+                                                                adel_wheat)
+
         # caribu
         caribu_facade_ = caribu_facade.CaribuFacade(g,
                                                     shared_elements_inputs_outputs_df,
@@ -215,26 +235,6 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                                          farquharwheat_elements_inputs_t0,
                                                                          farquharwheat_SAM_inputs_t0,
                                                                          shared_elements_inputs_outputs_df)
-
-        # elongwheat
-        elongwheat_hiddenzones_inputs_t0 = hiddenzones_inputs_t0[
-            elongwheat_facade.converter.HIDDENZONE_TOPOLOGY_COLUMNS + [i for i in elongwheat_facade.simulation.HIDDENZONE_INPUTS if i in
-                                                                       hiddenzones_inputs_t0.columns]]
-        elongwheat_elements_inputs_t0 = elements_inputs_t0[
-            elongwheat_facade.converter.ELEMENT_TOPOLOGY_COLUMNS + [i for i in elongwheat_facade.simulation.ELEMENT_INPUTS if i in
-                                                                    elements_inputs_t0.columns]]
-        elongwheat_SAM_inputs_t0 = SAM_inputs_t0[
-            elongwheat_facade.converter.SAM_TOPOLOGY_COLUMNS + [i for i in elongwheat_facade.simulation.SAM_INPUTS if i in SAM_inputs_t0.columns]]
-
-        elongwheat_facade_ = elongwheat_facade.ElongWheatFacade(g,
-                                                                elongwheat_ts * HOUR_TO_SECOND_CONVERSION_FACTOR,
-                                                                elongwheat_SAM_inputs_t0,
-                                                                elongwheat_hiddenzones_inputs_t0,
-                                                                elongwheat_elements_inputs_t0,
-                                                                shared_SAM_inputs_outputs_df,
-                                                                shared_hiddenzones_inputs_outputs_df,
-                                                                shared_elements_inputs_outputs_df,
-                                                                adel_wheat)
 
         # growthwheat
         growthwheat_hiddenzones_inputs_t0 = hiddenzones_inputs_t0[
@@ -666,7 +666,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         ax.set_title('RUE investigations')
         plt.savefig(os.path.join(GRAPHS_DIRPATH, 'RUE2.PNG'), dpi=200, format='PNG', bbox_inches='tight')
 
-        # 6) Sum thermal time
+        # 7) Sum thermal time
         df_SAM = df_SAM[df_SAM['axis'] == 'MS']
         fig, ax = plt.subplots()
         ax.plot(df_SAM['t'], df_SAM['sum_TT'])
@@ -675,5 +675,34 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         ax.set_title('Thermal Time')
         plt.savefig(os.path.join(GRAPHS_DIRPATH, 'SumTT.PNG'), dpi=200, format='PNG', bbox_inches='tight')
 
+        # 8) C costs of Leaf growth
+        df_elt['Net_Photosynthesis_tillers'] = df_elt['Photosynthesis'] * df_elt['nb_replications'] - df_elt['sum_respi_tillers']
+        df_hz['Growth_Costs_C_tillers'] = df_hz['sucrose_consumption_mstruct']*df_hz['nb_replications'] + df_hz['Respi_growth_tillers']
+
+        df_elt_ms = df_elt.loc[ df_elt['axis'] == 'MS' ] #df_elt.loc[ df_elt['organ'].isin(['sheath','blade']) & (df_elt['axis'] == 'MS') ]
+        Net_Photosynthesis_leaves = df_elt_ms.groupby(['plant','metamer','t'], as_index = False)['Net_Photosynthesis_tillers'].agg('sum')
+        Net_Photosynthesis_leaves['Net_Photosynthesis_leaves_cum'] = Net_Photosynthesis_leaves.groupby(['plant','metamer'])['Net_Photosynthesis_tillers'].cumsum()
+
+        df_hz_ms = df_hz.loc[ df_hz['axis'] == 'MS' ]
+        Growth_Costs_C = df_hz_ms.groupby(['plant','metamer','t'], as_index = False)['Growth_Costs_C_tillers'].agg('sum')
+        Growth_Costs_C['Growth_Costs_C_cum'] = Growth_Costs_C.groupby(['plant', 'metamer'])['Growth_Costs_C_tillers'].cumsum()
+
+        df_8 = pd.merge(Growth_Costs_C, Net_Photosynthesis_leaves, how = 'left', on = ['plant','metamer','t'] )
+        for lf in df_8.metamer.unique() :
+            sub = df_8.loc[df_8.metamer == lf]
+            fig, (ax1,ax2) = plt.subplots(2, 1, sharex=True)
+            ax1.plot(sub.t, sub.Growth_Costs_C_tillers, label=u'C used for growth')
+            ax1.plot(sub.t, sub.Net_Photosynthesis_tillers, label=u'Net Photosynthesis')
+            ax1.set_ylabel(u'Hourly C (µmol.h$^{-1}$)')
+            ax1.legend(prop={'size': 10}, framealpha=0.5, loc='center left', bbox_to_anchor=(1, 0.815), borderaxespad=0.)
+            ax1.set_title('Growth costs in C for metamer {}'.format(lf))
+            ax2.plot(sub.t, sub.Growth_Costs_C_cum)
+            ax2.plot(sub.t, sub.Net_Photosynthesis_leaves_cum)
+            ax2.set_ylabel(u'Cumulated C (µmol)')
+            ax2.set_xlabel('Time (h)')
+            fig.subplots_adjust(hspace=0)
+            plt.savefig(os.path.join(GRAPHS_DIRPATH, 'GrowthCostsC_metamer_{}.PNG'.format(lf)), dpi=200, format='PNG', bbox_inches='tight')
+
+
 if __name__ == '__main__':
-    main(1500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=True, opt_croiss_fix=True)
+    main(200, forced_start_time=0, run_simu=True, run_postprocessing=False, generate_graphs=False, run_from_outputs=False, opt_croiss_fix=True)
