@@ -1,5 +1,7 @@
 Meteo smooth
 ts caribu = 4
+talles = 0.5
+%N HZ>=4 : 9.5%
 
 ** ---- FARQUHAR-WHEATH
 
@@ -11,7 +13,13 @@ Default Tr value = 0.1
 #- calculate_deltaL_preE : Kn = 100// ^3 | Kc = 100
 - RER fixe par phytomère
 
+- ratio_DZ : lb=0.1 ; lm=0.4 ; le=0.85 (biblio)
+
+
 ** ---- GROWTH-WHEATH
+
+- addition_cyto : res = delta_mstruct * 120 (cytokinins / mstruct)
+
 
 - RATIO_SUCROSE_MSTRUCT = 0.444 au lieu de 0.384
 - RATIO_N_MSTRUCT_ROOTS_ = 0.005 au lieu de 0.02
@@ -27,34 +35,39 @@ Default Tr value = 0.1
 
 ** Blades
 - calculate_D_Proteins : k_proteins = f(cyto) 
-- conc_cyto init = 120 / diminution inti F1 à 3
+- conc_cyto init = 200 / inti F1 à 3 avec ref 120
 - calculate_S_Sucrose : Vmax * 4
 - calculate_S_amino_acids : Vmax * 4
 - calculate_S_Starch: Vmax * 4
 - calculate_D_Starch: DELTA_DSTARCH * 4
 
-- calculate_S_proteins : Vmax = 0.002 au lieu de 0.0015 ; K = 160 au lieu de 100
+- calculate_S_proteins : Vmax = 0.0015 ; K = 100
 
 ** HZ
-- calculate_S_proteins * 10
+- ratio_DZ : 
+- calculate_S_proteins : HZ * 58 et share avec ratio_DZ corrigé
 - calculate_D_Proteins : 2.5e-7 
-- calculate_S_Fructans * 1.5
 
 ** Roots
-- calculate_Unloading_Sucrose : VMAX_SUCROSE_UNLOADING * 1.3
+- calculate_Unloading_Sucrose : VMAX_SUCROSE_UNLOADING * 1.33
 - calculate_S_cytokinins : VMAX_S_CYTOKININS
 - calculate_S_amino_acids : VMAX_AMINO_ACIDS
 - calculate_Uptake_Nitrates : net_nitrate_uptake 
 - calculate_exudation : C_EXUDATION * 1 et N_exudation = min( AA/sucr , 0.2) * C_exudation
 
 - regul_transpiration : total_transpiration * 25
-- calculate_Export_Nitrates : K_NITRATE_EXPORT * 3
-- calculate_Export_Amino_Acids : K_AMINO_ACIDS_EXPORT * 3
+- calculate_Export_Nitrates : K_NITRATE_EXPORT * 110
+- calculate_Export_Amino_Acids : K_AMINO_ACIDS_EXPORT * 5
 - calculate_Export_cytokinins : K_CYTOKININS_EXPORT
 
 ** ---- SENESC-WHEATH
-- SENESCENCE_ROOTS = 0 
-- sénescence forcée pour F1 à partir sum_TT > 210, F2 280, F3 320, F4 380 avec SENESCENCE_LENGTH_MAX_RATE = 0.2E-8 * 0.45 / 3.5e-3 (trop rapide)
+- SENESCENCE_ROOTS = ON
+- sénescence forcée pour F1 à partir sum_TT > 190, F2 250, F3 300, F4 370 
+- SENESCENCE_MAX_RATE = /2
+- SENESCENCE_LENGTH_MAX_RATE = initial
+- calculate_remobilisation_proteins : metabolite * relative_delta_structure
+- max(max_prot) = 4000
+
 
 ** ---- RESPI-WHEATH
 - R_growth: YG = 0.8 // 0.75
@@ -66,10 +79,11 @@ A CORRIGER :
 -----------------------------------------------------------------------------------
 TARGETS
 
-Après 1050h simulations = 250 DD :
-- sénescence F1 environ 50%
-- 5 feuilles vertes à la ligulation F5 puis nb feuilles vertes diminuentjusqu'à ligulation F8
-- 3.5 feuilles vertes à la ligulation de F8 puis nb Green leaf augmente de nouveau
+Berthelot : 
+- HS 6.5 = 560DD = L1 (70%), 2 (30%), 3 (15%) en sénescence, L4 vert
+- HS 7.4 = 630DD = L1 (100%), 2 (50%), 3 (20%), 4(5%), 5(0%)
+=> -30% Surface verte en 70DD, sénescence environ en 220DD
+
 
 
 

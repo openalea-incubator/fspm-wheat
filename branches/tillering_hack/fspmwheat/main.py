@@ -92,7 +92,7 @@ SAM_INDEX_COLUMNS = ['t', 'plant', 'axis']
 SOILS_INDEX_COLUMNS = ['t', 'plant', 'axis']
 
 # Define culm density (culm m-2)
-CULM_DENSITY = {1: 410}
+CULM_DENSITY = {1: 250}
 
 INPUTS_OUTPUTS_PRECISION = 8  # 10
 
@@ -342,6 +342,12 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                             for t_cnwheat in range(t_growthwheat, t_growthwheat + growthwheat_ts, cnwheat_ts):
                                 if t_cnwheat > 0:
 
+                                    # N fertilisation if any
+                                    if t_cnwheat == 2016:
+                                        cnwheat_facade_.soils[(1,'MS')].nitrates += 357143
+                                    elif t_cnwheat == 2520:
+                                        cnwheat_facade_.soils[(1, 'MS')].nitrates += 1000000
+
                                     # run CNWheat
                                     print('t cnwheat is {}'.format(t_cnwheat))
                                     Tair = meteo.loc[t_elongwheat, 'air_temperature']
@@ -490,6 +496,9 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
         # Additional graphs
         from cnwheat import tools as cnwheat_tools
+        colors = ['blue', 'darkorange', 'green', 'red', 'darkviolet', 'gold', 'magenta', 'brown', 'darkcyan', 'grey', 'lime']
+        colors = colors + colors
+
         # 1) Phyllochron
         meteo_df = pd.read_csv(METEO_FILEPATH)
         df_hz = postprocessing_df_dict[hiddenzones_postprocessing_file_basename]
@@ -508,7 +517,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             phyllochron['plant'].append(plant)
             phyllochron['metamer'].append(metamer)
             prev_leaf_emergence_t = leaf_emergence[(plant, metamer - 1)]
-            # Calcul DD approximatif (moyenne)
+            # Calcul DD approximatif (moyenne) # TODO : Utiliser sumTT dans SAM outputs
             phyllo_DD = meteo_df[(meteo_df['t'] >= prev_leaf_emergence_t) & (meteo_df['t'] <= leaf_emergence_t)]['air_temperature'].mean() * ((leaf_emergence_t - prev_leaf_emergence_t) / 24)
             phyllochron['phyllochron'].append(phyllo_DD)
 
@@ -703,6 +712,25 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             fig.subplots_adjust(hspace=0)
             plt.savefig(os.path.join(GRAPHS_DIRPATH, 'GrowthCostsC_metamer_{}.PNG'.format(lf)), dpi=200, format='PNG', bbox_inches='tight')
 
-
+        # 9) Residual N : ratio_N_mstruct_max
+        df_elt_outputs = pd.read_csv(ELEMENTS_STATES_FILEPATH)
+        df_elt_outputs = df_elt_outputs.loc[df_elt_outputs.axis == 'MS']
+        df_elt_outputs = df_elt_outputs.loc[df_elt_outputs.mstruct != 0]
+        df_elt_outputs['N_content_total'] = df_elt_outputs['N_content_total'] * 100
+        x_name = 't'
+        x_label = 'Time (Hour)'
+        graph_variables_ph_elements = {'N_content_total':u'N content in green + senesced tissues (% mstruct)'}
+        for org_ph in (['blade'], ['sheath'], ['internode'], ['peduncle', 'ear']):
+            for variable_name, variable_label in graph_variables_ph_elements.items():
+                graph_name = variable_name + '_' + '_'.join(org_ph) + '.PNG'
+                cnwheat_tools.plot_cnwheat_ouputs(df_elt_outputs,
+                                                  x_name=x_name,
+                                                  y_name=variable_name,
+                                                  x_label=x_label,
+                                                  y_label=variable_label,
+                                                  colors=[colors[i-1] for i in df_elt_outputs.metamer.unique().tolist()],
+                                                  filters={'organ': org_ph},
+                                                  plot_filepath=os.path.join(GRAPHS_DIRPATH, graph_name),
+                                                  explicit_label=False)
 if __name__ == '__main__':
-    main(200, forced_start_time=0, run_simu=True, run_postprocessing=False, generate_graphs=False, run_from_outputs=False, opt_croiss_fix=True)
+    main(2000, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True)

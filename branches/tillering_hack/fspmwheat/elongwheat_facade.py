@@ -194,7 +194,7 @@ class ElongWheatFacade(object):
                         for mtg_element_vid in self._shared_mtg.components_iter(mtg_organ_vid):
                             mtg_element_label = self._shared_mtg.label(mtg_element_vid)
                             mtg_element_properties = self._shared_mtg.get_vertex_property(mtg_element_vid)
-                            if np.nan_to_num(self._shared_mtg.property('length').get(mtg_element_vid, 0)) == 0:
+                            if ( np.nan_to_num(self._shared_mtg.property('length').get(mtg_element_vid, 0)) == 0) :
                                 continue
                             if np.isnan( mtg_element_properties.get('age',0) ) :
                                 mtg_element_properties['age'] = 0.
