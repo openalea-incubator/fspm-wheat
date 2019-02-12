@@ -219,7 +219,7 @@ class TurgorGrowthFacade(object):
                             mtg_element_properties = self._shared_mtg.get_vertex_property(mtg_element_vid)
                             turgorgrowth_element_data_names = set(turgorgrowth_simulation.Simulation.ELEMENTS_STATE).intersection(turgorgrowth_element.__dict__)
 
-                            if mtg_element_properties.get('age') == 0:  # First time element passes into turorwheat model
+                            if mtg_element_properties.get('age') == 0:  # First time element passes into turgorwheat model
                                 missing_initial_element_properties = turgorgrowth_element_data_names - set(mtg_element_properties)
                                 turgorgrowth_element_data_names -= missing_initial_element_properties
 

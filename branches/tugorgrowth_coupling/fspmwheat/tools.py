@@ -8,7 +8,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 
 from alinea.adel.mtg import to_plantgl
-from openalea.plantgl.all import Viewer,Vector3
+from openalea.plantgl.all import Viewer, Vector3
 
 """
     fspmwheat.tools

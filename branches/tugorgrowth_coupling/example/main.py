@@ -202,8 +202,9 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         senescwheat_roots_inputs_t0 = organs_inputs_t0.loc[organs_inputs_t0['organ'] == 'roots'][senescwheat_facade.converter.ROOTS_TOPOLOGY_COLUMNS +
                                                                                                  [i for i in senescwheat_facade.converter.SENESCWHEAT_ROOTS_INPUTS if i in organs_inputs_t0.columns]]
         senescwheat_elements_inputs_t0 = elements_inputs_t0[senescwheat_facade.converter.ELEMENTS_TOPOLOGY_COLUMNS + [i for i in senescwheat_facade.converter.SENESCWHEAT_ELEMENTS_INPUTS if i in
-                                                                                                                      elements_inputs_t0.columns]]
-        senescwheat_SAM_inputs_t0 = SAM_inputs_t0[senescwheat_facade.converter.SAM_TOPOLOGY_COLUMNS + [i for i in senescwheat_facade.converter.SENESCWHEAT_SAM_INPUTS if i in SAM_inputs_t0.columns]]
+                                                                                                                      elements_inputs_t0.columns]].copy()
+        senescwheat_SAM_inputs_t0 = SAM_inputs_t0[senescwheat_facade.converter.SAM_TOPOLOGY_COLUMNS + [i for i in senescwheat_facade.converter.SENESCWHEAT_SAM_INPUTS if i in
+                                                                                                       SAM_inputs_t0.columns]].copy()
         senescwheat_facade_ = senescwheat_facade.SenescWheatFacade(g,
                                                                    senescwheat_ts * HOUR_TO_SECOND_CONVERSION_FACTOR,
                                                                    senescwheat_roots_inputs_t0,
@@ -215,9 +216,9 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
         # farquharwheat
         farquharwheat_elements_inputs_t0 = elements_inputs_t0[farquharwheat_facade.converter.ELEMENT_TOPOLOGY_COLUMNS + [i for i in farquharwheat_facade.converter.FARQUHARWHEAT_ELEMENTS_INPUTS if i in
-                                                                                                                         elements_inputs_t0.columns]]
+                                                                                                                         elements_inputs_t0.columns]].copy()
         farquharwheat_SAM_inputs_t0 = SAM_inputs_t0[
-            farquharwheat_facade.converter.SAM_TOPOLOGY_COLUMNS + [i for i in farquharwheat_facade.converter.FARQUHARWHEAT_SAMS_INPUTS if i in SAM_inputs_t0.columns]]
+            farquharwheat_facade.converter.SAM_TOPOLOGY_COLUMNS + [i for i in farquharwheat_facade.converter.FARQUHARWHEAT_SAMS_INPUTS if i in SAM_inputs_t0.columns]].copy()
 
         farquharwheat_facade_ = farquharwheat_facade.FarquharWheatFacade(g,
                                                                          farquharwheat_elements_inputs_t0,
@@ -227,12 +228,12 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         # elongwheat
         elongwheat_hiddenzones_inputs_t0 = hiddenzones_inputs_t0[
             elongwheat_facade.converter.HIDDENZONE_TOPOLOGY_COLUMNS + [i for i in elongwheat_facade.simulation.HIDDENZONE_INPUTS if i in
-                                                                       hiddenzones_inputs_t0.columns]]
+                                                                       hiddenzones_inputs_t0.columns]].copy()
         elongwheat_elements_inputs_t0 = elements_inputs_t0[
             elongwheat_facade.converter.ELEMENT_TOPOLOGY_COLUMNS + [i for i in elongwheat_facade.simulation.ELEMENT_INPUTS if i in
-                                                                    elements_inputs_t0.columns]]
+                                                                    elements_inputs_t0.columns]].copy()
         elongwheat_SAM_inputs_t0 = SAM_inputs_t0[
-            elongwheat_facade.converter.SAM_TOPOLOGY_COLUMNS + [i for i in elongwheat_facade.simulation.SAM_INPUTS if i in SAM_inputs_t0.columns]]
+            elongwheat_facade.converter.SAM_TOPOLOGY_COLUMNS + [i for i in elongwheat_facade.simulation.SAM_INPUTS if i in SAM_inputs_t0.columns]].copy()
 
         elongwheat_facade_ = elongwheat_facade.ElongWheatFacade(g,
                                                                 elongwheat_ts * HOUR_TO_SECOND_CONVERSION_FACTOR,
@@ -246,13 +247,13 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
         # growthwheat
         growthwheat_hiddenzones_inputs_t0 = hiddenzones_inputs_t0[
-            growthwheat_facade.converter.HIDDENZONE_TOPOLOGY_COLUMNS + [i for i in growthwheat_facade.simulation.HIDDENZONE_INPUTS if i in hiddenzones_inputs_t0.columns]]
+            growthwheat_facade.converter.HIDDENZONE_TOPOLOGY_COLUMNS + [i for i in growthwheat_facade.simulation.HIDDENZONE_INPUTS if i in hiddenzones_inputs_t0.columns]].copy()
         growthwheat_elements_inputs_t0 = elements_inputs_t0[
-            growthwheat_facade.converter.ELEMENT_TOPOLOGY_COLUMNS + [i for i in growthwheat_facade.simulation.ELEMENT_INPUTS if i in elements_inputs_t0.columns]]
+            growthwheat_facade.converter.ELEMENT_TOPOLOGY_COLUMNS + [i for i in growthwheat_facade.simulation.ELEMENT_INPUTS if i in elements_inputs_t0.columns]].copy()
         growthwheat_root_inputs_t0 = organs_inputs_t0.loc[organs_inputs_t0['organ'] == 'roots'][
-            growthwheat_facade.converter.ROOT_TOPOLOGY_COLUMNS + [i for i in growthwheat_facade.simulation.ROOT_INPUTS if i in organs_inputs_t0.columns]]
+            growthwheat_facade.converter.ROOT_TOPOLOGY_COLUMNS + [i for i in growthwheat_facade.simulation.ROOT_INPUTS if i in organs_inputs_t0.columns]].copy()
         growthwheat_SAM_inputs_t0 = SAM_inputs_t0[
-            growthwheat_facade.converter.SAM_TOPOLOGY_COLUMNS + [i for i in growthwheat_facade.simulation.SAM_INPUTS if i in SAM_inputs_t0.columns]]
+            growthwheat_facade.converter.SAM_TOPOLOGY_COLUMNS + [i for i in growthwheat_facade.simulation.SAM_INPUTS if i in SAM_inputs_t0.columns]].copy()
 
         growthwheat_facade_ = growthwheat_facade.GrowthWheatFacade(g,
                                                                    growthwheat_ts * HOUR_TO_SECOND_CONVERSION_FACTOR,
@@ -265,10 +266,10 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                                    shared_elements_inputs_outputs_df)
 
         # cnwheat
-        cnwheat_organs_inputs_t0 = organs_inputs_t0[[i for i in cnwheat_facade.cnwheat_converter.ORGANS_VARIABLES if i in organs_inputs_t0.columns]]
-        cnwheat_hiddenzones_inputs_t0 = hiddenzones_inputs_t0[[i for i in cnwheat_facade.cnwheat_converter.HIDDENZONE_VARIABLES if i in hiddenzones_inputs_t0.columns]]
-        cnwheat_elements_inputs_t0 = elements_inputs_t0[[i for i in cnwheat_facade.cnwheat_converter.ELEMENTS_VARIABLES if i in elements_inputs_t0.columns]]
-        cnwheat_soils_inputs_t0 = soils_inputs_t0[[i for i in cnwheat_facade.cnwheat_converter.SOILS_VARIABLES if i in soils_inputs_t0.columns]]
+        cnwheat_organs_inputs_t0 = organs_inputs_t0[[i for i in cnwheat_facade.cnwheat_converter.ORGANS_VARIABLES if i in organs_inputs_t0.columns]].copy()
+        cnwheat_hiddenzones_inputs_t0 = hiddenzones_inputs_t0[[i for i in cnwheat_facade.cnwheat_converter.HIDDENZONE_VARIABLES if i in hiddenzones_inputs_t0.columns]].copy()
+        cnwheat_elements_inputs_t0 = elements_inputs_t0[[i for i in cnwheat_facade.cnwheat_converter.ELEMENTS_VARIABLES if i in elements_inputs_t0.columns]].copy()
+        cnwheat_soils_inputs_t0 = soils_inputs_t0[[i for i in cnwheat_facade.cnwheat_converter.SOILS_VARIABLES if i in soils_inputs_t0.columns]].copy()
 
         cnwheat_facade_ = cnwheat_facade.CNWheatFacade(g,
                                                        cnwheat_ts * HOUR_TO_SECOND_CONVERSION_FACTOR,
@@ -284,8 +285,8 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                        shared_soils_inputs_outputs_df)
 
         # turgorgrowth
-        turgorgrowth_hiddenzones_inputs_t0 = hiddenzones_inputs_t0[[i for i in turgorgrowth_facade.turgorgrowth_converter.HIDDENZONE_VARIABLES if i in hiddenzones_inputs_t0.columns]]
-        turgorgrowth_elements_inputs_t0 = elements_inputs_t0[[i for i in turgorgrowth_facade.turgorgrowth_converter.ELEMENTS_VARIABLES if i in elements_inputs_t0.columns]]
+        turgorgrowth_hiddenzones_inputs_t0 = hiddenzones_inputs_t0[[i for i in turgorgrowth_facade.turgorgrowth_converter.HIDDENZONE_VARIABLES if i in hiddenzones_inputs_t0.columns]].copy()
+        turgorgrowth_elements_inputs_t0 = elements_inputs_t0[[i for i in turgorgrowth_facade.turgorgrowth_converter.ELEMENTS_VARIABLES if i in elements_inputs_t0.columns]].copy()
 
         turgorgrowth_facade_ = turgorgrowth_facade.TurgorGrowthFacade(g,
                                                                       turgorgrowth_ts * HOUR_TO_SECOND_CONVERSION_FACTOR,
@@ -628,11 +629,6 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         df_roots['sucrose_consumption_permstruct'] = df_roots['sucrose_consumption_mstruct']/df_roots['mstruct']
         df_roots['C_used_tot'] = df_roots['sucrose_consumption_permstruct'] + df_roots['R_tot_mstruct'] + df_roots['C_exudation']
         fig, ax = plt.subplots()
-        line1, = ax.plot(df_roots['t'], df_roots['Unloading_Sucrose'], label=u'C unloading to roots')
-        line2, = ax.plot(df_roots['t'], df_roots['C_exudation'], label=u'C lost by exudation')
-        line3, = ax.plot(df_roots['t'], df_roots['R_tot_mstruct'], label='Respiration')
-        line4, = ax.plot(df_roots['t'], df_roots['sucrose_consumption_permstruct'], label='C for growth')
-        line5, = ax.plot(df_roots['t'], df_roots['C_used_tot'], label='C consumed by the roots')
 
         ax.legend(prop={'size': 10}, framealpha=0.5, loc='center left', bbox_to_anchor=(1, 0.815), borderaxespad=0.)
         ax.set_xlabel('Time (h)')
@@ -654,13 +650,6 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         Unloading_Sucrose_tot_cum = np.cumsum(df_roots['Unloading_Sucrose_tot'])
 
         fig, ax = plt.subplots()
-        line1, = ax.plot(df_roots['t'], Unloading_Sucrose_tot_cum, label=u'C unloading to roots')
-        line2, = ax.plot(df_roots['t'], C_exudation_cum, label=u'C lost by exudation')
-        line3, = ax.plot(df_roots['t'], R_tot_cum, label='Total Roots Respiration')
-        line4, = ax.plot(df_roots['t'], sucrose_consumption_mstruct_cum, label='C for roots structural growth')
-        line5, = ax.plot(df_axe['t'], Total_Photosynthesis_cum, label=u'Gross Photosynthesis')
-        line6, = ax.plot(df_axe['t'], Net_Photosynthesis_cum, label=u'Photosynthesis - Total shoot respiration')
-        line7, = ax.plot(df_axe['t'], Total_Photosynthesis_An_cum, label=u'Net Photosynthesis (An)')
 
         ax.legend(prop={'size': 10}, framealpha=0.5, loc='center left', bbox_to_anchor=(1, 0.815), borderaxespad=0.)
         ax.set_xlabel('Time (h)')
