@@ -500,7 +500,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         colors = colors + colors
 
         # 1) Phyllochron
-        meteo_df = pd.read_csv(METEO_FILEPATH)
+        df_SAM = df_SAM[df_SAM['axis'] == 'MS']
         df_hz = postprocessing_df_dict[hiddenzones_postprocessing_file_basename]
         grouped_df = df_hz[df_hz['axis'] == 'MS'].groupby(['plant', 'metamer'])[['t', 'leaf_is_emerged']]
         leaf_emergence = {}
@@ -517,12 +517,35 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             phyllochron['plant'].append(plant)
             phyllochron['metamer'].append(metamer)
             prev_leaf_emergence_t = leaf_emergence[(plant, metamer - 1)]
-            # Calcul DD approximatif (moyenne) # TODO : Utiliser sumTT dans SAM outputs
-            phyllo_DD = meteo_df[(meteo_df['t'] >= prev_leaf_emergence_t) & (meteo_df['t'] <= leaf_emergence_t)]['air_temperature'].mean() * ((leaf_emergence_t - prev_leaf_emergence_t) / 24)
+            # Calcul DD approximatif (moyenne)
+            phyllo_DD = df_SAM[(df_SAM['t'] == leaf_emergence_t)].sum_TT.values[0] - df_SAM[(df_SAM['t'] == prev_leaf_emergence_t)].sum_TT.values[0]
             phyllochron['phyllochron'].append(phyllo_DD)
 
         cnwheat_tools.plot_cnwheat_ouputs(pd.DataFrame(phyllochron), 'metamer', 'phyllochron', x_label='Leaf number', y_label='Phyllochron (Degree Day)',
                                           plot_filepath=os.path.join(GRAPHS_DIRPATH, 'Phyllochron.PNG'), explicit_label=False, kwargs={'marker': 'o'})
+
+        # Comparison Ljutovac 2002
+        bchmk = pd.read_csv('Ljutovac2002.csv')
+        res = pd.read_csv(HIDDENZONES_STATES_FILEPATH)
+        res = res[(res['axis'] == 'MS') & (res['plant'] == 1) & (res.t == max(res.t)) ]
+        res['lamina_Wmax'] = res.leaf_Wmax
+        bchmk = bchmk[bchmk.metamer >= min(res.metamer)]
+
+        var_list = ['leaf_Lmax','lamina_Lmax','sheath_Lmax','lamina_Wmax']
+        for var in list(var_list):
+            plt.figure()
+            plt.xlim((int(min(res.metamer) - 1), int(max(res.metamer) + 1)))
+            plt.ylim(ymin=0, ymax=np.nanmax( list(res[var] * 100 * 1.05) + list(bchmk[var] * 1.05) ) )
+            ax = plt.subplot(111)
+
+            line1 = ax.plot(res.metamer, res[var] * 100, color='c', marker='o')
+            line2 = ax.plot(bchmk.metamer, bchmk[var], color='orange', marker='o')
+
+            ax.set_ylabel(var + ' (cm)')
+            ax.set_title(var)
+            ax.legend((line1[0], line2[0]), ('Simulation', 'Ljutovac 2002'), loc=2)
+            plt.savefig(os.path.join(GRAPHS_DIRPATH, var + '.PNG'))
+            plt.close()
 
         # 2) LAI
         grouped_df = postprocessing_df_dict[elements_postprocessing_file_basename].groupby(['t', 'plant'])
@@ -733,4 +756,4 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   plot_filepath=os.path.join(GRAPHS_DIRPATH, graph_name),
                                                   explicit_label=False)
 if __name__ == '__main__':
-    main(2100, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True)
+    main(1700, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True)
