@@ -479,11 +479,11 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                           soils_outputs_df=states_df_dict[os.path.basename(SOILS_STATES_FILEPATH).split('.')[0]],
                                                           delta_t=delta_t)
 
-        turgorgrowth_postprocessing_df_dict_hiddenzones, turgorgrowth_postprocessing_df_dict_elements \
+        (turgorgrowth_postprocessing_df_dict_hiddenzones, turgorgrowth_postprocessing_df_dict_elements) \
             = turgorgrowth_facade.TurgorGrowthFacade.postprocessing(hiddenzone_outputs_df=states_df_dict[os.path.basename(HIDDENZONES_STATES_FILEPATH).split('.')[0]],
                                                                     elements_outputs_df=states_df_dict[os.path.basename(ELEMENTS_STATES_FILEPATH).split('.')[0]],
                                                                     delta_t=delta_t)
-        postprocessing_df_dict[hiddenzones_postprocessing_file_basename] = postprocessing_df_dict[hiddenzones_postprocessing_file_basename].combine_first(turgorgrowth_postprocessing_df_dict_hiddenzones)
+        postprocessing_df_dict[hiddenzones_postprocessing_file_basename] = postprocessing_df_dict[hiddenzones_postprocessing_file_basename].merge(turgorgrowth_postprocessing_df_dict_hiddenzones)
         postprocessing_df_dict[elements_postprocessing_file_basename] = postprocessing_df_dict[elements_postprocessing_file_basename].merge(turgorgrowth_postprocessing_df_dict_elements)
 
         # save the postprocessing to disk
@@ -512,7 +512,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             postprocessing_df = pd.read_csv(postprocessing_filepath)
             postprocessing_df_dict[postprocessing_file_basename] = postprocessing_df
 
-        # Generate graphs
+        # # Generate graphs
         df_hz = postprocessing_df_dict[hiddenzones_postprocessing_file_basename]
         df_elt = postprocessing_df_dict[elements_postprocessing_file_basename]
         cnwheat_facade.CNWheatFacade.graphs(axes_postprocessing_df=postprocessing_df_dict[axes_postprocessing_file_basename],
@@ -586,7 +586,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
         # 4) Total C production vs. Root C allcoation
         df_org = postprocessing_df_dict[organs_postprocessing_file_basename]
-        df_roots = df_org[df_org['organ'] == 'roots']
+        df_roots = df_org[df_org['organ'] == 'roots'].copy()
         df_roots['day'] = df_roots['t'] // 24 + 1
         df_roots['Unloading_Sucrose_tot'] = df_roots['Unloading_Sucrose'] * df_roots['mstruct']
         Unloading_Sucrose_tot = df_roots.groupby(['day'])['Unloading_Sucrose_tot'].agg('sum')
@@ -699,4 +699,4 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
 
 if __name__ == '__main__':
-    main(10, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False)
+    main(10, forced_start_time=0, run_simu=False, run_postprocessing=True, generate_graphs=True, run_from_outputs=False)
