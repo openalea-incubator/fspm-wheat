@@ -1,7 +1,6 @@
 Meteo smooth
 ts caribu = 4
 talles = 0.5
-%N HZ>=4 : 9.5%
 
 ** ---- FARQUHAR-WHEATH
 
@@ -41,23 +40,23 @@ Default Tr value = 0.1
 - calculate_S_Starch: Vmax * 4
 - calculate_D_Starch: DELTA_DSTARCH * 4
 
-- calculate_S_proteins : Vmax = 0.0015 ; K = 100
 
 ** HZ
 - ratio_DZ : 
-- calculate_S_proteins : HZ * 58 et share avec ratio_DZ corrigé
+- calculate_S_fructan : VMAX_SFRUCTAN_RELATIVE = 7 et share avec ratio_DZ
+- calculate_S_proteins : HZ * 100 et share avec ratio_DZ
 - calculate_D_Proteins : 2.5e-7 
 
 ** Roots
-- calculate_Unloading_Sucrose : VMAX_SUCROSE_UNLOADING * 1.33
+- calculate_Unloading_Sucrose conductivity : SIGMA_SUCROSE = 1e-7
 - calculate_S_cytokinins : VMAX_S_CYTOKININS
-- calculate_S_amino_acids : VMAX_AMINO_ACIDS
+- calculate_S_amino_acids : K_AMINO_ACIDS_SUCROSE * 2
 - calculate_Uptake_Nitrates : net_nitrate_uptake 
 - calculate_exudation : C_EXUDATION * 1 et N_exudation = min( AA/sucr , 0.2) * C_exudation
-
+- regulation uptake N par C : K_C = 7000
 - regul_transpiration : total_transpiration * 25
-- calculate_Export_Nitrates : K_NITRATE_EXPORT * 110
-- calculate_Export_Amino_Acids : K_AMINO_ACIDS_EXPORT * 5
+- calculate_Export_Nitrates : K_NITRATE_EXPORT * 20
+- calculate_Export_Amino_Acids : K_AMINO_ACIDS_EXPORT * 20 / K_AMINO_ACIDS_SUCROSE *2
 - calculate_Export_cytokinins : K_CYTOKININS_EXPORT
 
 ** ---- SENESC-WHEATH
@@ -80,10 +79,10 @@ A CORRIGER :
 TARGETS
 
 Berthelot : 
-- HS 6.5 = 560DD = L1 (70%), 2 (30%), 3 (15%) en sénescence, L4 vert
-- HS 7.4 = 630DD = L1 (100%), 2 (50%), 3 (20%), 4(5%), 5(0%)
+- HS 6.5 (4lig?) = 560DD = L1 (70%), 2 (30%), 3 (15%) en sénescence, L4 vert
+- HS 7.4 (5lig?) = 630DD = L1 (100%), 2 (50%), 3 (20%), 4(5%), 5(0%)
 => -30% Surface verte en 70DD, sénescence environ en 220DD
-
+HS semble faux
 
 
 

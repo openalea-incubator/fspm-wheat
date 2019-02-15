@@ -484,7 +484,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             postprocessing_df = pd.read_csv(postprocessing_filepath)
             postprocessing_df_dict[postprocessing_file_basename] = postprocessing_df
 
-        # Generate graphs
+        # Generate graphs from postprocessing files
         df_hz = postprocessing_df_dict[hiddenzones_postprocessing_file_basename]
         df_elt = postprocessing_df_dict[elements_postprocessing_file_basename]
         cnwheat_facade.CNWheatFacade.graphs(axes_postprocessing_df=postprocessing_df_dict[axes_postprocessing_file_basename],
@@ -499,7 +499,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         colors = ['blue', 'darkorange', 'green', 'red', 'darkviolet', 'gold', 'magenta', 'brown', 'darkcyan', 'grey', 'lime']
         colors = colors + colors
 
-        # 1) Phyllochron
+        # 0) Phyllochron
         df_SAM = df_SAM[df_SAM['axis'] == 'MS']
         df_hz = postprocessing_df_dict[hiddenzones_postprocessing_file_basename]
         grouped_df = df_hz[df_hz['axis'] == 'MS'].groupby(['plant', 'metamer'])[['t', 'leaf_is_emerged']]
@@ -517,17 +517,30 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             phyllochron['plant'].append(plant)
             phyllochron['metamer'].append(metamer)
             prev_leaf_emergence_t = leaf_emergence[(plant, metamer - 1)]
-            # Calcul DD approximatif (moyenne)
-            phyllo_DD = df_SAM[(df_SAM['t'] == leaf_emergence_t)].sum_TT.values[0] - df_SAM[(df_SAM['t'] == prev_leaf_emergence_t)].sum_TT.values[0]
+            if df_SAM[(df_SAM['t'] == leaf_emergence_t) | (df_SAM['t'] == prev_leaf_emergence_t)].sum_TT.count() == 2:
+                phyllo_DD = df_SAM[(df_SAM['t'] == leaf_emergence_t)].sum_TT.values[0] - df_SAM[(df_SAM['t'] == prev_leaf_emergence_t)].sum_TT.values[0]
+            else :
+                phyllo_DD = np.nan
             phyllochron['phyllochron'].append(phyllo_DD)
 
-        cnwheat_tools.plot_cnwheat_ouputs(pd.DataFrame(phyllochron), 'metamer', 'phyllochron', x_label='Leaf number', y_label='Phyllochron (Degree Day)',
-                                          plot_filepath=os.path.join(GRAPHS_DIRPATH, 'Phyllochron.PNG'), explicit_label=False, kwargs={'marker': 'o'})
+        if len(phyllochron['metamer']) >0:
+            plt.figure()
+            plt.xlim((int(min(phyllochron['metamer']) - 1), int(max(phyllochron['metamer']) + 1)))
+            plt.ylim(ymin=0, ymax=150)
+            ax = plt.subplot(111)
+            ax.plot(phyllochron['metamer'], phyllochron['phyllochron'], color='b', marker='o')
+            for i, j in zip(phyllochron['metamer'], phyllochron['phyllochron']):
+                ax.annotate(str(int(round(j,0))), xy=(i, j+2), ha='center')
+            ax.set_xlabel('Leaf number')
+            ax.set_ylabel('Phyllochron (Degree Day)')
+            ax.set_title('phyllochron')
+            plt.savefig(os.path.join(GRAPHS_DIRPATH, 'phyllochron' + '.PNG'))
+            plt.close()
 
-        # Comparison Ljutovac 2002
+        # 1) Comparison Dimensions with Ljutovac 2002
         bchmk = pd.read_csv('Ljutovac2002.csv')
         res = pd.read_csv(HIDDENZONES_STATES_FILEPATH)
-        res = res[(res['axis'] == 'MS') & (res['plant'] == 1) & (res.t == max(res.t)) ]
+        res = res[(res['axis'] == 'MS') & (res['plant'] == 1) & ~np.isnan(res.leaf_Lmax) ]
         res['lamina_Wmax'] = res.leaf_Wmax
         bchmk = bchmk[bchmk.metamer >= min(res.metamer)]
 
@@ -538,7 +551,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             plt.ylim(ymin=0, ymax=np.nanmax( list(res[var] * 100 * 1.05) + list(bchmk[var] * 1.05) ) )
             ax = plt.subplot(111)
 
-            line1 = ax.plot(res.metamer, res[var] * 100, color='c', marker='o')
+            line1 = ax.plot(res.metamer.unique(), res[var].unique() * 100, color='c', marker='o')
             line2 = ax.plot(bchmk.metamer, bchmk[var], color='orange', marker='o')
 
             ax.set_ylabel(var + ' (cm)')
@@ -756,4 +769,4 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   plot_filepath=os.path.join(GRAPHS_DIRPATH, graph_name),
                                                   explicit_label=False)
 if __name__ == '__main__':
-    main(1700, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True)
+    main(1900, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True)
