@@ -2,6 +2,7 @@
 
 from growthwheat import converter, simulation, parameters
 import tools
+import numpy as np
 
 """
     fspmwheat.growthwheat_facade
@@ -158,7 +159,9 @@ class GrowthWheatFacade(object):
                                 mtg_element_properties = self._shared_mtg.get_vertex_property(mtg_element_vid)
 
                                 if mtg_element_label in ELEMENT_LABELS and \
-                                        mtg_element_properties.get('length', 0) > 0:  # Note : ADEL puts length to positive value after updates even for HiddenElement.
+                                        (mtg_element_properties.get('length', 0) > 0) and \
+                                        (np.nan_to_num(self._shared_mtg.get_vertex_property(mtg_element_vid).get('is_over', 0.)) == 0) :  # Note : ADEL puts length to positive value after updates
+                                    # even for HiddenElement.
 
                                     growthwheat_element_inputs_dict = {}
 
@@ -224,8 +227,11 @@ class GrowthWheatFacade(object):
                         mtg_metamer_properties = self._shared_mtg.get_vertex_property(mtg_metamer_vid)
                         if 'hiddenzone' not in mtg_metamer_properties:  # MG : when is it used ?
                             self._shared_mtg.property('hiddenzone')[mtg_metamer_vid] = {}
-                        for hiddenzone_data_name, hiddenzone_data_value in growthwheat_hiddenzone_data_dict.items():
-                            self._shared_mtg.property('hiddenzone')[mtg_metamer_vid][hiddenzone_data_name] = hiddenzone_data_value
+                        if growthwheat_hiddenzone_data_dict.get('is_over',False):
+                            del self._shared_mtg.property('hiddenzone')[mtg_metamer_vid]
+                        else :
+                            for hiddenzone_data_name, hiddenzone_data_value in growthwheat_hiddenzone_data_dict.items():
+                                self._shared_mtg.property('hiddenzone')[mtg_metamer_vid][hiddenzone_data_name] = hiddenzone_data_value
 
                     elif 'hiddenzone' in self._shared_mtg.get_vertex_property(mtg_metamer_vid):
                         # remove the 'hiddenzone' property from this metamer
@@ -240,12 +246,16 @@ class GrowthWheatFacade(object):
                             mtg_element_label = self._shared_mtg.label(mtg_element_vid)
                             element_id = (mtg_plant_index, mtg_axis_label, mtg_metamer_index, mtg_organ_label, mtg_element_label)
 
-                            if element_id in all_growthwheat_elements_data_dict:
+                            if element_id in all_growthwheat_elements_data_dict.keys():
                                 growthwheat_element_data_dict = all_growthwheat_elements_data_dict[element_id]
+                                mtg_element_properties = self._shared_mtg.get_vertex_property(mtg_element_vid)
 
                                 for element_data_name, element_data_value in growthwheat_element_data_dict.items():
                                     self._shared_mtg.property(element_data_name)[mtg_element_vid] = element_data_value
-
+                                if mtg_element_label == 'HiddenElement' and \
+                                        ( np.isnan( mtg_element_properties.get('green_area',np.nan )) or (mtg_element_properties.get('green_area',0 ) == 0) ) and\
+                                        (mtg_element_properties.get('senesced_length',0 ) == 0):
+                                    self._shared_mtg.property('green_area')[mtg_element_vid] = mtg_element_properties.get('area',0)
     def _update_shared_dataframes(self, growthwheat_hiddenzones_data_df, growthwheat_elements_data_df, growthwheat_roots_data_df):
         """
         Update the dataframes shared between all models from the inputs dataframes or the outputs dataframes of the model.

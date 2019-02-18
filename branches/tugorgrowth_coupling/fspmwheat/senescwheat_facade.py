@@ -138,12 +138,13 @@ class SenescWheatFacade(object):
                             mtg_element_label = self._shared_mtg.label(mtg_element_vid)
                             element_id = (mtg_plant_index, mtg_axis_label, mtg_metamer_index, mtg_organ_label, mtg_element_label)
                             if np.nan_to_num(self._shared_mtg.property('length').get(mtg_element_vid, 0)) == 0: continue
+                            if np.nan_to_num(self._shared_mtg.property('mstruct').get(mtg_element_vid, 0)) == 0: continue
                             if set(mtg_element_properties).issuperset(converter.SENESCWHEAT_ELEMENTS_INPUTS):
                                 senescwheat_element_inputs_dict = {}
                                 for senescwheat_element_input_name in converter.SENESCWHEAT_ELEMENTS_INPUTS:
                                     senescwheat_element_inputs_dict[senescwheat_element_input_name] = mtg_element_properties[senescwheat_element_input_name]
                                 all_senescwheat_elements_inputs_dict[element_id] = senescwheat_element_inputs_dict
-                                # TODO: temporary ; replace 'SENESCWHEAT_ELEMENT_PROPERTIES_TEMP' by default values
+                                # TODO: temporary ; replace 'SENESCWHEAT_ELEMENT_PROPERTIES_TEMP' by default values : Is the following code usefull ?
                                 SENESCWHEAT_ELEMENT_PROPERTIES_TEMP = {'starch': 0, 'max_proteins': 0, 'amino_acids': 0,
                                                                        'proteins': 0, 'Nstruct': 0, 'mstruct': 0, 'fructan': 0,
                                                                        'sucrose': 0, 'green_area': 0, 'cytokinins': 0}
@@ -153,7 +154,8 @@ class SenescWheatFacade(object):
                                         senescwheat_element_inputs_dict[senescwheat_element_input_name] = mtg_element_properties[senescwheat_element_input_name]
                                     else:
                                         senescwheat_element_inputs_dict[senescwheat_element_input_name] = SENESCWHEAT_ELEMENT_PROPERTIES_TEMP[senescwheat_element_input_name]
-                                all_senescwheat_elements_inputs_dict[element_id] = senescwheat_element_inputs_dict
+                                if senescwheat_element_inputs_dict['mstruct'] > 0:
+                                    all_senescwheat_elements_inputs_dict[element_id] = senescwheat_element_inputs_dict
 
         self._simulation.initialize({'roots': all_senescwheat_roots_inputs_dict, 'SAM': all_senescwheat_SAM_inputs_dict, 'elements': all_senescwheat_elements_inputs_dict})
 
@@ -191,8 +193,6 @@ class SenescWheatFacade(object):
                 for mtg_metamer_vid in self._shared_mtg.components_iter(mtg_axis_vid):
                     mtg_metamer_index = int(self._shared_mtg.index(mtg_metamer_vid))
                     for mtg_organ_vid in self._shared_mtg.components_iter(mtg_metamer_vid):
-                        if mtg_organ_vid == 30:
-                            pass
                         mtg_organ_label = self._shared_mtg.label(mtg_organ_vid)
                         senesced_length_organ = 0. # Temporaire
                         if mtg_organ_label not in PHOTOSYNTHETIC_ORGANS_NAMES: continue

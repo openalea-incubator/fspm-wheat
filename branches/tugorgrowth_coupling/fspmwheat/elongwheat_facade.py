@@ -68,7 +68,7 @@ class ElongWheatFacade(object):
                  shared_SAM_inputs_outputs_df,
                  shared_hiddenzones_inputs_outputs_df,
                  shared_elements_inputs_outputs_df,
-                 geometrical_model, opt_static = False):
+                 geometrical_model, opt_static=False):
 
         self._shared_mtg = shared_mtg  #: the MTG shared between all models
 
@@ -84,7 +84,7 @@ class ElongWheatFacade(object):
         self._shared_elements_inputs_outputs_df = shared_elements_inputs_outputs_df  #: the dataframe at elements scale shared between all models
         self._update_shared_dataframes(model_hiddenzones_inputs_df, model_elements_inputs_df, model_SAM_inputs_df)
 
-    def run(self,Tair, Tsoil, opt_static=False):
+    def run(self, Tair, Tsoil, opt_static=False):
         """
         Run the model and update the MTG and the dataframes shared between all models.
 
@@ -185,7 +185,7 @@ class ElongWheatFacade(object):
                     for mtg_organ_vid in self._shared_mtg.components_iter(mtg_metamer_vid):
                         mtg_organ_label = self._shared_mtg.label(mtg_organ_vid)
                         mtg_organ_properties = self._shared_mtg.get_vertex_property(mtg_organ_vid)
-                        if np.nan_to_num( self._shared_mtg.property('length').get(mtg_organ_vid,0)) == 0:
+                        if np.nan_to_num(self._shared_mtg.property('length').get(mtg_organ_vid, 0)) == 0:
                             continue
                         if mtg_organ_label == 'blade':
                             elongwheat_hiddenzone_data_from_mtg_organs_data['lamina_Lmax'] = mtg_organ_properties['shape_mature_length']
@@ -196,7 +196,7 @@ class ElongWheatFacade(object):
                             mtg_element_properties = self._shared_mtg.get_vertex_property(mtg_element_vid)
                             if np.nan_to_num(self._shared_mtg.property('length').get(mtg_element_vid, 0)) == 0:
                                 continue
-                            if np.isnan( mtg_element_properties.get('age',0) ) :
+                            if np.isnan(mtg_element_properties.get('age', 0)):
                                 mtg_element_properties['age'] = 0.
                             if set(mtg_element_properties).issuperset(simulation.ELEMENT_INPUTS):
                                 elongwheat_element_inputs_dict = {}
@@ -217,7 +217,7 @@ class ElongWheatFacade(object):
         self._simulation.initialize({'hiddenzone': all_elongwheat_hiddenzones_dict, 'elements': all_elongwheat_elements_dict, 'SAM': all_elongwheaSAM_temperature_dict,
                                      'sheath_internode_lengths': all_elongwheat_length_dict})
 
-    def _update_shared_MTG(self, all_elongwheat_hiddenzones_data_dict, all_elongwheat_elements_data_dict, all_elongwheat_SAM_data_dict, opt_static = False):
+    def _update_shared_MTG(self, all_elongwheat_hiddenzones_data_dict, all_elongwheat_elements_data_dict, all_elongwheat_SAM_data_dict, opt_static=False):
         """
         Update the MTG shared between all models from the inputs or the outputs of the model.
         """
@@ -249,11 +249,11 @@ class ElongWheatFacade(object):
                     if (mtg_plant_index, mtg_axis_label) not in axis_to_metamers_mapping: continue
                     new_metamer_ids = set(axis_to_metamers_mapping[(mtg_plant_index, mtg_axis_label)]).difference(mtg_metamer_ids)
                     for _ in new_metamer_ids:
-                        self.geometrical_model.add_metamer(self._shared_mtg, mtg_plant_index, mtg_axis_label) # Add new metamer with only top and base element
+                        self.geometrical_model.add_metamer(self._shared_mtg, mtg_plant_index, mtg_axis_label)  # Add new metamer with only top and base element
                     # default value to age property in order to run  update_geometry()
-                    for mtg_organ_vid in self._shared_mtg.components_at_scale(mtg_axis_vid,4):
+                    for mtg_organ_vid in self._shared_mtg.components_at_scale(mtg_axis_vid, 4):
                         if self._shared_mtg.property('label')[mtg_organ_vid] == 'blade':
-                            self._shared_mtg.property('age')[mtg_organ_vid] = self._shared_mtg.property('age').get(mtg_organ_vid,0)
+                            self._shared_mtg.property('age')[mtg_organ_vid] = self._shared_mtg.property('age').get(mtg_organ_vid, 0)
 
             self.geometrical_model.update_geometry(self._shared_mtg)  # Add HiddenElement and Stem/Leaf Element
 
@@ -369,7 +369,6 @@ class ElongWheatFacade(object):
 
                         total_organ_length = organ_visible_length + organ_hidden_length
                         self._shared_mtg.property('length')[mtg_organ_vid] = total_organ_length
-
 
     def _update_shared_dataframes(self, elongwheat_hiddenzones_data_df, elongwheat_elements_data_df, elongwheaSAM_temperature_data_df):
         """

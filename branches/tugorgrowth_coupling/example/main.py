@@ -676,7 +676,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         ax.set_xlabel('Cumulative absorbed PAR (MJ) Main stem only!')
         ax.set_ylabel('Dry mass (g)')
         ax.set_title('RUE')
-        plt.text(max(PARa_cum)*0.02,max(sum_dry_mass)*0.95, 'RUE shoot : {0:.2f} , RUE plant : {1:.2f}'.format(round(RUE_shoot, 2), round(RUE_plant, 2)))
+        plt.text(max(PARa_cum)*0.02, max(sum_dry_mass)*0.95, 'RUE shoot : {0:.2f} , RUE plant : {1:.2f}'.format(round(RUE_shoot, 2), round(RUE_plant, 2)))
         plt.savefig(os.path.join(GRAPHS_DIRPATH, 'RUE.PNG'), dpi=200, format='PNG', bbox_inches='tight')
 
         fig, ax = plt.subplots()
@@ -699,4 +699,4 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
 
 if __name__ == '__main__':
-    main(10, forced_start_time=0, run_simu=False, run_postprocessing=True, generate_graphs=True, run_from_outputs=False)
+    main(400, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False)
