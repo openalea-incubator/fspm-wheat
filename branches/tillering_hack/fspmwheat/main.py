@@ -305,7 +305,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             PARi = meteo.loc[t_caribu, ['PARi']].iloc[0]
             DOY = meteo.loc[t_caribu, ['DOY']].iloc[0]
             hour = meteo.loc[t_caribu, ['hour']].iloc[0]
-            caribu_facade_.run(energy=PARi, DOY=DOY, hourTU=hour, latitude = 48.85, sun_sky_option = 'mix')
+            caribu_facade_.run(energy=PARi, DOY=DOY, hourTU=hour, latitude = 48.85, sun_sky_option = 'sky')
             print('t caribu is {}'.format(t_caribu))
 
             for t_senescwheat in range(t_caribu, t_caribu + caribu_ts, senescwheat_ts):
@@ -769,4 +769,4 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   plot_filepath=os.path.join(GRAPHS_DIRPATH, graph_name),
                                                   explicit_label=False)
 if __name__ == '__main__':
-    main(1900, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True)
+    main(2100, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True)
