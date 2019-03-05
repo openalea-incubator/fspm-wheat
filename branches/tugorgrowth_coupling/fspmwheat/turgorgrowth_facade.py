@@ -109,7 +109,7 @@ class TurgorGrowthFacade(object):
         """
         Run the postprocessing.
         """
-        (hiddenzones_postprocessing_df, elements_postprocessing_df) = turgorgrowth_postprocessing.postprocessing(hiddenzones_df=hiddenzone_outputs_df, elements_df=elements_outputs_df, delta_t=delta_t)
+        (hiddenzones_postprocessing_df, elements_postprocessing_df) = turgorgrowth_postprocessing.postprocessing(hiddenzones_df=hiddenzone_outputs_df, elements_df=elements_outputs_df)
         return hiddenzones_postprocessing_df, elements_postprocessing_df
 
     @staticmethod
