@@ -551,7 +551,9 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             plt.ylim(ymin=0, ymax=np.nanmax( list(res[var] * 100 * 1.05) + list(bchmk[var] * 1.05) ) )
             ax = plt.subplot(111)
 
-            line1 = ax.plot(res.metamer.unique(), res[var].unique() * 100, color='c', marker='o')
+            tmp = res[['metamer',var]].drop_duplicates()
+
+            line1 = ax.plot(tmp.metamer, tmp[var] * 100, color='c', marker='o')
             line2 = ax.plot(bchmk.metamer, bchmk[var], color='orange', marker='o')
 
             ax.set_ylabel(var + ' (cm)')
