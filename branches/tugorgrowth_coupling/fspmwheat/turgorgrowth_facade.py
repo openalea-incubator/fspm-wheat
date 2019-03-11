@@ -1,5 +1,5 @@
 # -*- coding: latin-1 -*-
-
+from math import pi
 from turgorgrowth import model as turgorgrowth_model, simulation as turgorgrowth_simulation, \
     converter as turgorgrowth_converter, postprocessing as turgorgrowth_postprocessing
 
@@ -384,7 +384,11 @@ class TurgorGrowthFacade(object):
                         if mtg_organ_label == 'blade' and 'LeafElement1' in new_mtg_element_labels.keys():
                             organ_visible_length = self._shared_mtg.property('length')[new_mtg_element_labels['LeafElement1']]
                             self._shared_mtg.property('visible_length')[mtg_organ_vid] = organ_visible_length
-                        elif mtg_organ_label in ('sheath', 'internode') and 'StemElement' in new_mtg_element_labels.keys():
+                        elif mtg_organ_label == 'sheath' and 'StemElement' in new_mtg_element_labels.keys():
+                            organ_visible_length = self._shared_mtg.property('length')[new_mtg_element_labels['StemElement']]
+                            self._shared_mtg.property('diameter')[mtg_organ_vid] = self._shared_mtg.property('width')[new_mtg_element_labels['StemElement']] / pi
+                            self._shared_mtg.property('visible_length')[mtg_organ_vid] = organ_visible_length
+                        elif mtg_organ_label == 'internode' and 'StemElement' in new_mtg_element_labels.keys():
                             organ_visible_length = self._shared_mtg.property('length')[new_mtg_element_labels['StemElement']]
                             self._shared_mtg.property('visible_length')[mtg_organ_vid] = organ_visible_length
                         else:
