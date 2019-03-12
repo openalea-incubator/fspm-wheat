@@ -562,6 +562,52 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             plt.savefig(os.path.join(GRAPHS_DIRPATH, var + '.PNG'))
             plt.close()
 
+        # 1bis) Comparison Structural Masses vs. adaptation from Bertheloot 2008
+
+        # SSLW Laminae
+        bchmk = pd.DataFrame.from_dict( {1: 15,2: 23,3: 25,4: 18,5: 22,6: 25,7: 20,8: 23,9: 26,10: 28,11: 31}, orient='index').rename(columns={0:'SSLW'})
+        bchmk.index.name = 'metamer'
+        bchmk = bchmk.reset_index()
+        bchmk = bchmk[bchmk.metamer >= min(res.metamer)]
+
+        plt.figure()
+        plt.xlim((int(min(res.metamer) - 1), int(max(res.metamer) + 1)))
+        plt.ylim(ymin=0, ymax=50)
+        ax = plt.subplot(111)
+
+        tmp = res[['metamer', 'SSLW']].drop_duplicates()
+
+        line1 = ax.plot(tmp.metamer, tmp.SSLW, color='c', marker='o')
+        line2 = ax.plot(bchmk.metamer, bchmk.SSLW, color='orange', marker='o')
+
+        ax.set_ylabel('Structural Specific Lamina Weight (g.m-2)')
+        ax.set_title('Structural Specific Lamina Weight')
+        ax.legend((line1[0], line2[0]), ('Simulation', 'adapated from Bertheloot 2008'), loc=3)
+        plt.savefig(os.path.join(GRAPHS_DIRPATH, 'SSLW.PNG'))
+        plt.close()
+
+        # LWS Sheaths
+        bchmk = pd.DataFrame.from_dict(  {1: 0.08,2: 0.09,3: 0.11,4: 0.18,5: 0.17,6: 0.21,7: 0.24,8: 0.4,9: 0.5,10: 0.55,11: 0.65}  , orient='index').rename(columns={0:'LSSW'})
+        bchmk.index.name = 'metamer'
+        bchmk = bchmk.reset_index()
+        bchmk = bchmk[bchmk.metamer >= min(res.metamer)]
+
+        plt.figure()
+        plt.xlim((int(min(res.metamer) - 1), int(max(res.metamer) + 1)))
+        plt.ylim(ymin=0, ymax=0.8)
+        ax = plt.subplot(111)
+
+        tmp = res[['metamer', 'LSSW']].drop_duplicates()
+
+        line1 = ax.plot(tmp.metamer, tmp.LSSW, color='c', marker='o')
+        line2 = ax.plot(bchmk.metamer, bchmk.LSSW, color='orange', marker='o')
+
+        ax.set_ylabel('Lineic Structural Sheath Weight (g.m-1)')
+        ax.set_title('Lineic Structural Sheath Weight')
+        ax.legend((line1[0], line2[0]), ('Simulation', 'adapated from Bertheloot 2008'), loc=2)
+        plt.savefig(os.path.join(GRAPHS_DIRPATH, 'LSSW.PNG'))
+        plt.close()
+
         # 2) LAI
         grouped_df = postprocessing_df_dict[elements_postprocessing_file_basename].groupby(['t', 'plant'])
         LAI_dict = {'t': [], 'plant': [], 'LAI': []}
@@ -771,4 +817,4 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   plot_filepath=os.path.join(GRAPHS_DIRPATH, graph_name),
                                                   explicit_label=False)
 if __name__ == '__main__':
-    main(2100, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True)
+    main(2100, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False)
