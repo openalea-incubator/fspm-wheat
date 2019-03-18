@@ -105,7 +105,7 @@ class TurgorGrowthFacade(object):
                                        turgorgrowth_elements_data_df=turgorgrowth_elements_inputs_outputs_df)
 
     @staticmethod
-    def postprocessing(hiddenzone_outputs_df, elements_outputs_df, delta_t):
+    def postprocessing(hiddenzone_outputs_df, elements_outputs_df):
         """
         Run the postprocessing.
         """
@@ -173,13 +173,13 @@ class TurgorGrowthFacade(object):
                     mtg_hiddenzone_label = turgorgrowth_converter.TURGORGROWTH_CLASSES_TO_DATAFRAME_ORGANS_MAPPING[turgorgrowth_model.HiddenZone]
                     mtg_metamer_properties = self._shared_mtg.get_vertex_property(mtg_metamer_vid)
 
-                    if mtg_hiddenzone_label in mtg_metamer_properties:
+                    if mtg_hiddenzone_label in mtg_metamer_properties and mtg_metamer_properties[mtg_hiddenzone_label]['leaf_is_growing']:
                         has_valid_hiddenzone = True
                         turgorgrowth_hiddenzone = turgorgrowth_model.HiddenZone(label=mtg_hiddenzone_label)
                         mtg_hiddenzone_properties = mtg_metamer_properties[mtg_hiddenzone_label]
                         turgorgrowth_hiddenzone_data_names = set(turgorgrowth_simulation.Simulation.HIDDENZONE_STATE).intersection(turgorgrowth_hiddenzone.__dict__)
 
-                        if mtg_hiddenzone_properties.get('leaf_pseudo_age') == 0:  # First time hiddenzone passes into turorwheat model
+                        if mtg_hiddenzone_properties.get('leaf_pseudo_age') == 0:  # First time hiddenzone passes into turgor model
                             missing_initial_hiddenzone_properties = turgorgrowth_hiddenzone_data_names - set(mtg_hiddenzone_properties)
                             turgorgrowth_hiddenzone_data_names -= missing_initial_hiddenzone_properties
 

@@ -481,8 +481,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
         (turgorgrowth_postprocessing_df_dict_hiddenzones, turgorgrowth_postprocessing_df_dict_elements) \
             = turgorgrowth_facade.TurgorGrowthFacade.postprocessing(hiddenzone_outputs_df=states_df_dict[os.path.basename(HIDDENZONES_STATES_FILEPATH).split('.')[0]],
-                                                                    elements_outputs_df=states_df_dict[os.path.basename(ELEMENTS_STATES_FILEPATH).split('.')[0]],
-                                                                    delta_t=delta_t)
+                                                                    elements_outputs_df=states_df_dict[os.path.basename(ELEMENTS_STATES_FILEPATH).split('.')[0]])
         postprocessing_df_dict[hiddenzones_postprocessing_file_basename] = postprocessing_df_dict[hiddenzones_postprocessing_file_basename].merge(turgorgrowth_postprocessing_df_dict_hiddenzones)
         postprocessing_df_dict[elements_postprocessing_file_basename] = postprocessing_df_dict[elements_postprocessing_file_basename].merge(turgorgrowth_postprocessing_df_dict_elements)
 
@@ -699,4 +698,4 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
 
 if __name__ == '__main__':
-    main(50, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False)
+    main(400, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False)
