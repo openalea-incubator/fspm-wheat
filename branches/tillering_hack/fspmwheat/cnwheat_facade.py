@@ -117,11 +117,11 @@ class CNWheatFacade(object):
                                        cnwheat_elements_data_df=model_elements_inputs_df,
                                        cnwheat_soils_data_df=model_soils_inputs_df)
 
-    def run(self, Tair=12, Tsoil = 12):
+    def run(self, Tair=12, Tsoil = 12, tillers_replications = None):
         """
         Run the model and update the MTG and the dataframes shared between all models.
         """
-        self._initialize_model(Tair=Tair,Tsoil=Tsoil)
+        self._initialize_model(Tair=Tair,Tsoil=Tsoil,tillers_replications=tillers_replications)
         self._simulation.run()
         self._update_shared_MTG()
 
@@ -163,10 +163,19 @@ class CNWheatFacade(object):
                                                 soils_df=soils_postprocessing_df,
                                                 graphs_dirpath=graphs_dirpath)
 
-    def _initialize_model(self, Tair=12, Tsoil=12):
+    def _initialize_model(self, Tair=12, Tsoil=12, tillers_replications=None ):
         """
         Initialize the inputs of the model from the MTG shared between all models and the soils.
         """
+
+        # Convert number of replications per tiller into number of replications per cohort
+        cohorts_replications = {}
+        for k,v in tillers_replications.iteritems():
+            try:
+                tiller_rank = int( k[1:])
+            except:
+                continue
+            cohorts_replications[ tiller_rank+3 ] = v
 
         self.population = cnwheat_model.Population()
 
@@ -230,7 +239,7 @@ class CNWheatFacade(object):
                     mtg_metamer_index = int(self._shared_mtg.index(mtg_metamer_vid))
 
                     # create a new phytomer
-                    cnwheat_phytomer = cnwheat_model.Phytomer(mtg_metamer_index,cohorts=cnwheat_plant.cohorts) #: Hack to treat tillering cases : TEMPORARY
+                    cnwheat_phytomer = cnwheat_model.Phytomer(mtg_metamer_index,cohorts=cnwheat_plant.cohorts, cohorts_replications=cohorts_replications ) #: Hack to treat tillering cases :TEMPORARY
 
                     mtg_hiddenzone_label = cnwheat_converter.CNWHEAT_CLASSES_TO_DATAFRAME_ORGANS_MAPPING[cnwheat_model.HiddenZone]
                     mtg_metamer_properties = self._shared_mtg.get_vertex_property(mtg_metamer_vid)
@@ -250,7 +259,7 @@ class CNWheatFacade(object):
                                 #     print(cnwheat_hiddenzone_data_name)
 
                             # create a new hiddenzone
-                            cnwheat_hiddenzone = cnwheat_model.HiddenZone(mtg_hiddenzone_label,cohorts=cnwheat_plant.cohorts, index = cnwheat_phytomer.index, **cnwheat_hiddenzone_data_dict) #: TEMPORARY
+                            cnwheat_hiddenzone = cnwheat_model.HiddenZone(mtg_hiddenzone_label,cohorts=cnwheat_plant.cohorts, cohorts_replications=cohorts_replications, index = cnwheat_phytomer.index, **cnwheat_hiddenzone_data_dict) #: TEMPORARY
                             cnwheat_hiddenzone.initialize()
                             # add the new hiddenzone to current phytomer
                             setattr(cnwheat_phytomer, mtg_hiddenzone_label, cnwheat_hiddenzone)
@@ -292,8 +301,8 @@ class CNWheatFacade(object):
                                     else :
                                         mtg_element_data_value = cnwheat_parameters.PhotosyntheticOrganElementInitCompartments().__dict__[cnwheat_element_data_name]
                                 cnwheat_element_data_dict[cnwheat_element_data_name] = mtg_element_data_value
-                            cnwheat_element = CNWHEAT_ORGANS_TO_ELEMENTS_MAPPING[cnwheat_organ_class](mtg_element_label,cohorts=cnwheat_plant.cohorts, index = cnwheat_phytomer.index,
-                                                                                                      **cnwheat_element_data_dict)
+                            cnwheat_element = CNWHEAT_ORGANS_TO_ELEMENTS_MAPPING[cnwheat_organ_class](mtg_element_label,cohorts=cnwheat_plant.cohorts,cohorts_replications=cohorts_replications,
+                                                                                                      index = cnwheat_phytomer.index,**cnwheat_element_data_dict)
                             setattr(cnwheat_organ, cnwheat_converter.DATAFRAME_TO_CNWHEAT_ELEMENTS_NAMES_MAPPING[mtg_element_label], cnwheat_element)
 
                         if has_valid_element:

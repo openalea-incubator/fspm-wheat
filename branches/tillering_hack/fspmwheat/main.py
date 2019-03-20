@@ -91,7 +91,7 @@ ORGANS_INDEX_COLUMNS = ['t', 'plant', 'axis', 'organ']
 SAM_INDEX_COLUMNS = ['t', 'plant', 'axis']
 SOILS_INDEX_COLUMNS = ['t', 'plant', 'axis']
 
-# Define culm density (culm m-2)
+# Define plant density (culm m-2)
 CULM_DENSITY = {1: 250}
 
 INPUTS_OUTPUTS_PRECISION = 8  # 10
@@ -115,7 +115,8 @@ LOGGING_CONFIG_FILEPATH = os.path.join('..', '..', 'logging.json')
 LOGGING_LEVEL = logging.DEBUG  # can be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL
 
 
-def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False):
+def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
+         tillers_replications=None, manual_cyto_init=None):
     if run_simu:
         meteo = pd.read_csv(METEO_FILEPATH, index_col='t')
 
@@ -314,6 +315,10 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                 print('t senescwheat is {}'.format(t_senescwheat))
                 senescwheat_facade_.run()
 
+                if shared_elements_inputs_outputs_df.shape[0] == 0:
+                    print('Simulation stopped because all the elements are fully senescent.')
+                    break
+
                 for t_farquharwheat in range(t_senescwheat, t_senescwheat + senescwheat_ts, farquharwheat_ts):
                     # get the meteo of the current step
                     Ta, ambient_CO2, RH, Ur = meteo.loc[t_farquharwheat, ['air_temperature', 'ambient_CO2', 'humidity', 'Wind']]
@@ -337,7 +342,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
                             # run GrowthWheat
                             print('t growthwheat is {}'.format(t_growthwheat))
-                            growthwheat_facade_.run()
+                            growthwheat_facade_.run(manual_cyto_init)
 
                             for t_cnwheat in range(t_growthwheat, t_growthwheat + growthwheat_ts, cnwheat_ts):
                                 if t_cnwheat > 0:
@@ -352,7 +357,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                     print('t cnwheat is {}'.format(t_cnwheat))
                                     Tair = meteo.loc[t_elongwheat, 'air_temperature']
                                     Tsoil = meteo.loc[t_elongwheat, 'soil_temperature']
-                                    cnwheat_facade_.run(Tair,Tsoil)
+                                    cnwheat_facade_.run(Tair, Tsoil, tillers_replications)
 
                                 # append the inputs and outputs at current step to global lists
                                 all_simulation_steps.append(t_cnwheat)
@@ -609,18 +614,20 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         plt.close()
 
         # 2) LAI
-        grouped_df = postprocessing_df_dict[elements_postprocessing_file_basename].groupby(['t', 'plant'])
+        df_elt['green_area_rep'] = df_elt.green_area * df_elt.nb_replications
+        grouped_df = df_elt[(df_elt.axis == 'MS') & (df_elt.element == 'LeafElement1')].groupby(['t', 'plant'])
         LAI_dict = {'t': [], 'plant': [], 'LAI': []}
         for name, data in grouped_df:
             t, plant = name[0], name[1]
             LAI_dict['t'].append(t)
             LAI_dict['plant'].append(plant)
-            LAI_dict['LAI'].append(data['green_area'].sum() * CULM_DENSITY[plant])
+            LAI_dict['LAI'].append(data['green_area_rep'].sum() * CULM_DENSITY[plant])
 
         cnwheat_tools.plot_cnwheat_ouputs(pd.DataFrame(LAI_dict), 't', 'LAI', x_label='Time (Hour)', y_label='LAI', plot_filepath=os.path.join(GRAPHS_DIRPATH, 'LAI.PNG'), explicit_label=False)
 
         # 3) RER during the exponentiel-like phase
         df = postprocessing_df_dict[hiddenzones_postprocessing_file_basename]
+        df = df[df['axis'] == 'MS'].copy()
         df['day'] = df['t'] // 24 + 1
         grouped_df = df.groupby(['day', 'plant', 'metamer'])['RER']
 
@@ -631,6 +638,15 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             if metamer == 4: continue
             prev_leaf_emergence_day = leaf_emergence[(plant, metamer - 1)]// 24 +1
             df_leaf_emergence.loc[ (df_leaf_emergence['plant'] == plant) & (df_leaf_emergence['metamer'] == metamer), 'prev_leaf_emergence_day'] = prev_leaf_emergence_day
+        for plant in df_leaf_emergence.plant.drop_duplicates():
+            last_metamer = df_leaf_emergence.loc[ (df_leaf_emergence['plant'] == plant) & \
+                                  (df_leaf_emergence['prev_leaf_emergence_day'] == max(df_leaf_emergence.loc[(df_leaf_emergence['plant'] == plant) ]['prev_leaf_emergence_day'])) ] ['metamer']
+            last_metamer = last_metamer.values[0]
+            prev_leaf_emergence_day = leaf_emergence[(plant, last_metamer)]// 24 +1
+            df_leaf_emergence.loc[(df_leaf_emergence['plant'] == plant) & (df_leaf_emergence['metamer'] == last_metamer + 1), 'prev_leaf_emergence_day'] = prev_leaf_emergence_day
+            # leaves without previous one emerged
+            for metamer in df_leaf_emergence[(df_leaf_emergence['plant'] == plant) & (df_leaf_emergence['metamer'] > last_metamer + 1)].metamer :
+                df_leaf_emergence.loc[(df_leaf_emergence['plant'] == plant) & (df_leaf_emergence['metamer'] == metamer), 'prev_leaf_emergence_day'] = 1000
 
         RER_dict = {'day': [], 'plant': [], 'metamer': [], 'RER': []}
         for name, RER in grouped_df:
@@ -817,4 +833,6 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   plot_filepath=os.path.join(GRAPHS_DIRPATH, graph_name),
                                                   explicit_label=False)
 if __name__ == '__main__':
-    main(2100, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False)
+    main(2100, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True,
+         tillers_replications = {'T1':0.5, 'T2':0.5, 'T3':0.5, 'T4':0.5},
+         manual_cyto_init = 200 )
