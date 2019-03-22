@@ -286,14 +286,14 @@ class TurgorGrowthFacade(object):
                                     mapping_topology['successor'][turgorgrowth_phytomer.internode.exposed_element] = turgorgrowth_phytomer.sheath.enclosed_element
                                 else:
                                     mapping_topology['predecessor'][turgorgrowth_phytomer.sheath.enclosed_element] = turgorgrowth_phytomer.internode.enclosed_element
-                                    mapping_topology['successor'][turgorgrowth_phytomer.internode.enclosed_element] = turgorgrowth_phytomer.sheath.enclosed_element
+                                    mapping_topology['successor'][turgorgrowth_phytomer.internode.enclosed_element].append(turgorgrowth_phytomer.sheath.enclosed_element)
 
                             elif turgorgrowth_phytomer.hiddenzone:
                                 mapping_topology['predecessor'][turgorgrowth_phytomer.sheath.enclosed_element] = turgorgrowth_phytomer.hiddenzone
                                 mapping_topology['successor'][turgorgrowth_phytomer.hiddenzone] = turgorgrowth_phytomer.sheath.enclosed_element
                             else:
                                 mapping_topology['predecessor'][turgorgrowth_phytomer.sheath.enclosed_element] = last_elongated_internode
-                            mapping_topology['successor'][last_elongated_internode].append(turgorgrowth_phytomer.sheath.enclosed_element)
+                                mapping_topology['successor'][last_elongated_internode].append(turgorgrowth_phytomer.sheath.enclosed_element)
 
                 if not has_valid_phytomer:
                     is_valid_axis = False
