@@ -46,6 +46,7 @@ Default Tr value = 0.1
 - calculate_S_fructan : VMAX_SFRUCTAN_RELATIVE = 7 et share avec ratio_DZ
 - calculate_S_proteins : HZ * 100 et share avec ratio_DZ
 - calculate_D_Proteins : 2.5e-7 
+- self.SIGMA = 5E-2 /3 vs. /2
 
 ** Roots
 - calculate_Unloading_Sucrose conductivity : SIGMA_SUCROSE = 1e-7
@@ -57,7 +58,18 @@ Default Tr value = 0.1
 - regul_transpiration : total_transpiration * 25
 - calculate_Export_Nitrates : K_NITRATE_EXPORT * 20
 - calculate_Export_Amino_Acids : K_AMINO_ACIDS_EXPORT * 20 / K_AMINO_ACIDS_SUCROSE *2
-- calculate_Export_cytokinins : K_CYTOKININS_EXPORT
+
+
+-- Cytokinines
+self.VMAX_S_CYTOKININS = 4.5E-04 vs. 4.5E-04 *1.3 /2
+self.K_NITRATES_CYTOKININS = 50 vs. 200
+self.K_SUCROSE_CYTOKININS = 1000 vs. 600
+self.N_SUC_CYTOKININS = 3
+self.N_NIT_CYTOKININS = 1 vs. 0.7
+self.K_CYTOKININS_EXPORT = 2E-4/3 vs. 2E-4
+self.K_CYTOKININS_EXPORT = 2E-4 /4 vs. /1
+self.DELTA_D_CYTOKININS = 3.E-6 *2 vs. *1
+
 
 ** ---- SENESC-WHEATH
 - SENESCENCE_ROOTS = ON
@@ -83,6 +95,3 @@ Berthelot :
 - HS 7.4 (5lig?) = 630DD = L1 (100%), 2 (50%), 3 (20%), 4(5%), 5(0%)
 => -30% Surface verte en 70DD, sénescence environ en 220DD
 HS semble faux
-
-
-

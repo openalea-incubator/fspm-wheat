@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-import caribu_facade
+from fspmwheat import caribu_facade
 import cnwheat_facade
 import elongwheat_facade
 import farquharwheat_facade
@@ -63,7 +63,7 @@ ORGANS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'organs_inputs.csv')
 HIDDENZONE_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'hiddenzones_inputs.csv')
 ELEMENTS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'elements_inputs.csv')
 SOILS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'soils_inputs.csv')
-METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_smooth.csv') #  os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')#os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')
+METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_smooth.csv')#os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')  #  os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')#
 
 # the path of the CSV files where to save the states of the modeled system at each step
 OUTPUTS_DIRPATH = 'outputs'
@@ -92,7 +92,7 @@ SAM_INDEX_COLUMNS = ['t', 'plant', 'axis']
 SOILS_INDEX_COLUMNS = ['t', 'plant', 'axis']
 
 # Define plant density (culm m-2)
-CULM_DENSITY = {1: 250}
+PLANT_DENSITY = {1: 250}
 
 INPUTS_OUTPUTS_PRECISION = 8  # 10
 
@@ -116,7 +116,7 @@ LOGGING_LEVEL = logging.DEBUG  # can be one of: DEBUG, INFO, WARNING, ERROR, CRI
 
 
 def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
-         tillers_replications=None, manual_cyto_init=None):
+         tillers_replications=None, manual_cyto_init=None, heterogeneous_canopy = False):
     if run_simu:
         meteo = pd.read_csv(METEO_FILEPATH, index_col='t')
 
@@ -265,7 +265,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
         cnwheat_facade_ = cnwheat_facade.CNWheatFacade(g,
                                                        cnwheat_ts * HOUR_TO_SECOND_CONVERSION_FACTOR,
-                                                       CULM_DENSITY,
+                                                       PLANT_DENSITY,
                                                        cnwheat_organs_inputs_t0,
                                                        cnwheat_hiddenzones_inputs_t0,
                                                        cnwheat_elements_inputs_t0,
@@ -306,7 +306,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             PARi = meteo.loc[t_caribu, ['PARi']].iloc[0]
             DOY = meteo.loc[t_caribu, ['DOY']].iloc[0]
             hour = meteo.loc[t_caribu, ['hour']].iloc[0]
-            caribu_facade_.run(energy=PARi, DOY=DOY, hourTU=hour, latitude = 48.85, sun_sky_option = 'sky')
+            caribu_facade_.run(energy=PARi, DOY=DOY, hourTU=hour, latitude = 48.85, sun_sky_option = 'sky', heterogeneous_canopy=heterogeneous_canopy)
             print('t caribu is {}'.format(t_caribu))
 
             for t_senescwheat in range(t_caribu, t_caribu + caribu_ts, senescwheat_ts):
@@ -621,7 +621,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             t, plant = name[0], name[1]
             LAI_dict['t'].append(t)
             LAI_dict['plant'].append(plant)
-            LAI_dict['LAI'].append(data['green_area_rep'].sum() * CULM_DENSITY[plant])
+            LAI_dict['LAI'].append(data['green_area_rep'].sum() * PLANT_DENSITY[plant])
 
         cnwheat_tools.plot_cnwheat_ouputs(pd.DataFrame(LAI_dict), 't', 'LAI', x_label='Time (Hour)', y_label='LAI', plot_filepath=os.path.join(GRAPHS_DIRPATH, 'LAI.PNG'), explicit_label=False)
 
@@ -835,4 +835,4 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 if __name__ == '__main__':
     main(2100, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True,
          tillers_replications = {'T1':0.5, 'T2':0.5, 'T3':0.5, 'T4':0.5},
-         manual_cyto_init = 200 )
+         manual_cyto_init = 200, heterogeneous_canopy = False)
