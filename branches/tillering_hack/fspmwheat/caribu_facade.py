@@ -190,6 +190,8 @@ class CaribuFacade(object):
         import openalea.plantgl.all as plantgl
         import random
 
+        random.seed(1234)
+
         # Load scene
         initial_scene = self._geometrical_model.scene(self._shared_mtg)
 
