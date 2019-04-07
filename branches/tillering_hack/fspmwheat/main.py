@@ -53,36 +53,10 @@ np.random.seed(1234)
 # number of seconds in 1 hour
 HOUR_TO_SECOND_CONVERSION_FACTOR = 3600
 
-INPUTS_DIRPATH = 'inputs'
+# Define plant density (culm m-2)
+PLANT_DENSITY = {1: 250}
 
-# the directory  must contain files 'adel_pars.RData', 'adel0000.pckl' and 'scene0000.bgeom' for ADELWHEAT
-
-# inputs
-SAM_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'SAM_inputs.csv')
-ORGANS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'organs_inputs.csv')
-HIDDENZONE_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'hiddenzones_inputs.csv')
-ELEMENTS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'elements_inputs.csv')
-SOILS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'soils_inputs.csv')
-METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_smooth.csv')#os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')  #  os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')#
-
-# the path of the CSV files where to save the states of the modeled system at each step
-OUTPUTS_DIRPATH = 'outputs'
-AXES_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'axes_states.csv')
-SAM_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'SAM_states.csv')
-ORGANS_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'organs_states.csv')
-HIDDENZONES_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'hiddenzones_states.csv')
-ELEMENTS_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'elements_states.csv')
-SOILS_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'soils_states.csv')
-
-# post-processing directory path
-POSTPROCESSING_DIRPATH = 'postprocessing'
-AXES_POSTPROCESSING_FILEPATH = os.path.join(POSTPROCESSING_DIRPATH, 'axes_postprocessing.csv')
-ORGANS_POSTPROCESSING_FILEPATH = os.path.join(POSTPROCESSING_DIRPATH, 'organs_postprocessing.csv')
-HIDDENZONES_POSTPROCESSING_FILEPATH = os.path.join(POSTPROCESSING_DIRPATH, 'hiddenzones_postprocessing.csv')
-ELEMENTS_POSTPROCESSING_FILEPATH = os.path.join(POSTPROCESSING_DIRPATH, 'elements_postprocessing.csv')
-SOILS_POSTPROCESSING_FILEPATH = os.path.join(POSTPROCESSING_DIRPATH, 'soils_postprocessing.csv')
-
-GRAPHS_DIRPATH = 'graphs'
+INPUTS_OUTPUTS_PRECISION = 8  # 10
 
 AXES_INDEX_COLUMNS = ['t', 'plant', 'axis']
 ELEMENTS_INDEX_COLUMNS = ['t', 'plant', 'axis', 'metamer', 'organ', 'element']
@@ -90,11 +64,6 @@ HIDDENZONES_INDEX_COLUMNS = ['t', 'plant', 'axis', 'metamer']
 ORGANS_INDEX_COLUMNS = ['t', 'plant', 'axis', 'organ']
 SAM_INDEX_COLUMNS = ['t', 'plant', 'axis']
 SOILS_INDEX_COLUMNS = ['t', 'plant', 'axis']
-
-# Define plant density (culm m-2)
-PLANT_DENSITY = {1: 250}
-
-INPUTS_OUTPUTS_PRECISION = 8  # 10
 
 
 def save_df_to_csv(df, states_filepath):
@@ -114,10 +83,36 @@ LOGGING_CONFIG_FILEPATH = os.path.join('..', '..', 'logging.json')
 
 LOGGING_LEVEL = logging.DEBUG  # can be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL
 
-
 def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
-         tillers_replications=None, manual_cyto_init=None, heterogeneous_canopy = False):
+         tillers_replications=None, manual_cyto_init=None, heterogeneous_canopy = False, cnwheat_parameters = pd.DataFrame(), N_fertilizations = None,
+         INPUTS_DIRPATH='inputs',OUTPUTS_DIRPATH = 'outputs',POSTPROCESSING_DIRPATH = 'postprocessing', GRAPHS_DIRPATH = 'graphs' ):
+
+    # inputs
+    # the inputs directory  must contain files 'adel_pars.RData', 'adel0000.pckl' and 'scene0000.bgeom' for ADELWHEAT
+    SAM_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'SAM_inputs.csv')
+    ORGANS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'organs_inputs.csv')
+    HIDDENZONE_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'hiddenzones_inputs.csv')
+    ELEMENTS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'elements_inputs.csv')
+    SOILS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'soils_inputs.csv')
+    METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_smooth.csv')  # os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')  #  os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')#
+
+    # the path of the CSV files where to save the states of the modeled system at each step
+    AXES_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'axes_states.csv')
+    SAM_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'SAM_states.csv')
+    ORGANS_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'organs_states.csv')
+    HIDDENZONES_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'hiddenzones_states.csv')
+    ELEMENTS_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'elements_states.csv')
+    SOILS_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'soils_states.csv')
+
+    # post-processing directory path
+    AXES_POSTPROCESSING_FILEPATH = os.path.join(POSTPROCESSING_DIRPATH, 'axes_postprocessing.csv')
+    ORGANS_POSTPROCESSING_FILEPATH = os.path.join(POSTPROCESSING_DIRPATH, 'organs_postprocessing.csv')
+    HIDDENZONES_POSTPROCESSING_FILEPATH = os.path.join(POSTPROCESSING_DIRPATH, 'hiddenzones_postprocessing.csv')
+    ELEMENTS_POSTPROCESSING_FILEPATH = os.path.join(POSTPROCESSING_DIRPATH, 'elements_postprocessing.csv')
+    SOILS_POSTPROCESSING_FILEPATH = os.path.join(POSTPROCESSING_DIRPATH, 'soils_postprocessing.csv')
+
     if run_simu:
+
         meteo = pd.read_csv(METEO_FILEPATH, index_col='t')
 
         # define the time step in hours for each simulator
@@ -347,17 +342,16 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                             for t_cnwheat in range(t_growthwheat, t_growthwheat + growthwheat_ts, cnwheat_ts):
                                 if t_cnwheat > 0:
 
-                                    # N fertilisation if any
-                                    if t_cnwheat == 2016:
-                                        cnwheat_facade_.soils[(1,'MS')].nitrates += 357143
-                                    elif t_cnwheat == 2520:
-                                        cnwheat_facade_.soils[(1, 'MS')].nitrates += 1000000
+                                    # N fertilization if any
+                                    if N_fertilizations is not None and len(N_fertilizations) > 0:
+                                        if t_cnwheat in N_fertilizations.keys():
+                                            cnwheat_facade_.soils[(1,'MS')].nitrates += N_fertilizations[t_cnwheat]
 
                                     # run CNWheat
                                     print('t cnwheat is {}'.format(t_cnwheat))
                                     Tair = meteo.loc[t_elongwheat, 'air_temperature']
                                     Tsoil = meteo.loc[t_elongwheat, 'soil_temperature']
-                                    cnwheat_facade_.run(Tair, Tsoil, tillers_replications)
+                                    cnwheat_facade_.run(Tair, Tsoil, tillers_replications, parameters=cnwheat_parameters)
 
                                 # append the inputs and outputs at current step to global lists
                                 all_simulation_steps.append(t_cnwheat)
@@ -832,7 +826,9 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   filters={'organ': org_ph},
                                                   plot_filepath=os.path.join(GRAPHS_DIRPATH, graph_name),
                                                   explicit_label=False)
+
 if __name__ == '__main__':
-    main(1900, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True,
+    main(2100, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
          tillers_replications = {'T1':0.5, 'T2':0.5, 'T3':0.5, 'T4':0.5},
-         manual_cyto_init = 200, heterogeneous_canopy = True)
+         manual_cyto_init = 200, heterogeneous_canopy = True,
+         N_fertilizations = {2016:357143, 2520:1000000} )

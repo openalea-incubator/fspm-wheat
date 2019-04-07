@@ -8,6 +8,7 @@ from cnwheat import model as cnwheat_model, simulation as cnwheat_simulation, \
 from fspmwheat import tools
 
 import math
+import pandas as pd
 import numpy as np
 
 """
@@ -117,11 +118,11 @@ class CNWheatFacade(object):
                                        cnwheat_elements_data_df=model_elements_inputs_df,
                                        cnwheat_soils_data_df=model_soils_inputs_df)
 
-    def run(self, Tair=12, Tsoil = 12, tillers_replications = None):
+    def run(self, Tair=12, Tsoil = 12, tillers_replications = None, parameters = pd.DataFrame() ):
         """
         Run the model and update the MTG and the dataframes shared between all models.
         """
-        self._initialize_model(Tair=Tair,Tsoil=Tsoil,tillers_replications=tillers_replications)
+        self._initialize_model(Tair=Tair,Tsoil=Tsoil,tillers_replications=tillers_replications, parameters=parameters)
         self._simulation.run()
         self._update_shared_MTG()
 
@@ -163,16 +164,18 @@ class CNWheatFacade(object):
                                                 soils_df=soils_postprocessing_df,
                                                 graphs_dirpath=graphs_dirpath)
 
-    def _initialize_model(self, Tair=12, Tsoil=12, tillers_replications=None ):
+    def _initialize_model(self, Tair=12, Tsoil=12, tillers_replications=None, parameters=pd.DataFrame() ):
         """
         Initialize the inputs of the model from the MTG shared between all models and the soils.
         """
+
+        self.parameters = parameters
 
         # Convert number of replications per tiller into number of replications per cohort
         cohorts_replications = {}
         for k,v in tillers_replications.iteritems():
             try:
-                tiller_rank = int( k[1:])
+                tiller_rank = int( k[1:] )
             except:
                 continue
             cohorts_replications[ tiller_rank+3 ] = v
@@ -323,7 +326,7 @@ class CNWheatFacade(object):
             if is_valid_plant:
                 self.population.plants.append(cnwheat_plant)
 
-        self._simulation.initialize(self.population, self.soils, Tair=Tair, Tsoil=Tsoil)
+        self._simulation.initialize(self.population, self.soils, self.parameters, Tair=Tair, Tsoil=Tsoil)
 
     def _update_shared_MTG(self):
         """
