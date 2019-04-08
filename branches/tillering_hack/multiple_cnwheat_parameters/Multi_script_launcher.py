@@ -5,8 +5,8 @@ import pandas as pd
 
 import main
 
-scenarii_cnwheat_parameters = pd.read_csv('scenarii_cnwheat_parameters.csv')
-scenarii_cnwheat_parameters = scenarii_cnwheat_parameters.reindex(scenarii_cnwheat_parameters.Scenario)
+scenarii_cnwheat_parameters = pd.read_csv('scenarii_cnwheat_parameters.csv', index_col='Scenario')
+scenarii_cnwheat_parameters['Scenario'] = scenarii_cnwheat_parameters.index
 scenarii = scenarii_cnwheat_parameters.Scenario
 
 def launch_cmd(command):

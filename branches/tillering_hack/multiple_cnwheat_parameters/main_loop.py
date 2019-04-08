@@ -9,8 +9,8 @@ import time
 my_dir = os.getcwd()
 
 # Manual cnwheat parameters
-scenarii_cnwheat_parameters = pd.read_csv('scenarii_cnwheat_parameters.csv')
-scenarii_cnwheat_parameters = scenarii_cnwheat_parameters.reindex(scenarii_cnwheat_parameters.Scenario)
+scenarii_cnwheat_parameters = pd.read_csv('scenarii_cnwheat_parameters.csv', index_col='Scenario')
+scenarii_cnwheat_parameters['Scenario'] = scenarii_cnwheat_parameters.index
 scenarii = scenarii_cnwheat_parameters.Scenario
 
 fspm = os.path.join(inspect.getfile(fspmwheat),'..')
@@ -29,8 +29,6 @@ def clear_directory(directory_path):
 tstart = time.time()
 
 for scenario in scenarii:
-
-
 
     scenario_name = 'Scenario_{}'.format(scenario)
     i += 1
@@ -65,7 +63,7 @@ for scenario in scenarii:
     # Run main fspmwheat
     os.chdir(fspm)
     try:
-        fspmwheat.main.main(10, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True,
+        fspmwheat.main.main(1900, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True,
             tillers_replications = {'T1':0.5, 'T2':0.5, 'T3':0.5, 'T4':0.5},
             manual_cyto_init = 200, heterogeneous_canopy = True, N_fertilizations = {2016:357143, 2520:1000000},
             cnwheat_parameters = scenario_cnwheat_parameters, GRAPHS_DIRPATH = scenario_graphs_dirpath, OUTPUTS_DIRPATH = scenario_outputs_dirpath)
