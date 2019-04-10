@@ -1,5 +1,6 @@
 # -*- coding: latin-1 -*-
 import numpy as np
+import pandas as pd
 
 from elongwheat import converter, simulation
 import tools
@@ -84,7 +85,7 @@ class ElongWheatFacade(object):
         self._shared_elements_inputs_outputs_df = shared_elements_inputs_outputs_df  #: the dataframe at elements scale shared between all models
         self._update_shared_dataframes(model_hiddenzones_inputs_df, model_elements_inputs_df, model_SAM_inputs_df)
 
-    def run(self,Tair, Tsoil, opt_static=False, opt_croiss_fix=False):
+    def run(self,Tair, Tsoil, opt_static=False, opt_croiss_fix=False, parameters = pd.DataFrame()):
         """
         Run the model and update the MTG and the dataframes shared between all models.
 
@@ -94,7 +95,7 @@ class ElongWheatFacade(object):
             - `Tsoil` (:class:`float`) - soil temperature at t (degree Celsius)
         """
         self._initialize_model()
-        self._simulation.run(Tair, Tsoil,opt_croiss_fix)
+        self._simulation.run(Tair, Tsoil, opt_croiss_fix, parameters)
         self._update_shared_MTG(self._simulation.outputs['hiddenzone'], self._simulation.outputs['elements'], self._simulation.outputs['SAM'], opt_static)
         elongwheat_hiddenzones_outputs_df, elongwheat_elements_outputs_df, elongwheaSAM_temperature_outputs_df = converter.to_dataframes(self._simulation.outputs)
 

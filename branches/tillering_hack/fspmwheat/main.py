@@ -84,7 +84,8 @@ LOGGING_CONFIG_FILEPATH = os.path.join('..', '..', 'logging.json')
 LOGGING_LEVEL = logging.DEBUG  # can be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL
 
 def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
-         tillers_replications=None, manual_cyto_init=None, heterogeneous_canopy = False, cnwheat_parameters = pd.DataFrame(), N_fertilizations = None,
+         tillers_replications=None, manual_cyto_init=None, heterogeneous_canopy = False, N_fertilizations = None,
+         cnwheat_parameters = pd.DataFrame(), elongwheat_parameters = pd.DataFrame(),
          INPUTS_DIRPATH='inputs',OUTPUTS_DIRPATH = 'outputs',POSTPROCESSING_DIRPATH = 'postprocessing', GRAPHS_DIRPATH = 'graphs' ):
 
     # inputs
@@ -326,7 +327,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                         # run ElongWheat
                         print('t elongwheat is {}'.format(t_elongwheat))
                         Tair, Tsoil = meteo.loc[t_elongwheat, ['air_temperature', 'soil_temperature']]
-                        elongwheat_facade_.run(Tair, Tsoil,opt_croiss_fix=opt_croiss_fix)
+                        elongwheat_facade_.run(Tair, Tsoil, opt_croiss_fix=opt_croiss_fix, parameters = elongwheat_parameters)
 
                         # Update geometry
                         adel_wheat.update_geometry(g)  # SI_units=True, properties_to_convert=properties_to_convert) # Return mtg with non-SI units
