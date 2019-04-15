@@ -542,13 +542,16 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         res = pd.read_csv(HIDDENZONES_STATES_FILEPATH)
         res = res[(res['axis'] == 'MS') & (res['plant'] == 1) & ~np.isnan(res.leaf_Lmax) ]
         res['lamina_Wmax'] = res.leaf_Wmax
+        res['lamina_W_Lg'] = res.leaf_Wmax / res.lamina_Lmax
         bchmk = bchmk[bchmk.metamer >= min(res.metamer)]
+        bchmk['lamina_W_Lg'] = bchmk.lamina_Wmax / bchmk.lamina_Lmax
 
         var_list = ['leaf_Lmax','lamina_Lmax','sheath_Lmax','lamina_Wmax']
         for var in list(var_list):
             plt.figure()
             plt.xlim((int(min(res.metamer) - 1), int(max(res.metamer) + 1)))
             plt.ylim(ymin=0, ymax=np.nanmax( list(res[var] * 100 * 1.05) + list(bchmk[var] * 1.05) ) )
+
             ax = plt.subplot(111)
 
             tmp = res[['metamer',var]].drop_duplicates()
@@ -561,6 +564,21 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             ax.legend((line1[0], line2[0]), ('Simulation', 'Ljutovac 2002'), loc=2)
             plt.savefig(os.path.join(GRAPHS_DIRPATH, var + '.PNG'))
             plt.close()
+
+        var = 'lamina_W_Lg'
+        plt.figure()
+        plt.xlim((int(min(res.metamer) - 1), int(max(res.metamer) + 1)))
+        plt.ylim(ymin=0, ymax=np.nanmax(list(res[var] * 1.05) + list(bchmk[var] * 1.05)))
+        ax = plt.subplot(111)
+        tmp = res[['metamer', var]].drop_duplicates()
+        line1 = ax.plot(tmp.metamer, tmp[var], color='c', marker='o')
+        line2 = ax.plot(bchmk.metamer, bchmk[var], color='orange', marker='o')
+        ax.set_ylabel(var )
+        ax.set_title(var)
+        ax.legend((line1[0], line2[0]), ('Simulation', 'Ljutovac 2002'), loc=2)
+        plt.savefig(os.path.join(GRAPHS_DIRPATH, var + '.PNG'))
+        plt.close()
+
 
         # 1bis) Comparison Structural Masses vs. adaptation from Bertheloot 2008
 
