@@ -540,7 +540,9 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         # 1) Comparison Dimensions with Ljutovac 2002
         bchmk = pd.read_csv('Ljutovac2002.csv')
         res = pd.read_csv(HIDDENZONES_STATES_FILEPATH)
-        res = res[(res['axis'] == 'MS') & (res['plant'] == 1) & ~np.isnan(res.leaf_Lmax) ]
+        res = res[(res['axis'] == 'MS') & (res['plant'] == 1) & ~np.isnan(res.leaf_Lmax) ].copy()
+        last_value_idx = res.groupby(['metamer'])['t'].transform(max) == res['t']
+        res = res[last_value_idx].copy()
         res['lamina_Wmax'] = res.leaf_Wmax
         res['lamina_W_Lg'] = res.leaf_Wmax / res.lamina_Lmax
         bchmk = bchmk[bchmk.metamer >= min(res.metamer)]
