@@ -537,26 +537,45 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             plt.savefig(os.path.join(GRAPHS_DIRPATH, 'phyllochron' + '.PNG'))
             plt.close()
 
-        # 1) Comparison Dimensions with Ljutovac 2002
-        bchmk = pd.read_csv('Ljutovac2002.csv')
-        res = pd.read_csv(HIDDENZONES_STATES_FILEPATH)
-        res = res[(res['axis'] == 'MS') & (res['plant'] == 1) & ~np.isnan(res.leaf_Lmax) ]
-        res['lamina_Wmax'] = res.leaf_Wmax
-        bchmk = bchmk[bchmk.metamer >= min(res.metamer)]
+            # 1) Comparison Dimensions with Ljutovac 2002
+            bchmk = pd.read_csv('Ljutovac2002.csv')
+            res = pd.read_csv(HIDDENZONES_STATES_FILEPATH)
+            res = res[(res['axis'] == 'MS') & (res['plant'] == 1) & ~np.isnan(res.leaf_Lmax)].copy()
+            last_value_idx = res.groupby(['metamer'])['t'].transform(max) == res['t']
+            res = res[last_value_idx].copy()
+            res['lamina_Wmax'] = res.leaf_Wmax
+            res['lamina_W_Lg'] = res.leaf_Wmax / res.lamina_Lmax
+            bchmk = bchmk[bchmk.metamer >= min(res.metamer)]
+            bchmk['lamina_W_Lg'] = bchmk.lamina_Wmax / bchmk.lamina_Lmax
 
-        var_list = ['leaf_Lmax','lamina_Lmax','sheath_Lmax','lamina_Wmax']
-        for var in list(var_list):
+            var_list = ['leaf_Lmax', 'lamina_Lmax', 'sheath_Lmax', 'lamina_Wmax']
+            for var in list(var_list):
+                plt.figure()
+                plt.xlim((int(min(res.metamer) - 1), int(max(res.metamer) + 1)))
+                plt.ylim(ymin=0, ymax=np.nanmax(list(res[var] * 100 * 1.05) + list(bchmk[var] * 1.05)))
+
+                ax = plt.subplot(111)
+
+                tmp = res[['metamer', var]].drop_duplicates()
+
+                line1 = ax.plot(tmp.metamer, tmp[var] * 100, color='c', marker='o')
+                line2 = ax.plot(bchmk.metamer, bchmk[var], color='orange', marker='o')
+
+                ax.set_ylabel(var + ' (cm)')
+                ax.set_title(var)
+                ax.legend((line1[0], line2[0]), ('Simulation', 'Ljutovac 2002'), loc=2)
+                plt.savefig(os.path.join(GRAPHS_DIRPATH, var + '.PNG'))
+                plt.close()
+
+            var = 'lamina_W_Lg'
             plt.figure()
             plt.xlim((int(min(res.metamer) - 1), int(max(res.metamer) + 1)))
-            plt.ylim(ymin=0, ymax=np.nanmax( list(res[var] * 100 * 1.05) + list(bchmk[var] * 1.05) ) )
+            plt.ylim(ymin=0, ymax=np.nanmax(list(res[var] * 1.05) + list(bchmk[var] * 1.05)))
             ax = plt.subplot(111)
-
-            tmp = res[['metamer',var]].drop_duplicates()
-
-            line1 = ax.plot(tmp.metamer, tmp[var] * 100, color='c', marker='o')
+            tmp = res[['metamer', var]].drop_duplicates()
+            line1 = ax.plot(tmp.metamer, tmp[var], color='c', marker='o')
             line2 = ax.plot(bchmk.metamer, bchmk[var], color='orange', marker='o')
-
-            ax.set_ylabel(var + ' (cm)')
+            ax.set_ylabel(var)
             ax.set_title(var)
             ax.legend((line1[0], line2[0]), ('Simulation', 'Ljutovac 2002'), loc=2)
             plt.savefig(os.path.join(GRAPHS_DIRPATH, var + '.PNG'))
@@ -829,7 +848,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   explicit_label=False)
 
 if __name__ == '__main__':
-    main(1600, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
+    main(1600, forced_start_time=0, run_simu=False, run_postprocessing=False, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
          tillers_replications = {'T1':0.5, 'T2':0.5, 'T3':0.5, 'T4':0.5},
          manual_cyto_init = 200, heterogeneous_canopy = True,
          N_fertilizations = {2016:357143./4, 2520:1000000./4} )
