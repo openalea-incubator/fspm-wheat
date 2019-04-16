@@ -72,7 +72,7 @@ def run_one_scenario(param):
     os.chdir(fspm)
     try:
         fspmwheat.main.main(1600, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
-                            tillers_replications = {'T1':0.5, 'T2':0.5, 'T3':0.5, 'T4':0.5},
+                            tillers_replications = {'T1':0., 'T2':0., 'T3':0., 'T4':0.},
                             manual_cyto_init = 200, heterogeneous_canopy = True, N_fertilizations = {2016:357143./4, 2520:1000000./4},
                             cnwheat_parameters = scenario_cnwheat_parameters,
                             elongwheat_parameters = scenario_cnwheat_parameters,

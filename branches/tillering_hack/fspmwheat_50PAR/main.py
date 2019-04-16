@@ -848,7 +848,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   explicit_label=False)
 
 if __name__ == '__main__':
-    main(1900, forced_start_time=0, run_simu=False, run_postprocessing=False, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
-         tillers_replications = {'T1':0.5, 'T2':0.5, 'T3':0.5, 'T4':0.5},
+    main(1600, forced_start_time=286, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=True, opt_croiss_fix=False,
+         tillers_replications = {'T1':0., 'T2':0.5, 'T3':0.5, 'T4':0.},
          manual_cyto_init = 200, heterogeneous_canopy = True,
          N_fertilizations = {2016:357143, 2520:1000000} )
