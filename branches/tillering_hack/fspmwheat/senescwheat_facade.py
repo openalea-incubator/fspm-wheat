@@ -199,7 +199,9 @@ class SenescWheatFacade(object):
                         for mtg_element_vid in self._shared_mtg.components_iter(mtg_organ_vid):
                             mtg_element_label = self._shared_mtg.label(mtg_element_vid)
                             element_id = (mtg_plant_index, mtg_axis_label, mtg_metamer_index, mtg_organ_label, mtg_element_label)
-                            if element_id not in senescwheat_elements_data_dict: continue
+                            if element_id not in senescwheat_elements_data_dict:
+                                senesced_length_organ += np.nan_to_num(self._shared_mtg.property('senesced_length').get(mtg_element_vid, 0.))
+                                continue
                             # update the element in the MTG
                             senescwheat_element_data_dict = senescwheat_elements_data_dict[element_id]
                             for senescwheat_element_data_name, senescwheat_element_data_value in senescwheat_element_data_dict.items():
