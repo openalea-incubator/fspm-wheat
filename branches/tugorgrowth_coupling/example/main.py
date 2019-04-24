@@ -324,7 +324,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             PARi = meteo.loc[t_caribu, ['PARi']].iloc[0]
             DOY = meteo.loc[t_caribu, ['DOY']].iloc[0]
             hour = meteo.loc[t_caribu, ['hour']].iloc[0]
-            caribu_facade_.run(energy=PARi, DOY=DOY, hourTU=hour, latitude=48.85, sun_sky_option='mix')
+            caribu_facade_.run(energy=PARi, DOY=DOY, hourTU=hour, latitude=48.85, sun_sky_option='sky', heterogeneous_canopy=True)
             print('t caribu is {}'.format(t_caribu))
 
             for t_senescwheat in range(t_caribu, t_caribu + caribu_ts, senescwheat_ts):
@@ -410,8 +410,6 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         all_SAM_inputs_outputs = all_SAM_inputs_outputs.reindex(SAM_INDEX_COLUMNS+all_SAM_inputs_outputs.columns.difference(SAM_INDEX_COLUMNS).tolist(), axis=1, copy=False)
 
         all_elements_inputs_outputs = pd.concat(elements_all_data_list, keys=all_simulation_steps, sort=False)
-        # all_elements_inputs_outputs = all_elements_inputs_outputs.loc[(all_elements_inputs_outputs.plant == 1) &  # TODO: temporary ; to remove when there will be default input values for each element in the mtg
-        #                                                               (all_elements_inputs_outputs.axis == 'MS')]
         all_elements_inputs_outputs.reset_index(0, inplace=True)
         all_elements_inputs_outputs.rename({'level_0': 't'}, axis=1, inplace=True)
         all_elements_inputs_outputs = all_elements_inputs_outputs.reindex(ELEMENTS_INDEX_COLUMNS+all_elements_inputs_outputs.columns.difference(ELEMENTS_INDEX_COLUMNS).tolist(), axis=1, copy=False)
@@ -423,12 +421,12 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
         # write all inputs and outputs to CSV files
         if run_from_outputs:
-            all_axes_inputs_outputs = pd.concat([axes_previous_outputs,all_axes_inputs_outputs], sort=False)
-            all_organs_inputs_outputs = pd.concat([organs_previous_outputs,all_organs_inputs_outputs], sort=False)
-            all_hiddenzones_inputs_outputs = pd.concat([hiddenzones_previous_outputs,all_hiddenzones_inputs_outputs], sort=False)
-            all_SAM_inputs_outputs = pd.concat([SAM_previous_outputs,all_SAM_inputs_outputs], sort=False)
-            all_elements_inputs_outputs = pd.concat([elements_previous_outputs,all_elements_inputs_outputs], sort=False)
-            all_soils_inputs_outputs = pd.concat([soils_previous_outputs,all_soils_inputs_outputs], sort=False)
+            all_axes_inputs_outputs = pd.concat([axes_previous_outputs, all_axes_inputs_outputs], sort=False)
+            all_organs_inputs_outputs = pd.concat([organs_previous_outputs, all_organs_inputs_outputs], sort=False)
+            all_hiddenzones_inputs_outputs = pd.concat([hiddenzones_previous_outputs, all_hiddenzones_inputs_outputs], sort=False)
+            all_SAM_inputs_outputs = pd.concat([SAM_previous_outputs, all_SAM_inputs_outputs], sort=False)
+            all_elements_inputs_outputs = pd.concat([elements_previous_outputs, all_elements_inputs_outputs], sort=False)
+            all_soils_inputs_outputs = pd.concat([soils_previous_outputs, all_soils_inputs_outputs], sort=False)
 
         save_df_to_csv(all_axes_inputs_outputs, AXES_STATES_FILEPATH)
         save_df_to_csv(all_organs_inputs_outputs, ORGANS_STATES_FILEPATH)
@@ -698,4 +696,4 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
 
 if __name__ == '__main__':
-    main(800, forced_start_time=415, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=True)
+    main(100, forced_start_time=49, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=True)
