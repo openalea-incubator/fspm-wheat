@@ -333,31 +333,31 @@ def main(stop_time, run_simu=True, make_graphs=True):
         # write all inputs and outputs to CSV files
         all_axes_inputs_outputs = pd.concat(axes_all_data_list, keys=all_simulation_steps)
         all_axes_inputs_outputs.reset_index(0, inplace=True)
-        all_axes_inputs_outputs.rename_axis({'level_0': 't'}, axis=1, inplace=True)
+        all_axes_inputs_outputs.rename({'level_0': 't'}, axis=1, inplace=True)
         all_axes_inputs_outputs.to_csv(AXES_STATES_FILEPATH, na_rep='NA', index=False, float_format='%.{}f'.format(INPUTS_OUTPUTS_PRECISION))
 
         all_organs_inputs_outputs = pd.concat(organs_all_data_list, keys=all_simulation_steps)
         all_organs_inputs_outputs.reset_index(0, inplace=True)
-        all_organs_inputs_outputs.rename_axis({'level_0': 't'}, axis=1, inplace=True)
+        all_organs_inputs_outputs.rename({'level_0': 't'}, axis=1, inplace=True)
         all_organs_inputs_outputs.to_csv(ORGANS_STATES_FILEPATH, na_rep='NA', index=False, float_format='%.{}f'.format(INPUTS_OUTPUTS_PRECISION))
 
         all_elements_inputs_outputs = pd.concat(elements_all_data_list, keys=all_simulation_steps)
 ##        all_elements_inputs_outputs = all_elements_inputs_outputs.loc[(all_elements_inputs_outputs.plant == 1) & ### TODO: temporary ; to remove when there will be default input values for each element in the mtg
 ##                                                                      (all_elements_inputs_outputs.axis == 'MS')]
         all_elements_inputs_outputs.reset_index(0, inplace=True)
-        all_elements_inputs_outputs.rename_axis({'level_0': 't'}, axis=1, inplace=True)
+        all_elements_inputs_outputs.rename({'level_0': 't'}, axis=1, inplace=True)
         all_elements_inputs_outputs.to_csv(ELEMENTS_STATES_FILEPATH, na_rep='NA', index=False, float_format='%.{}f'.format(INPUTS_OUTPUTS_PRECISION))
 
         all_soils_inputs_outputs = pd.concat(soils_all_data_list, keys=all_simulation_steps)
         all_soils_inputs_outputs.reset_index(0, inplace=True)
-        all_soils_inputs_outputs.rename_axis({'level_0': 't'}, axis=1, inplace=True)
+        all_soils_inputs_outputs.rename({'level_0': 't'}, axis=1, inplace=True)
         all_soils_inputs_outputs.to_csv(SOILS_STATES_FILEPATH, na_rep='NA', index=False, float_format='%.{}f'.format(INPUTS_OUTPUTS_PRECISION))
 
     ########POST-PROCESSING##
 
     if make_graphs:
 
-        ## POST PROCESSINGS
+        # POST PROCESSINGS
 
         states_df_dict = {}
         for states_filepath in (AXES_STATES_FILEPATH,
@@ -447,7 +447,7 @@ def main(stop_time, run_simu=True, make_graphs=True):
         # for org_ph in (['blade'], ['sheath'], ['internode'], ['peduncle', 'ear']):
         #     for variable_name, variable_label in graph_variables_ph_elements.iteritems():
         #         graph_name = variable_name + '_' + '_'.join(org_ph) + '.PNG'
-        #         tools.plot_cnwheat_ouputs(ph_elements_output_df,
+        #         cnwheat_tools.plot_cnwheat_ouputs(ph_elements_output_df,
         #                       x_name = x_name,
         #                       y_name = variable_name,
         #                       x_label=x_label,
@@ -473,7 +473,7 @@ def main(stop_time, run_simu=True, make_graphs=True):
         # for org in (['roots'], ['grains'], ['phloem']):
         #     for variable_name, variable_label in graph_variables_organs.iteritems():
         #         graph_name = variable_name + '_' + '_'.join(org) + '.PNG'
-        #         tools.plot_cnwheat_ouputs(organs_output_df,
+        #         cnwheat_tools.plot_cnwheat_ouputs(organs_output_df,
         #                       x_name = x_name,
         #                       y_name = variable_name,
         #                       x_label=x_label,
@@ -495,5 +495,5 @@ def main(stop_time, run_simu=True, make_graphs=True):
         # plt.close()
 
 if __name__ == '__main__':
-    main(1200, run_simu=False, make_graphs=True)
+    main(1200, run_simu=True, make_graphs=True)
 ##    cProfile.run('main(10, run_simu=True, make_graphs=False)', 'output.pstats')
