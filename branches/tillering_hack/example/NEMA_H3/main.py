@@ -295,12 +295,12 @@ def main(stop_time, run_simu=True, make_graphs=True):
 
                 # run SenescWheat
                 print('t senescwheat is {}'.format(t_senescwheat))
-                senescwheat_facade_.run(forced_max_protein_elements)
+                senescwheat_facade_.run(forced_max_protein_elements, opt_postflo=True)
 
                 for t_growthwheat in xrange(t_senescwheat, t_senescwheat + senescwheat_ts, growthwheat_ts):
                     # run GrowthWheat
                     print('t growthwheat is {}'.format(t_growthwheat))
-                    growthwheat_facade_.run()
+                    growthwheat_facade_.run(opt_postflo=True)
 
                     for t_farquharwheat in xrange(t_growthwheat, t_growthwheat + growthwheat_ts, farquharwheat_ts):
                         # get the meteo of the current step
