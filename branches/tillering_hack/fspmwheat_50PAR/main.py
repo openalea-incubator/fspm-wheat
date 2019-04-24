@@ -162,11 +162,32 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                 last_t_step = max(hiddenzones_previous_outputs['t'])
                 new_start_time = last_t_step + 1
 
-            organs_inputs_t0 = organs_previous_outputs[organs_previous_outputs.t == last_t_step].drop(['t'], axis=1)
-            hiddenzones_inputs_t0 = hiddenzones_previous_outputs[hiddenzones_previous_outputs.t == last_t_step].drop(['t'], axis=1)
-            elements_inputs_t0 = elements_previous_outputs[elements_previous_outputs.t == last_t_step].drop(['t'], axis=1)
-            SAM_inputs_t0 = SAM_previous_outputs[SAM_previous_outputs.t == last_t_step].drop(['t'], axis=1)
-            soils_inputs_t0 = soils_previous_outputs[soils_previous_outputs.t == last_t_step].drop(['t'], axis=1)
+            idx = organs_previous_outputs.groupby([v for v in ORGANS_INDEX_COLUMNS if v != 't'])['t'].transform(max) == organs_previous_outputs['t']
+            organs_inputs_t0 = organs_previous_outputs[idx].drop(['t'], axis=1)
+
+            idx = hiddenzones_previous_outputs.groupby([v for v in HIDDENZONES_INDEX_COLUMNS if v != 't'])['t'].transform(max) == hiddenzones_previous_outputs['t']
+            hiddenzones_inputs_t0 = hiddenzones_previous_outputs[idx].drop(['t'], axis=1)
+
+            titi = elements_previous_outputs[~elements_previous_outputs.is_over.isna()]
+            idx = titi.groupby([v for v in ELEMENTS_INDEX_COLUMNS if v != 't'])['t'].transform(max) == titi['t']
+            elements_inputs_t0 = titi[idx].drop(['t'], axis=1)
+            # idx = elements_previous_outputs.groupby([v for v in ELEMENTS_INDEX_COLUMNS if v != 't'])['t'].transform(max) == elements_previous_outputs['t']
+            # elements_inputs_t0 = elements_previous_outputs[idx].drop(['t'], axis=1)
+
+            idx = SAM_previous_outputs.groupby([v for v in SAM_INDEX_COLUMNS if v != 't'])['t'].transform(max) == SAM_previous_outputs['t']
+            SAM_inputs_t0 = SAM_previous_outputs[idx].drop(['t'], axis=1)
+
+            idx = soils_previous_outputs.groupby([v for v in SOILS_INDEX_COLUMNS if v != 't'])['t'].transform(max) == soils_previous_outputs['t']
+            soils_inputs_t0 = soils_previous_outputs[idx].drop(['t'], axis=1)
+
+            # Make sure boolean columns have either type bool or float
+            bool_columns = ['is_over','is_growing','leaf_is_emerged','internode_is_visible','leaf_is_growing','internode_is_growing']
+            for df in [elements_inputs_t0, hiddenzones_inputs_t0]:
+                for cln in bool_columns:
+                    if cln in df.keys():
+                        df[cln].replace(to_replace='False', value=0.0, inplace = True)
+                        df[cln].replace(to_replace='True', value=1.0, inplace = True)
+                        df[cln] = pd.to_numeric(df[cln])
 
         else:
             new_start_time = -1
@@ -341,8 +362,8 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                             growthwheat_facade_.run(manual_cyto_init)
 
                             for t_cnwheat in range(t_growthwheat, t_growthwheat + growthwheat_ts, cnwheat_ts):
-                                if t_cnwheat > 0:
 
+                                if t_cnwheat > 0:
                                     # N fertilization if any
                                     if N_fertilizations is not None and len(N_fertilizations) > 0:
                                         if t_cnwheat in N_fertilizations.keys():
@@ -758,8 +779,8 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         ax.set_title('Cumulated fluxes of C')
         plt.savefig(os.path.join(GRAPHS_DIRPATH, 'Fluxes_cumulated.PNG'), dpi=200, format='PNG', bbox_inches='tight')
 
-        # 6) RUE # TODO
-        df_elt['PARa_MJ'] = df_elt['PARa'] * df_elt['green_area'] * 3600/2.02 * 10**-6 # Il faut les calculcs green_area des talles
+        # 6) RUE
+        df_elt['PARa_MJ'] = df_elt['PARa'] * df_elt['green_area'] * df_elt['nb_replications'] * 3600 / 2.02 * 10 ** -6  # Il faudrait idealement les calculcs green_area et PARa des talles
         PARa = df_elt.groupby(['day'])['PARa_MJ'].agg('sum')
         PARa_cum = np.cumsum(PARa)
         days = df_elt['day'].unique()
@@ -767,23 +788,23 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         sum_dry_mass_shoot = df_axe.groupby(['day'])['sum_dry_mass_shoot'].agg('max')
         sum_dry_mass = df_axe.groupby(['day'])['sum_dry_mass'].agg('max')
 
-        RUE_shoot = np.polyfit(PARa_cum, sum_dry_mass_shoot,1)[0]
+        RUE_shoot = np.polyfit(PARa_cum, sum_dry_mass_shoot, 1)[0]
         RUE_plant = np.polyfit(PARa_cum, sum_dry_mass, 1)[0]
 
         fig, ax = plt.subplots()
-        ax.plot(PARa_cum, sum_dry_mass_shoot, label = 'Shoot dry mass (g)')
+        ax.plot(PARa_cum, sum_dry_mass_shoot, label='Shoot dry mass (g)')
         ax.plot(PARa_cum, sum_dry_mass, label='Plant dry mass (g)')
         ax.legend(prop={'size': 10}, framealpha=0.5, loc='center left', bbox_to_anchor=(1, 0.815), borderaxespad=0.)
-        ax.set_xlabel('Cumulative absorbed PAR (MJ) Main stem only!')
+        ax.set_xlabel('Cumulative absorbed PAR (MJ)')
         ax.set_ylabel('Dry mass (g)')
         ax.set_title('RUE')
-        plt.text(max(PARa_cum)*0.02,max(sum_dry_mass)*0.95, 'RUE shoot : {0:.2f} , RUE plant : {1:.2f}'.format(round(RUE_shoot,2),round(RUE_plant, 2) ) )
+        plt.text(max(PARa_cum) * 0.02, max(sum_dry_mass) * 0.95, 'RUE shoot : {0:.2f} , RUE plant : {1:.2f}'.format(round(RUE_shoot, 2), round(RUE_plant, 2)))
         plt.savefig(os.path.join(GRAPHS_DIRPATH, 'RUE.PNG'), dpi=200, format='PNG', bbox_inches='tight')
 
         fig, ax = plt.subplots()
-        ax.plot(days, sum_dry_mass_shoot, label = 'Shoot dry mass (g)')
+        ax.plot(days, sum_dry_mass_shoot, label='Shoot dry mass (g)')
         ax.plot(days, sum_dry_mass, label='Plant dry mass (g)')
-        ax.plot(days, PARa_cum, label = 'Cumulative absorbed PAR (MJ) Main stem only!')
+        ax.plot(days, PARa_cum, label='Cumulative absorbed PAR (MJ)')
         ax.legend(prop={'size': 10}, framealpha=0.5, loc='center left', bbox_to_anchor=(1, 0.815), borderaxespad=0.)
         ax.set_xlabel('Days')
         ax.set_title('RUE investigations')
@@ -848,7 +869,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   explicit_label=False)
 
 if __name__ == '__main__':
-    main(1600, forced_start_time=286, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=True, opt_croiss_fix=False,
-         tillers_replications = {'T1':0., 'T2':0.5, 'T3':0.5, 'T4':0.},
+    main(1900, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=True, opt_croiss_fix=False,
+         tillers_replications = {'T1':0.5, 'T2':0.5, 'T3':0., 'T4':0.},
          manual_cyto_init = 200, heterogeneous_canopy = True,
          N_fertilizations = {2016:357143, 2520:1000000} )

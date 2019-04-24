@@ -173,12 +173,13 @@ class CNWheatFacade(object):
 
         # Convert number of replications per tiller into number of replications per cohort
         cohorts_replications = {}
-        for k,v in tillers_replications.iteritems():
-            try:
-                tiller_rank = int( k[1:] )
-            except:
-                continue
-            cohorts_replications[ tiller_rank+3 ] = v
+        if tillers_replications is not None:
+            for k,v in tillers_replications.iteritems():
+                try:
+                    tiller_rank = int( k[1:] )
+                except:
+                    continue
+                cohorts_replications[ tiller_rank+3 ] = v
 
         self.population = cnwheat_model.Population()
 
