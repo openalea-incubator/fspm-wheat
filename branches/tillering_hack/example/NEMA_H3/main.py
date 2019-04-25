@@ -109,7 +109,7 @@ ORGANS_INDEX_COLUMNS = ['t','plant','axis', 'organ']
 SOILS_INDEX_COLUMNS = ['t','plant','axis']
 
 # Define culm density (culm m-2)
-DENSITY = 200.
+DENSITY = 410.
 NPLANTS = 1
 CULM_DENSITY = {i: DENSITY / NPLANTS for i in range(1, NPLANTS + 1)}
 
@@ -319,7 +319,7 @@ def main(stop_time, run_simu=True, make_graphs=True):
                                 Tair, Tsoil = meteo.loc[t_cnwheat, ['air_temperature', 'air_temperature']]
                                 # run CNWheat
                                 print('t cnwheat is {}'.format(t_cnwheat))
-                                cnwheat_facade_.run(Tair=Tair, Tsoil=Tsoil)
+                                cnwheat_facade_.run(Tair=Tair, Tsoil=Tsoil, parameters = {'RT.REGUL_S_CYTOKININS_AA':1} )
                                 # append the inputs and outputs at current step to global lists
                                 all_simulation_steps.append(t_cnwheat)
                                 axes_all_data_list.append(shared_axes_inputs_outputs_df.copy())
@@ -495,5 +495,5 @@ def main(stop_time, run_simu=True, make_graphs=True):
         # plt.close()
 
 if __name__ == '__main__':
-    main(1200, run_simu=True, make_graphs=True)
+    main(1000, run_simu=True, make_graphs=True)
 ##    cProfile.run('main(10, run_simu=True, make_graphs=False)', 'output.pstats')
