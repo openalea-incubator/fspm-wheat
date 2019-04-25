@@ -86,12 +86,12 @@ class SenescWheatFacade(object):
         self._shared_elements_inputs_outputs_df = shared_elements_inputs_outputs_df  #: the dataframe at elements scale shared between all models
         self._update_shared_dataframes(model_roots_inputs_df,model_SAM_inputs_df, model_elements_inputs_df)
 
-    def run(self, forced_max_protein_elements=None):
+    def run(self, forced_max_protein_elements=None, opt_full_remob=True, opt_postflo=False):
         """
         Run the model and update the MTG and the dataframes shared between all models.
         """
         self._initialize_model()
-        self._simulation.run(forced_max_protein_elements)
+        self._simulation.run(forced_max_protein_elements, opt_full_remob, opt_postflo)
         self._update_shared_MTG(self._simulation.outputs['roots'], self._simulation.outputs['SAM'], self._simulation.outputs['elements'])
         senescwheat_roots_outputs_df, senescwheat_SAM_outputs_df, senescwheat_elements_outputs_df = converter.to_dataframes(self._simulation.outputs)
         self._update_shared_dataframes(senescwheat_roots_outputs_df,senescwheat_SAM_outputs_df, senescwheat_elements_outputs_df)

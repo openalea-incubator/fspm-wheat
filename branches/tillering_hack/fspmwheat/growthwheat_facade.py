@@ -86,12 +86,12 @@ class GrowthWheatFacade(object):
         self._shared_elements_inputs_outputs_df = shared_elements_inputs_outputs_df  #: the dataframe at elements scale shared between all models
         self._update_shared_dataframes(model_hiddenzones_inputs_df, model_elements_inputs_df, model_roots_inputs_df)
 
-    def run(self, manual_cyto_init=None):
+    def run(self, manual_cyto_init=None, opt_postflo=False):
         """
         Run the model and update the MTG and the dataframes shared between all models.
         """
         self._initialize_model()
-        self._simulation.run(manual_cyto_init)
+        self._simulation.run(manual_cyto_init, opt_postflo)
         self._update_shared_MTG(self._simulation.outputs['hiddenzone'], self._simulation.outputs['elements'], self._simulation.outputs['roots'])
         growthwheat_hiddenzones_outputs_df, growthwheat_elements_outputs_df, growthwheat_roots_outputs_df = converter.to_dataframes(self._simulation.outputs)
         self._update_shared_dataframes(growthwheat_hiddenzones_outputs_df, growthwheat_elements_outputs_df, growthwheat_roots_outputs_df)
