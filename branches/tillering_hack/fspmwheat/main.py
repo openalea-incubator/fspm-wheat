@@ -95,7 +95,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
     HIDDENZONE_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'hiddenzones_inputs.csv')
     ELEMENTS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'elements_inputs.csv')
     SOILS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'soils_inputs.csv')
-    METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_smooth.csv')  # os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')  #  os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')#
+    METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')  #  os.path.join(INPUTS_DIRPATH, 'meteo_smooth.csv')  # os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')#
 
     # the path of the CSV files where to save the states of the modeled system at each step
     AXES_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'axes_states.csv')
@@ -117,7 +117,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         meteo = pd.read_csv(METEO_FILEPATH, index_col='t')
 
         # define the time step in hours for each simulator
-        caribu_ts = 4
+        caribu_ts = 2
         senescwheat_ts = 2
         farquharwheat_ts = 2
         elongwheat_ts = 1
@@ -796,7 +796,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         ax.plot(PARa_cum, sum_dry_mass_shoot, label = 'Shoot dry mass (g)')
         ax.plot(PARa_cum, sum_dry_mass, label='Plant dry mass (g)')
         ax.legend(prop={'size': 10}, framealpha=0.5, loc='center left', bbox_to_anchor=(1, 0.815), borderaxespad=0.)
-        ax.set_xlabel('Cumulative absorbed PAR (MJ)')
+        ax.set_xlabel('Cumulative absorbed global radiation (MJ)')
         ax.set_ylabel('Dry mass (g)')
         ax.set_title('RUE')
         plt.text(max(PARa_cum)*0.02,max(sum_dry_mass)*0.95, 'RUE shoot : {0:.2f} , RUE plant : {1:.2f}'.format(round(RUE_shoot,2),round(RUE_plant, 2) ) )
@@ -873,4 +873,4 @@ if __name__ == '__main__':
     main(2100, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
          tillers_replications = {'T1':0.5, 'T2':0.5, 'T3':0.5, 'T4':0.5},
          manual_cyto_init = 200, heterogeneous_canopy = True,
-         N_fertilizations = {2016:357143, 2520:1000000} )
+         N_fertilizations = {2016:357143, 2520:1000000})
