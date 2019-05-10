@@ -95,7 +95,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
     HIDDENZONE_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'hiddenzones_inputs.csv')
     ELEMENTS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'elements_inputs.csv')
     SOILS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'soils_inputs.csv')
-    METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')  #  os.path.join(INPUTS_DIRPATH, 'meteo_smooth.csv')  # os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')#
+    METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')  #  os.path.join(INPUTS_DIRPATH,'meteo_smooth.csv') #  os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')#
 
     # the path of the CSV files where to save the states of the modeled system at each step
     AXES_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'axes_states.csv')
@@ -117,7 +117,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         meteo = pd.read_csv(METEO_FILEPATH, index_col='t')
 
         # define the time step in hours for each simulator
-        caribu_ts = 2
+        caribu_ts = 4
         senescwheat_ts = 2
         farquharwheat_ts = 2
         elongwheat_ts = 1
@@ -320,7 +320,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         for t_caribu in range(start_time, stop_time, caribu_ts):
 
             # run Caribu
-            PARi = meteo.loc[t_caribu, ['PARi']].iloc[0]
+            PARi = meteo.loc[t_caribu, ['PARi_MA4']].iloc[0]
             DOY = meteo.loc[t_caribu, ['DOY']].iloc[0]
             hour = meteo.loc[t_caribu, ['hour']].iloc[0]
             caribu_facade_.run(energy=PARi, DOY=DOY, hourTU=hour, latitude = 48.85, sun_sky_option = 'sky', heterogeneous_canopy=heterogeneous_canopy)
@@ -338,7 +338,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
                 for t_farquharwheat in range(t_senescwheat, t_senescwheat + senescwheat_ts, farquharwheat_ts):
                     # get the meteo of the current step
-                    Ta, ambient_CO2, RH, Ur = meteo.loc[t_farquharwheat, ['air_temperature', 'ambient_CO2', 'humidity', 'Wind']]
+                    Ta, ambient_CO2, RH, Ur = meteo.loc[t_farquharwheat, ['air_temperature_MA2', 'ambient_CO2_MA2', 'humidity_MA2', 'Wind_MA2']]
 
                     # run FarquharWheat
                     farquharwheat_facade_.run(Ta, ambient_CO2, RH, Ur)
