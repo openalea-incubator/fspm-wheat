@@ -319,7 +319,9 @@ def main(stop_time, run_simu=True, make_graphs=True):
                                 Tair, Tsoil = meteo.loc[t_cnwheat, ['air_temperature', 'air_temperature']]
                                 # run CNWheat
                                 print('t cnwheat is {}'.format(t_cnwheat))
-                                cnwheat_facade_.run(Tair=Tair, Tsoil=Tsoil, parameters = {'RT.REGUL_S_CYTOKININS_AA':1} )
+                                cnwheat_facade_.run(Tair=Tair, Tsoil=Tsoil, parameters= {'RT.K_AMINO_ACIDS_EXPORT':3E-5,
+                                                                                         'RT.K_NITRATE_EXPORT':1E-6 })
+
                                 # append the inputs and outputs at current step to global lists
                                 all_simulation_steps.append(t_cnwheat)
                                 axes_all_data_list.append(shared_axes_inputs_outputs_df.copy())
@@ -495,5 +497,5 @@ def main(stop_time, run_simu=True, make_graphs=True):
         # plt.close()
 
 if __name__ == '__main__':
-    main(1000, run_simu=True, make_graphs=True)
+    main(1200, run_simu=True, make_graphs=True)
 ##    cProfile.run('main(10, run_simu=True, make_graphs=False)', 'output.pstats')
