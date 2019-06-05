@@ -95,7 +95,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
     HIDDENZONE_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'hiddenzones_inputs.csv')
     ELEMENTS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'elements_inputs.csv')
     SOILS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'soils_inputs.csv')
-    METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_smooth.csv')  # os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')  #  os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')#
+    METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')  #  os.path.join(INPUTS_DIRPATH, 'meteo_smooth.csv')  # os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')#
 
     # the path of the CSV files where to save the states of the modeled system at each step
     AXES_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'axes_states.csv')
@@ -869,7 +869,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   explicit_label=False)
 
 if __name__ == '__main__':
-    main(2060, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
+    main(2025, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
          tillers_replications = {'T1':0.5, 'T2':0., 'T3':0., 'T4':0.},
          manual_cyto_init = 200, heterogeneous_canopy = True,
          N_fertilizations = {2016:0, 2520:0} )

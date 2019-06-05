@@ -25,10 +25,10 @@ import tools
 """
     Information about this versioned file:
         $LastChangedBy: mngauthier $
-        $LastChangedDate: 2019-02-07 07:53:38 +0100 (jeu., 07 févr. 2019) $
-        $LastChangedRevision: 127 $
+        $LastChangedDate: 2019-05-06 11:44:49 +0200 (lun., 06 mai 2019) $
+        $LastChangedRevision: 187 $
         $URL: https://subversion.renater.fr/fspm-wheat/branches/tillering_hack/fspmwheat/senescwheat_facade.py $
-        $Id: senescwheat_facade.py 127 2019-02-07 06:53:38Z mngauthier $
+        $Id: senescwheat_facade.py 187 2019-05-06 09:44:49Z mngauthier $
 """
 
 #: the name of the photosynthetic organs modeled by SenescWheat
@@ -86,12 +86,12 @@ class SenescWheatFacade(object):
         self._shared_elements_inputs_outputs_df = shared_elements_inputs_outputs_df  #: the dataframe at elements scale shared between all models
         self._update_shared_dataframes(model_roots_inputs_df,model_SAM_inputs_df, model_elements_inputs_df)
 
-    def run(self, forced_max_protein_elements=None):
+    def run(self, forced_max_protein_elements=None, opt_full_remob=False, opt_postflo=False):
         """
         Run the model and update the MTG and the dataframes shared between all models.
         """
         self._initialize_model()
-        self._simulation.run(forced_max_protein_elements)
+        self._simulation.run(forced_max_protein_elements, opt_full_remob, opt_postflo)
         self._update_shared_MTG(self._simulation.outputs['roots'], self._simulation.outputs['SAM'], self._simulation.outputs['elements'])
         senescwheat_roots_outputs_df, senescwheat_SAM_outputs_df, senescwheat_elements_outputs_df = converter.to_dataframes(self._simulation.outputs)
         self._update_shared_dataframes(senescwheat_roots_outputs_df,senescwheat_SAM_outputs_df, senescwheat_elements_outputs_df)

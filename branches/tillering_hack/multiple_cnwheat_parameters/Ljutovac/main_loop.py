@@ -28,7 +28,7 @@ def clear_directory(directory_path):
 
 tstart = time.time()
 
-for scenario in scenarii:
+for scenario in [117]:#scenarii:
 
     scenario_name = 'Scenario_{}'.format(scenario)
     i += 1
@@ -51,22 +51,31 @@ for scenario in scenarii:
     # Create directory paths for graphs and outputs of this scneario
     scenario_graphs_dirpath = os.path.join(scenario_dirpath,'graphs')
     if os.path.exists(scenario_graphs_dirpath):
-        clear_directory(scenario_graphs_dirpath)
+        # clear_directory(scenario_graphs_dirpath)
+        pass
     else :
         os.mkdir(scenario_graphs_dirpath)
     scenario_outputs_dirpath = os.path.join(scenario_dirpath,'outputs')
     if os.path.exists(scenario_outputs_dirpath):
-        clear_directory(scenario_outputs_dirpath)
+        # clear_directory(scenario_outputs_dirpath)
+        pass
     else :
         os.mkdir(scenario_outputs_dirpath)
+    scenario_postprocessing_dirpath = os.path.join(scenario_dirpath,'postprocessing')
+    if os.path.exists(scenario_postprocessing_dirpath):
+        # clear_directory(scenario_postprocessing_dirpath)
+        pass
+    else :
+        os.mkdir(scenario_postprocessing_dirpath)
 
     # Run main fspmwheat
     os.chdir(fspm)
     try:
-        fspmwheat.main.main(1900, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=True,
+        fspmwheat.main.main(2500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=True, opt_croiss_fix=False,
             tillers_replications = {'T1':0.5, 'T2':0.5, 'T3':0.5, 'T4':0.5},
             manual_cyto_init = 200, heterogeneous_canopy = True, N_fertilizations = {2016:357143, 2520:1000000},
-            cnwheat_parameters = scenario_cnwheat_parameters, GRAPHS_DIRPATH = scenario_graphs_dirpath, OUTPUTS_DIRPATH = scenario_outputs_dirpath)
+            cnwheat_parameters = scenario_cnwheat_parameters, GRAPHS_DIRPATH = scenario_graphs_dirpath,
+                            OUTPUTS_DIRPATH = scenario_outputs_dirpath, POSTPROCESSING_DIRPATH=scenario_postprocessing_dirpath)
     except Exception as e:
         print e
         pass

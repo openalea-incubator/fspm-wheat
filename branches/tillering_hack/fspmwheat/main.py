@@ -562,14 +562,19 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         bchmk = pd.read_csv('Ljutovac2002.csv')
         res = pd.read_csv(HIDDENZONES_STATES_FILEPATH)
         res = res[(res['axis'] == 'MS') & (res['plant'] == 1) & ~np.isnan(res.leaf_Lmax) ].copy()
+        res_IN = res[ ~ np.isnan(res.internode_Lmax)]
         last_value_idx = res.groupby(['metamer'])['t'].transform(max) == res['t']
         res = res[last_value_idx].copy()
         res['lamina_Wmax'] = res.leaf_Wmax
         res['lamina_W_Lg'] = res.leaf_Wmax / res.lamina_Lmax
         bchmk = bchmk[bchmk.metamer >= min(res.metamer)]
         bchmk['lamina_W_Lg'] = bchmk.lamina_Wmax / bchmk.lamina_Lmax
+        last_value_idx = res_IN.groupby(['metamer'])['t'].transform(max) == res_IN['t']
+        res_IN = res_IN[last_value_idx].copy()
+        res = res[['metamer', 'leaf_Lmax', 'lamina_Lmax', 'sheath_Lmax', 'lamina_Wmax', 'lamina_W_Lg','SSLW','LSSW']].merge(res_IN[['metamer', 'internode_Lmax']], left_on='metamer',
+                                                                                                                     right_on='metamer', how = 'outer').copy()
 
-        var_list = ['leaf_Lmax','lamina_Lmax','sheath_Lmax','lamina_Wmax']
+        var_list = ['leaf_Lmax','lamina_Lmax','sheath_Lmax','lamina_Wmax','internode_Lmax']
         for var in list(var_list):
             plt.figure()
             plt.xlim((int(min(res.metamer) - 1), int(max(res.metamer) + 1)))
@@ -870,7 +875,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   explicit_label=False)
 
 if __name__ == '__main__':
-    main(2100, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
+    main(2500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
          tillers_replications = {'T1':0.5, 'T2':0.5, 'T3':0.5, 'T4':0.5},
          manual_cyto_init = 200, heterogeneous_canopy = True,
          N_fertilizations = {2016:357143, 2520:1000000})
