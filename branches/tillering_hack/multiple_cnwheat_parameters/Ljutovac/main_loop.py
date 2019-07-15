@@ -28,7 +28,7 @@ def clear_directory(directory_path):
 
 tstart = time.time()
 
-for scenario in [117]:#scenarii:
+for scenario in [120,121,122]:#scenarii:
 
     scenario_name = 'Scenario_{}'.format(scenario)
     i += 1
@@ -71,7 +71,7 @@ for scenario in [117]:#scenarii:
     # Run main fspmwheat
     os.chdir(fspm)
     try:
-        fspmwheat.main.main(2500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=True, opt_croiss_fix=False,
+        fspmwheat.main.main(2000, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
             tillers_replications = {'T1':0.5, 'T2':0.5, 'T3':0.5, 'T4':0.5},
             manual_cyto_init = 200, heterogeneous_canopy = True, N_fertilizations = {2016:357143, 2520:1000000},
             cnwheat_parameters = scenario_cnwheat_parameters, GRAPHS_DIRPATH = scenario_graphs_dirpath,

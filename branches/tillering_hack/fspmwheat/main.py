@@ -21,7 +21,6 @@ import senescwheat_facade
 from alinea.adel.echap_leaf import echap_leaves
 from alinea.adel.adel_dynamic import AdelWheatDyn
 
-
 """
     main
     ~~~~

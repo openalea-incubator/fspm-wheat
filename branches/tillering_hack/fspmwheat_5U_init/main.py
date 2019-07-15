@@ -21,7 +21,6 @@ import senescwheat_facade
 from alinea.adel.echap_leaf import echap_leaves
 from alinea.adel.adel_dynamic import AdelWheatDyn
 
-
 """
     main
     ~~~~
@@ -41,10 +40,10 @@ from alinea.adel.adel_dynamic import AdelWheatDyn
 '''
     Information about this versioned file:
         $LastChangedBy: mngauthier $
-        $LastChangedDate: 2019-04-07 09:28:34 +0200 (dim., 07 avr. 2019) $
-        $LastChangedRevision: 154 $
+        $LastChangedDate: 2019-06-05 07:58:08 +0200 (mer., 05 juin 2019) $
+        $LastChangedRevision: 194 $
         $URL: https://subversion.renater.fr/fspm-wheat/branches/tillering_hack/fspmwheat/main.py $
-        $Id: main.py 154 2019-04-07 07:28:34Z mngauthier $
+        $Id: main.py 194 2019-06-05 05:58:08Z mngauthier $
 '''
 
 random.seed(1234)
@@ -95,7 +94,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
     HIDDENZONE_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'hiddenzones_inputs.csv')
     ELEMENTS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'elements_inputs.csv')
     SOILS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH, 'soils_inputs.csv')
-    METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')  #  os.path.join(INPUTS_DIRPATH, 'meteo_smooth.csv')  # os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')#
+    METEO_FILEPATH = os.path.join(INPUTS_DIRPATH, 'meteo_Ljutovac2002.csv')  #  os.path.join(INPUTS_DIRPATH,'meteo_smooth.csv') #  os.path.join(INPUTS_DIRPATH, 'meteo_standard.csv')#
 
     # the path of the CSV files where to save the states of the modeled system at each step
     AXES_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'axes_states.csv')
@@ -320,7 +319,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         for t_caribu in range(start_time, stop_time, caribu_ts):
 
             # run Caribu
-            PARi = meteo.loc[t_caribu, ['PARi']].iloc[0]
+            PARi = meteo.loc[t_caribu, ['PARi_MA4']].iloc[0]
             DOY = meteo.loc[t_caribu, ['DOY']].iloc[0]
             hour = meteo.loc[t_caribu, ['hour']].iloc[0]
             caribu_facade_.run(energy=PARi, DOY=DOY, hourTU=hour, latitude = 48.85, sun_sky_option = 'sky', heterogeneous_canopy=heterogeneous_canopy)
@@ -338,7 +337,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
                 for t_farquharwheat in range(t_senescwheat, t_senescwheat + senescwheat_ts, farquharwheat_ts):
                     # get the meteo of the current step
-                    Ta, ambient_CO2, RH, Ur = meteo.loc[t_farquharwheat, ['air_temperature', 'ambient_CO2', 'humidity', 'Wind']]
+                    Ta, ambient_CO2, RH, Ur = meteo.loc[t_farquharwheat, ['air_temperature_MA2', 'ambient_CO2_MA2', 'humidity_MA2', 'Wind_MA2']]
 
                     # run FarquharWheat
                     farquharwheat_facade_.run(Ta, ambient_CO2, RH, Ur)
@@ -374,6 +373,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                     Tair = meteo.loc[t_elongwheat, 'air_temperature']
                                     Tsoil = meteo.loc[t_elongwheat, 'soil_temperature']
                                     cnwheat_facade_.run(Tair, Tsoil, tillers_replications, parameters=cnwheat_parameters)
+
 
                                 # append the inputs and outputs at current step to global lists
                                 all_simulation_steps.append(t_cnwheat)
@@ -558,49 +558,55 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             plt.savefig(os.path.join(GRAPHS_DIRPATH, 'phyllochron' + '.PNG'))
             plt.close()
 
-            # 1) Comparison Dimensions with Ljutovac 2002
-            bchmk = pd.read_csv('Ljutovac2002.csv')
-            res = pd.read_csv(HIDDENZONES_STATES_FILEPATH)
-            res = res[(res['axis'] == 'MS') & (res['plant'] == 1) & ~np.isnan(res.leaf_Lmax)].copy()
-            last_value_idx = res.groupby(['metamer'])['t'].transform(max) == res['t']
-            res = res[last_value_idx].copy()
-            res['lamina_Wmax'] = res.leaf_Wmax
-            res['lamina_W_Lg'] = res.leaf_Wmax / res.lamina_Lmax
-            bchmk = bchmk[bchmk.metamer >= min(res.metamer)]
-            bchmk['lamina_W_Lg'] = bchmk.lamina_Wmax / bchmk.lamina_Lmax
+        # 1) Comparison Dimensions with Ljutovac 2002
+        bchmk = pd.read_csv('Ljutovac2002.csv')
+        res = pd.read_csv(HIDDENZONES_STATES_FILEPATH)
+        res = res[(res['axis'] == 'MS') & (res['plant'] == 1) & ~np.isnan(res.leaf_Lmax) ].copy()
+        res_IN = res[ ~ np.isnan(res.internode_Lmax)]
+        last_value_idx = res.groupby(['metamer'])['t'].transform(max) == res['t']
+        res = res[last_value_idx].copy()
+        res['lamina_Wmax'] = res.leaf_Wmax
+        res['lamina_W_Lg'] = res.leaf_Wmax / res.lamina_Lmax
+        bchmk = bchmk[bchmk.metamer >= min(res.metamer)]
+        bchmk['lamina_W_Lg'] = bchmk.lamina_Wmax / bchmk.lamina_Lmax
+        last_value_idx = res_IN.groupby(['metamer'])['t'].transform(max) == res_IN['t']
+        res_IN = res_IN[last_value_idx].copy()
+        res = res[['metamer', 'leaf_Lmax', 'lamina_Lmax', 'sheath_Lmax', 'lamina_Wmax', 'lamina_W_Lg','SSLW','LSSW']].merge(res_IN[['metamer', 'internode_Lmax']], left_on='metamer',
+                                                                                                                     right_on='metamer', how = 'outer').copy()
 
-            var_list = ['leaf_Lmax', 'lamina_Lmax', 'sheath_Lmax', 'lamina_Wmax']
-            for var in list(var_list):
-                plt.figure()
-                plt.xlim((int(min(res.metamer) - 1), int(max(res.metamer) + 1)))
-                plt.ylim(ymin=0, ymax=np.nanmax(list(res[var] * 100 * 1.05) + list(bchmk[var] * 1.05)))
-
-                ax = plt.subplot(111)
-
-                tmp = res[['metamer', var]].drop_duplicates()
-
-                line1 = ax.plot(tmp.metamer, tmp[var] * 100, color='c', marker='o')
-                line2 = ax.plot(bchmk.metamer, bchmk[var], color='orange', marker='o')
-
-                ax.set_ylabel(var + ' (cm)')
-                ax.set_title(var)
-                ax.legend((line1[0], line2[0]), ('Simulation', 'Ljutovac 2002'), loc=2)
-                plt.savefig(os.path.join(GRAPHS_DIRPATH, var + '.PNG'))
-                plt.close()
-
-            var = 'lamina_W_Lg'
+        var_list = ['leaf_Lmax','lamina_Lmax','sheath_Lmax','lamina_Wmax','internode_Lmax']
+        for var in list(var_list):
             plt.figure()
             plt.xlim((int(min(res.metamer) - 1), int(max(res.metamer) + 1)))
-            plt.ylim(ymin=0, ymax=np.nanmax(list(res[var] * 1.05) + list(bchmk[var] * 1.05)))
+            plt.ylim(ymin=0, ymax=np.nanmax( list(res[var] * 100 * 1.05) + list(bchmk[var] * 1.05) ) )
+
             ax = plt.subplot(111)
-            tmp = res[['metamer', var]].drop_duplicates()
-            line1 = ax.plot(tmp.metamer, tmp[var], color='c', marker='o')
+
+            tmp = res[['metamer',var]].drop_duplicates()
+
+            line1 = ax.plot(tmp.metamer, tmp[var] * 100, color='c', marker='o')
             line2 = ax.plot(bchmk.metamer, bchmk[var], color='orange', marker='o')
-            ax.set_ylabel(var)
+
+            ax.set_ylabel(var + ' (cm)')
             ax.set_title(var)
             ax.legend((line1[0], line2[0]), ('Simulation', 'Ljutovac 2002'), loc=2)
             plt.savefig(os.path.join(GRAPHS_DIRPATH, var + '.PNG'))
             plt.close()
+
+        var = 'lamina_W_Lg'
+        plt.figure()
+        plt.xlim((int(min(res.metamer) - 1), int(max(res.metamer) + 1)))
+        plt.ylim(ymin=0, ymax=np.nanmax(list(res[var] * 1.05) + list(bchmk[var] * 1.05)))
+        ax = plt.subplot(111)
+        tmp = res[['metamer', var]].drop_duplicates()
+        line1 = ax.plot(tmp.metamer, tmp[var], color='c', marker='o')
+        line2 = ax.plot(bchmk.metamer, bchmk[var], color='orange', marker='o')
+        ax.set_ylabel(var )
+        ax.set_title(var)
+        ax.legend((line1[0], line2[0]), ('Simulation', 'Ljutovac 2002'), loc=2)
+        plt.savefig(os.path.join(GRAPHS_DIRPATH, var + '.PNG'))
+        plt.close()
+
 
         # 1bis) Comparison Structural Masses vs. adaptation from Bertheloot 2008
 
@@ -780,7 +786,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         plt.savefig(os.path.join(GRAPHS_DIRPATH, 'Fluxes_cumulated.PNG'), dpi=200, format='PNG', bbox_inches='tight')
 
         # 6) RUE
-        df_elt['PARa_MJ'] = df_elt['PARa'] * df_elt['green_area'] * df_elt['nb_replications'] * 3600 / 2.02 * 10 ** -6  # Il faudrait idealement les calculcs green_area et PARa des talles
+        df_elt['PARa_MJ'] = df_elt['PARa'] * df_elt['green_area'] * df_elt['nb_replications'] * 3600/2.02 * 10**-6 # Il faudrait idealement utiliser les calculcs green_area et PARa des talles
         PARa = df_elt.groupby(['day'])['PARa_MJ'].agg('sum')
         PARa_cum = np.cumsum(PARa)
         days = df_elt['day'].unique()
@@ -788,23 +794,23 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         sum_dry_mass_shoot = df_axe.groupby(['day'])['sum_dry_mass_shoot'].agg('max')
         sum_dry_mass = df_axe.groupby(['day'])['sum_dry_mass'].agg('max')
 
-        RUE_shoot = np.polyfit(PARa_cum, sum_dry_mass_shoot, 1)[0]
+        RUE_shoot = np.polyfit(PARa_cum, sum_dry_mass_shoot,1)[0]
         RUE_plant = np.polyfit(PARa_cum, sum_dry_mass, 1)[0]
 
         fig, ax = plt.subplots()
-        ax.plot(PARa_cum, sum_dry_mass_shoot, label='Shoot dry mass (g)')
+        ax.plot(PARa_cum, sum_dry_mass_shoot, label = 'Shoot dry mass (g)')
         ax.plot(PARa_cum, sum_dry_mass, label='Plant dry mass (g)')
         ax.legend(prop={'size': 10}, framealpha=0.5, loc='center left', bbox_to_anchor=(1, 0.815), borderaxespad=0.)
-        ax.set_xlabel('Cumulative absorbed PAR (MJ)')
+        ax.set_xlabel('Cumulative absorbed global radiation (MJ)')
         ax.set_ylabel('Dry mass (g)')
         ax.set_title('RUE')
-        plt.text(max(PARa_cum) * 0.02, max(sum_dry_mass) * 0.95, 'RUE shoot : {0:.2f} , RUE plant : {1:.2f}'.format(round(RUE_shoot, 2), round(RUE_plant, 2)))
+        plt.text(max(PARa_cum)*0.02,max(sum_dry_mass)*0.95, 'RUE shoot : {0:.2f} , RUE plant : {1:.2f}'.format(round(RUE_shoot,2),round(RUE_plant, 2) ) )
         plt.savefig(os.path.join(GRAPHS_DIRPATH, 'RUE.PNG'), dpi=200, format='PNG', bbox_inches='tight')
 
         fig, ax = plt.subplots()
-        ax.plot(days, sum_dry_mass_shoot, label='Shoot dry mass (g)')
+        ax.plot(days, sum_dry_mass_shoot, label = 'Shoot dry mass (g)')
         ax.plot(days, sum_dry_mass, label='Plant dry mass (g)')
-        ax.plot(days, PARa_cum, label='Cumulative absorbed PAR (MJ)')
+        ax.plot(days, PARa_cum, label = 'Cumulative absorbed PAR (MJ)')
         ax.legend(prop={'size': 10}, framealpha=0.5, loc='center left', bbox_to_anchor=(1, 0.815), borderaxespad=0.)
         ax.set_xlabel('Days')
         ax.set_title('RUE investigations')
@@ -869,7 +875,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   explicit_label=False)
 
 if __name__ == '__main__':
-    main(2025, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
+    main(2200, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=True, opt_croiss_fix=False,
          tillers_replications = {'T1':0.5, 'T2':0., 'T3':0., 'T4':0.},
          manual_cyto_init = 200, heterogeneous_canopy = True,
-         N_fertilizations = {2016:0, 2520:0} )
+         N_fertilizations = {2016:0, 2520:0})
