@@ -43,7 +43,7 @@ setup(
     author = "C.Chambon, R.Barillot",
     author_email = "camille.chambon@inra.fr, romain.barillot@inra.fr",
     description = "Model of CN distribution for wheat",
-    long_description = "Modèle de distribution spatiale de l'azote et du carbone chez le blé",
+    long_description = "Model of CN distribution for wheat",
     license = "", # TODO
     keywords = "", # TODO
     url = "https://sourcesup.renater.fr/projects/fspm-wheat/",
