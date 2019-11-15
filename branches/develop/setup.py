@@ -37,7 +37,7 @@ setup(
     version=fspmwheat.__version__,
     packages=find_packages(),
 
-    install_requires=['numpy>=1.7.2', 'pandas>=0.14.0', 'scipy>=0.12.1', 'matplotlib>=1.3.1'],
+    #install_requires=['numpy>=1.7.2', 'pandas>=0.14.0', 'scipy>=0.12.1', 'matplotlib>=1.3.1'],
     include_package_data=True,
 
     # metadata for upload to PyPI
