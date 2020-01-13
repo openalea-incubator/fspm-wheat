@@ -63,7 +63,7 @@ class CaribuFacade(object):
         self._shared_elements_inputs_outputs_df = shared_elements_inputs_outputs_df  #: the dataframe at elements scale shared between all models
         self._geometrical_model = geometrical_model  #: the model which deals with geometry
 
-    def run(self, sun_sky_option='mix', energy=1, DOY=1, hourTU=12, latitude=48.85, diffuse_model='soc', azimuts=4, zenits=5, heterogeneous_canopy=False):
+    def run(self, sun_sky_option='mix', energy=1, DOY=1, hourTU=12, latitude=48.85, diffuse_model='soc', azimuts=4, zenits=5, heterogeneous_canopy=False, t=0):
         """
         Run the model and update the MTG and the dataframes shared between all models.
 
@@ -114,6 +114,38 @@ class CaribuFacade(object):
 
         else:
             raise ValueError("Unknown sun_sky_option : can be either 'mix', 'sun' or 'sky'.")
+
+
+        # -- Plot and save the scene
+        # from openalea.plantgl.all import Scene as pglScene, Viewer
+        # c_scene_sky.plot()  # =PARa_sky, minval=0., maxval=700.)
+        # Viewer.camera.setPosition([0, 1, 0])
+        # Viewer.frameGL.saveImage('video/scene_{}.png'.format(t))
+
+        # -- Ground cover
+        #
+        # # Optical properties
+        # opt = {'par': {}}
+        # geom = self._shared_mtg.property('geometry')
+        #
+        # for vid in geom.keys():
+        #     if self._shared_mtg.class_name(vid) in ('LeafElement1', 'LeafElement'):
+        #         opt['par'][vid] = (0.10, 0.05)  #: (reflectance, transmittance) of the adaxial side of the leaves
+        #     elif self._shared_mtg.class_name(vid) == 'StemElement':
+        #         opt['par'][vid] = (0.10,)  #: (reflectance,) of the stems
+        #     else:
+        #         warnings.warn('Warning: unknown element type {}, vid={}'.format(self._shared_mtg.class_name(vid), vid))
+        #
+        # # Generates CaribuScenes
+        # duplicated_scene, domain = self._create_heterogeneous_canopy()
+        #
+        # ## at 0°
+        # c_scene_sun = CaribuScene(scene=duplicated_scene, pattern=domain, opt=opt, soil_mesh=1)
+        # _, agg0 = c_scene_sun.run(direct=True, infinite=True)
+        # PARa_sun = aggregated_sun['par']['Eabs']  #: Eabs is the relative surfacic absorbed energy per organ
+        # GC0 =  c_scene_sun.soil_aggregated['par']['area']
+        #
+        # ## at 57°
 
     def _initialize_model(self, energy, diffuse_model, azimuts, zenits, DOY, hourTU, latitude, heterogeneous_canopy):
         """

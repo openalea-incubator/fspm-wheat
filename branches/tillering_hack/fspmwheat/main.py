@@ -21,6 +21,8 @@ import senescwheat_facade
 from alinea.adel.echap_leaf import echap_leaves
 from alinea.adel.adel_dynamic import AdelWheatDyn
 
+import sys
+
 """
     main
     ~~~~
@@ -322,7 +324,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             PARi = meteo.loc[t_caribu, ['PARi_MA4']].iloc[0]
             DOY = meteo.loc[t_caribu, ['DOY']].iloc[0]
             hour = meteo.loc[t_caribu, ['hour']].iloc[0]
-            caribu_facade_.run(energy=PARi, DOY=DOY, hourTU=hour, latitude = 48.85, sun_sky_option = 'sky', heterogeneous_canopy=heterogeneous_canopy)
+            caribu_facade_.run(energy=PARi, DOY=DOY, hourTU=hour, latitude = 48.85, sun_sky_option = 'sky', heterogeneous_canopy=heterogeneous_canopy, t = t_caribu)
             print('t caribu is {}'.format(t_caribu))
 
             for t_senescwheat in range(t_caribu, t_caribu + caribu_ts, senescwheat_ts):
@@ -352,6 +354,11 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                         # Update geometry
                         adel_wheat.update_geometry(g)  # SI_units=True, properties_to_convert=properties_to_convert) # Return mtg with non-SI units
                         adel_wheat.plot(g)
+                        # Plot and save the plant
+                        from openalea.plantgl.all import Scene as pglScene, Viewer
+                        # if t_elongwheat == t_caribu:
+                        #     Viewer.camera.setPosition([0.265275,0.10075,0.0556634])
+                        #     Viewer.frameGL.saveImage('video/plant_{}.png'.format(t_elongwheat))
                         # adel_wheat.convert_to_SI_units(g, properties_to_convert)
 
                         for t_growthwheat in range(t_elongwheat, t_elongwheat + elongwheat_ts, growthwheat_ts):
@@ -372,7 +379,19 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                     print('t cnwheat is {}'.format(t_cnwheat))
                                     Tair = meteo.loc[t_elongwheat, 'air_temperature']
                                     Tsoil = meteo.loc[t_elongwheat, 'soil_temperature']
+
+                                    # we need this to restore our sys.stdout later on
+                                    org_stdout = sys.stdout
+                                    # we open a file
+                                    file_name = os.path.join('unloadings_hz', 'all_{}.txt'.format(t_cnwheat))
+                                    file_out = open(file_name, "w+")
+                                    # we redirect standard out to the file
+                                    sys.stdout = file_out
                                     cnwheat_facade_.run(Tair, Tsoil, tillers_replications, parameters=cnwheat_parameters)
+                                    # now we redirect the original stdout to sys.stdout
+                                    sys.stdout = org_stdout
+                                    # we clsoe the file
+                                    file_out.close()
 
                                 # append the inputs and outputs at current step to global lists
                                 all_simulation_steps.append(t_cnwheat)
@@ -874,7 +893,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   explicit_label=False)
 
 if __name__ == '__main__':
-    main(2500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
+    main(3500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, opt_croiss_fix=False,
          tillers_replications = {'T1':0.5, 'T2':0.5, 'T3':0.5, 'T4':0.5},
          manual_cyto_init = 200, heterogeneous_canopy = True,
          N_fertilizations = {2016:357143, 2520:1000000})
