@@ -974,4 +974,4 @@ if __name__ == '__main__':
          option_static=False, tillers_replications={'T1': 0.5, 'T2': 0.5, 'T3': 0.5, 'T4': 0.5},
          heterogeneous_canopy=True, N_fertilizations={2016: 357143, 2520: 1000000},
          PLANT_DENSITY={1:250}, update_parameters_all_models=None,
-         INPUTS_DIRPATH='inputs',METEO_FILENAME = 'meteo_Ljutovac2002.csv', OUTPUTS_DIRPATH=r'~\outputs', POSTPROCESSING_DIRPATH='postprocessing', GRAPHS_DIRPATH='graphs')
+         INPUTS_DIRPATH='inputs',METEO_FILENAME = 'meteo_Ljutovac2002.csv', OUTPUTS_DIRPATH=os.path.join(os.path.expanduser('~'), 'outputs'), POSTPROCESSING_DIRPATH='postprocessing', GRAPHS_DIRPATH='graphs')
