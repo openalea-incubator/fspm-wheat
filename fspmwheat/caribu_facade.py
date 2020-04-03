@@ -38,7 +38,7 @@ import tools
 SHARED_ELEMENTS_INPUTS_OUTPUTS_INDEXES = ['plant', 'axis', 'metamer', 'organ', 'element']
 
 #: the outputs of Caribu
-CARIBU_OUTPUTS = ['PARa']
+CARIBU_OUTPUTS = ['Eabs']
 
 
 class CaribuFacade(object):
@@ -66,7 +66,7 @@ class CaribuFacade(object):
     def run(self, sun_sky_option='mix', energy=1, DOY=1, hourTU=12, latitude=48.85, diffuse_model='soc', azimuts=4, zenits=5, heterogeneous_canopy=False,
             plant_density=250., inter_row=0.15):
         """
-        Run the model and update the MTG and the dataframes shared between all models.
+        Run the model (light distribution in the canopy) and update the MTG and the dataframes shared between all models.
 
         :param str sun_sky_option: The irradiance model, should be one of 'mix' or 'sun' or 'sky'
         :param float energy: The incident PAR above the canopy (µmol m-2 s-1)
@@ -80,39 +80,39 @@ class CaribuFacade(object):
         :param float plant_density: Number of plant per m2 in the stand (plant m-2).
         :param float inter_row: Inter-row spacing in the stand (m).
         """
-        c_scene_sky, c_scene_sun = self._initialize_model(energy, diffuse_model, azimuts, zenits, DOY, hourTU, latitude, heterogeneous_canopy, plant_density, inter_row)
+        c_scene_sky, c_scene_sun = self._initialize_model(1, diffuse_model, azimuts, zenits, DOY, hourTU, latitude, heterogeneous_canopy, plant_density, inter_row)
 
         #: Diffuse light
         if sun_sky_option == 'sky':
             _, aggregated_sky = c_scene_sky.run(direct=True, infinite=True)
-            PARa_sky = aggregated_sky['par']['Eabs']  #: Eabs is the relative surfacic absorbed energy per organ
+            Eabs_sky = aggregated_sky['par']['Eabs']  #: Eabs is the relative surfacic absorbed energy per organ
             # Updates
-            self.update_shared_MTG(PARa_sky)
-            self.update_shared_dataframes(PARa_sky)
+            self.update_shared_MTG(Eabs_sky)
+            self.update_shared_dataframes(Eabs_sky)
 
         #: Direct light
         elif sun_sky_option == 'sun':
             _, aggregated_sun = c_scene_sun.run(direct=True, infinite=True)
-            PARa_sun = aggregated_sun['par']['Eabs']  #: Eabs is the relative surfacic absorbed energy per organ
+            Eabs_sun = aggregated_sun['par']['Eabs']  #: Eabs is the relative surfacic absorbed energy per organ
             # Updates
-            self.update_shared_MTG(PARa_sun)
-            self.update_shared_dataframes(PARa_sun)
+            self.update_shared_MTG(Eabs_sun)
+            self.update_shared_dataframes(Eabs_sun)
 
         #: Mix sky-Sun
         elif sun_sky_option == 'mix':
             #: Diffuse
             _, aggregated_sky = c_scene_sky.run(direct=True, infinite=True)
-            PARa_sky = aggregated_sky['par']['Eabs']
+            Eabs_sky = aggregated_sky['par']['Eabs']
             #: Direct
             _, aggregated_sun = c_scene_sun.run(direct=True, infinite=True)
-            PARa_sun = aggregated_sun['par']['Eabs']
+            Eabs_sun = aggregated_sun['par']['Eabs']
 
             #: Spitters's model estimating for the diffuse:direct ratio
             Rg = energy / 2.02  #: Global Radiation (W.m-2)
             RdRs = spitters_horaire.RdRsH(Rg=Rg, DOY=DOY, heureTU=hourTU, latitude=latitude)  #: Diffuse fraction of the global irradiance
-            PARa = {}
-            for element_id, PARa_value in PARa_sky.items():
-                PARa[element_id] = RdRs * PARa_value + (1-RdRs) * PARa_sun[element_id]
+            Eabs = {}
+            for element_id, Eabs_value in Eabs_sky.items():
+                Eabs[element_id] = RdRs * Eabs_value + (1-RdRs) * Eabs_sun[element_id]
 
         else:
             raise ValueError("Unknown sun_sky_option : can be either 'mix', 'sun' or 'sky'.")
@@ -229,31 +229,31 @@ class CaribuFacade(object):
 
         return duplicated_scene, domain
 
-    def update_shared_MTG(self, aggregated_PARa):
+    def update_shared_MTG(self, aggregated_Eabs):
         """
         Update the MTG shared between all models from the population of Caribu.
         """
         # add the missing property
-        if 'PARa' not in self._shared_mtg.properties():
-            self._shared_mtg.add_property('PARa')
+        if 'Eabs' not in self._shared_mtg.properties():
+            self._shared_mtg.add_property('Eabs')
 
         # update the MTG
-        self._shared_mtg.property('PARa').update(aggregated_PARa)
+        self._shared_mtg.property('Eabs').update(aggregated_Eabs)
 
-    def update_shared_dataframes(self, aggregated_PARa):
+    def update_shared_dataframes(self, aggregated_Eabs):
         """
         Update the dataframes shared between all models from the inputs dataframes or the outputs dataframes of the model.
         """
         ids = []
-        PARa = []
-        for vid in sorted(aggregated_PARa.keys()):
+        Eabs = []
+        for vid in sorted(aggregated_Eabs.keys()):
             ind = int(self._shared_mtg.index(self._shared_mtg.complex_at_scale(vid, 1))), self._shared_mtg.label(self._shared_mtg.complex_at_scale(vid, 2)),\
                   int(self._shared_mtg.index(self._shared_mtg.complex_at_scale(vid, 3))), self._shared_mtg.label(self._shared_mtg.complex_at_scale(vid, 4)), self._shared_mtg.label(vid)
             ids.append(ind)
-            PARa.append(aggregated_PARa[vid])
+            Eabs.append(aggregated_Eabs[vid])
 
         ids_df = pd.DataFrame(ids, columns=SHARED_ELEMENTS_INPUTS_OUTPUTS_INDEXES)
-        data_df = pd.DataFrame({'PARa': PARa})
+        data_df = pd.DataFrame({'Eabs': Eabs})
         df = pd.concat([ids_df, data_df], axis=1)
         df.sort_values(['plant', 'axis', 'metamer', 'organ', 'element'], inplace=True)
         tools.combine_dataframes_inplace(df, SHARED_ELEMENTS_INPUTS_OUTPUTS_INDEXES, self._shared_elements_inputs_outputs_df)

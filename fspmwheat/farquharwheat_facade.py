@@ -73,10 +73,11 @@ class FarquharWheatFacade(object):
         self._shared_elements_inputs_outputs_df = shared_elements_inputs_outputs_df  #: the dataframe at elements scale shared between all models
         self._update_shared_dataframes(model_elements_inputs_df)
 
-    def run(self, Ta, ambient_CO2, RH, Ur):
+    def run(self, PARi, Ta, ambient_CO2, RH, Ur):
         """
         Run the model and update the MTG and the dataframes shared between all models.
 
+        :param float PARi: The incident PAR above the canopy (µmol m-2 s-1)
         :param float Ta: air temperature at t (degree Celsius)
         :param float ambient_CO2: air CO2 at t (µmol mol-1)
         :param float RH: relative humidity at t (decimal fraction)
@@ -84,7 +85,7 @@ class FarquharWheatFacade(object):
 
         """
         self._initialize_model()
-        self._simulation.run(Ta, ambient_CO2, RH, Ur)
+        self._simulation.run(PARi, Ta, ambient_CO2, RH, Ur)
         self._update_shared_MTG({'elements': self._simulation.outputs, 'SAMs': ''})
         farquharwheat_elements_outputs_df = converter.to_dataframe(self._simulation.outputs)
         self._update_shared_dataframes(farquharwheat_elements_outputs_df)

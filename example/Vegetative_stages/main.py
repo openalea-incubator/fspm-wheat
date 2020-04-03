@@ -64,6 +64,7 @@ ORGANS_INDEX_COLUMNS = ['t', 'plant', 'axis', 'organ']
 SAM_INDEX_COLUMNS = ['t', 'plant', 'axis']
 SOILS_INDEX_COLUMNS = ['t', 'plant', 'axis']
 
+
 def save_df_to_csv(df, states_filepath):
     try:
         df.to_csv(states_filepath, na_rep='NA', index=False, float_format='%.{}f'.format(INPUTS_OUTPUTS_PRECISION))
@@ -84,7 +85,7 @@ LOGGING_LEVEL = logging.INFO  # can be one of: DEBUG, INFO, WARNING, ERROR, CRIT
 
 def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False, option_static=False, tillers_replications=None,
          heterogeneous_canopy=True, N_fertilizations=None, PLANT_DENSITY=None, update_parameters_all_models=None,
-         INPUTS_DIRPATH='inputs', METEO_FILENAME='meteo.csv', OUTPUTS_DIRPATH = 'outputs', POSTPROCESSING_DIRPATH = 'postprocessing', GRAPHS_DIRPATH = 'graphs'):
+         INPUTS_DIRPATH='inputs', METEO_FILENAME='meteo.csv', OUTPUTS_DIRPATH='outputs', POSTPROCESSING_DIRPATH='postprocessing', GRAPHS_DIRPATH='graphs'):
     """
     update_parameters_all_models = {'cnwheat': {'organ1': {'param1': 'val1', 'param2': 'val2'},
                                                 'organ2': {'param1': 'val1', 'param2': 'val2'}
@@ -99,7 +100,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
     or INPUTS_DIRPATH = {'adel':str, 'plants':str, 'meteo':str, 'soils':str} #  The directory at path 'adel' must contain files 'adel_pars.RData', 'adel0000.pckl' and 'scene0000.bgeom' for ADELWHEAT
     """
 
-# Define default plant density (culm m-2)
+    # Define default plant density (culm m-2)
     if PLANT_DENSITY is None:
         PLANT_DENSITY = {1: 250.}
 
@@ -110,12 +111,12 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         INPUTS_DIRPATH_DICT = INPUTS_DIRPATH
     else:
         INPUTS_DIRPATH_DEFAULT = INPUTS_DIRPATH
-    SAM_INPUTS_FILEPATH = os.path.join( INPUTS_DIRPATH_DICT.get('plants', INPUTS_DIRPATH_DEFAULT), 'SAM_inputs.csv')
-    ORGANS_INPUTS_FILEPATH = os.path.join( INPUTS_DIRPATH_DICT.get('plants', INPUTS_DIRPATH_DEFAULT), 'organs_inputs.csv')
-    HIDDENZONE_INPUTS_FILEPATH = os.path.join( INPUTS_DIRPATH_DICT.get('plants', INPUTS_DIRPATH_DEFAULT), 'hiddenzones_inputs.csv')
-    ELEMENTS_INPUTS_FILEPATH = os.path.join( INPUTS_DIRPATH_DICT.get('plants', INPUTS_DIRPATH_DEFAULT), 'elements_inputs.csv')
-    SOILS_INPUTS_FILEPATH = os.path.join( INPUTS_DIRPATH_DICT.get('soils', INPUTS_DIRPATH_DEFAULT), 'soils_inputs.csv')
-    METEO_FILEPATH = os.path.join( INPUTS_DIRPATH_DICT.get('meteo', INPUTS_DIRPATH_DEFAULT),METEO_FILENAME )
+    SAM_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH_DICT.get('plants', INPUTS_DIRPATH_DEFAULT), 'SAM_inputs.csv')
+    ORGANS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH_DICT.get('plants', INPUTS_DIRPATH_DEFAULT), 'organs_inputs.csv')
+    HIDDENZONE_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH_DICT.get('plants', INPUTS_DIRPATH_DEFAULT), 'hiddenzones_inputs.csv')
+    ELEMENTS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH_DICT.get('plants', INPUTS_DIRPATH_DEFAULT), 'elements_inputs.csv')
+    SOILS_INPUTS_FILEPATH = os.path.join(INPUTS_DIRPATH_DICT.get('soils', INPUTS_DIRPATH_DEFAULT), 'soils_inputs.csv')
+    METEO_FILEPATH = os.path.join(INPUTS_DIRPATH_DICT.get('meteo', INPUTS_DIRPATH_DEFAULT), METEO_FILENAME)
 
     # the path of the CSV files where to save the states of the modeled system at each step
     AXES_STATES_FILEPATH = os.path.join(OUTPUTS_DIRPATH, 'axes_states.csv')
@@ -137,15 +138,15 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
         # define the time step in hours for each simulator
         caribu_ts = 4
-        senescwheat_ts = 2
-        farquharwheat_ts = 2
+        senescwheat_ts = 1
+        farquharwheat_ts = 1
         elongwheat_ts = 1
         growthwheat_ts = 1
         cnwheat_ts = 1
 
         # read adelwheat inputs at t0
         adel_wheat = AdelDyn(seed=1, scene_unit='m', leaves=echap_leaves(xy_model='Soissons_byleafclass'))
-       # adel_wheat.pars = adel_wheat.read_pars(dir=INPUTS_DIRPATH)
+        # adel_wheat.pars = adel_wheat.read_pars(dir=INPUTS_DIRPATH)
         g = adel_wheat.load(dir=INPUTS_DIRPATH_DICT.get('adel', INPUTS_DIRPATH_DEFAULT))
 
         # create empty dataframes to shared data between the models
@@ -371,11 +372,10 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         for t_caribu in range(start_time, stop_time, caribu_ts):
 
             # run Caribu
-            PARi = meteo.loc[t_caribu, ['PARi_MA4']].iloc[0]
             DOY = meteo.loc[t_caribu, ['DOY']].iloc[0]
             hour = meteo.loc[t_caribu, ['hour']].iloc[0]
-            caribu_facade_.run(energy=PARi, DOY=DOY, hourTU=hour, latitude=48.85, sun_sky_option='sky', heterogeneous_canopy=heterogeneous_canopy, plant_density=PLANT_DENSITY[1] )
-            #TODO: plant_density is not updated in case heterogeneous_canopy = False !
+            caribu_facade_.run(energy=1, DOY=DOY, hourTU=hour, latitude=48.85, sun_sky_option='sky', heterogeneous_canopy=heterogeneous_canopy, plant_density=PLANT_DENSITY[1])
+            # TODO: plant_density is not updated in case heterogeneous_canopy = False !
             print('t caribu is {}'.format(t_caribu))
 
             for t_senescwheat in range(t_caribu, t_caribu + caribu_ts, senescwheat_ts):
@@ -385,8 +385,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                 senescwheat_facade_.run()
 
                 # Test for dead plant # TODO: adapt in case of multiple plants
-                if np.nansum( shared_elements_inputs_outputs_df.loc[shared_elements_inputs_outputs_df['element'].isin(['StemElement','LeafElement1']), 'green_area'] ) == 0:
-
+                if np.nansum(shared_elements_inputs_outputs_df.loc[shared_elements_inputs_outputs_df['element'].isin(['StemElement', 'LeafElement1']), 'green_area']) == 0:
                     print('\n' '! Simulation stopped because all the emerged elements are fully senescent !')
 
                     # append the inputs and outputs at current step to global lists
@@ -403,10 +402,9 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                 # Run the rest of the model if the plant is alive
                 for t_farquharwheat in range(t_senescwheat, t_senescwheat + senescwheat_ts, farquharwheat_ts):
                     # get the meteo of the current step
-                    Ta, ambient_CO2, RH, Ur = meteo.loc[t_farquharwheat, ['air_temperature_MA2', 'ambient_CO2_MA2', 'humidity_MA2', 'Wind_MA2']]
-
+                    PARi, Ta, ambient_CO2, RH, Ur = meteo.loc[t_farquharwheat, ['PARi', 'air_temperature', 'ambient_CO2', 'humidity', 'Wind']]
                     # run FarquharWheat
-                    farquharwheat_facade_.run(Ta, ambient_CO2, RH, Ur)
+                    farquharwheat_facade_.run(PARi, Ta, ambient_CO2, RH, Ur)
 
                     for t_elongwheat in range(t_farquharwheat, t_farquharwheat + farquharwheat_ts, elongwheat_ts):
 
@@ -736,10 +734,10 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
         # 3) RER during the exponentiel-like phase
 
-        ## RER parameters
+        # - RER parameters
         rer_param = dict((k, v) for k, v in elongwheat_parameters.RERmax.iteritems())
 
-        ## Simulated RER
+        # - Simulated RER
 
         # import simulation outputs
         data_RER = pd.read_csv(HIDDENZONES_STATES_FILEPATH)
@@ -748,7 +746,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         data_teq = pd.read_csv(SAM_STATES_FILEPATH)
         data_teq = data_teq[data_teq.axis == 'MS'].copy()
 
-        ## Time previous leaf emergence
+        # Time previous leaf emergence
         tmp = data_RER[data_RER.leaf_is_emerged]
         leaf_em = tmp.groupby('metamer', as_index=False)['t'].min()
         leaf_em['t_em'] = leaf_em.t
@@ -758,14 +756,14 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         data_RER2 = pd.merge(data_RER, prev_leaf_em[['metamer', 't_em']], on='metamer')
         data_RER2 = data_RER2[data_RER2.t <= data_RER2.t_em]
 
-        ## SumTimeEq
+        # SumTimeEq
         data_teq['SumTimeEq'] = np.cumsum(data_teq.delta_teq)
         data_RER3 = pd.merge(data_RER2, data_teq[['t', 'SumTimeEq']], on='t')
 
-        ## logL
+        # logL
         data_RER3['logL'] = np.log(data_RER3.leaf_L)
 
-        ## Estimate RER
+        # Estimate RER
         RER_sim = {}
         for l in data_RER3.metamer.drop_duplicates():
             Y = data_RER3.logL[data_RER3.metamer == l]
@@ -775,7 +773,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             fit_RER = mod.fit()
             RER_sim[l] = fit_RER.params['SumTimeEq']
 
-        ## Graph
+        # - Graph
         fig, (ax1) = plt.subplots(1)
         ax1.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1e'))
 
@@ -870,7 +868,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         C_usages['NS_phloem'] = C_NS_phloem_init.reset_index(drop=True)
 
         df_elt['C_NS'] = df_elt.sucrose.fillna(0) + df_elt.fructan.fillna(0) + df_elt.starch.fillna(0) + (
-                    df_elt.amino_acids.fillna(0) + df_elt.proteins.fillna(0)) * AMINO_ACIDS_C_RATIO / AMINO_ACIDS_N_RATIO
+                df_elt.amino_acids.fillna(0) + df_elt.proteins.fillna(0)) * AMINO_ACIDS_C_RATIO / AMINO_ACIDS_N_RATIO
         df_elt['C_NS_tillers'] = df_elt['C_NS'] * df_elt['nb_replications'].fillna(1.)
         C_elt = df_elt.groupby(['t']).agg({'C_NS_tillers': 'sum'})
 
@@ -903,7 +901,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         ax.set_ylabel(u'Carbon usages : Photosynthesis (%)')
         ax.set_ylim(bottom=0, top=100.)
 
-        fig.suptitle(u'Total cumulated usages are ' + str(round(C_usages.C_budget.tail(1)*100, 0)) + u' % of Photosynthesis')
+        fig.suptitle(u'Total cumulated usages are ' + str(round(C_usages.C_budget.tail(1) * 100, 0)) + u' % of Photosynthesis')
 
         plt.savefig(os.path.join(GRAPHS_DIRPATH, 'C_usages_cumulated.PNG'), format='PNG', bbox_inches='tight')
         plt.close()
@@ -969,9 +967,10 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                                   plot_filepath=os.path.join(GRAPHS_DIRPATH, graph_name),
                                                   explicit_label=False)
 
+
 if __name__ == '__main__':
     main(2500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False,
          option_static=False, tillers_replications={'T1': 0.5, 'T2': 0.5, 'T3': 0.5, 'T4': 0.5},
          heterogeneous_canopy=True, N_fertilizations={2016: 357143, 2520: 1000000},
-         PLANT_DENSITY={1:250}, update_parameters_all_models=None,
-         INPUTS_DIRPATH='inputs',METEO_FILENAME = 'meteo_Ljutovac2002.csv', OUTPUTS_DIRPATH='outputs', POSTPROCESSING_DIRPATH='postprocessing', GRAPHS_DIRPATH='graphs')
+         PLANT_DENSITY={1: 250}, update_parameters_all_models=None,
+         INPUTS_DIRPATH='inputs', METEO_FILENAME='meteo_Ljutovac2002.csv', OUTPUTS_DIRPATH='outputs', POSTPROCESSING_DIRPATH='postprocessing', GRAPHS_DIRPATH='graphs')
