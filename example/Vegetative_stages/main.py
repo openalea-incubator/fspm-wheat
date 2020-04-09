@@ -40,14 +40,6 @@ from alinea.adel.echap_leaf import echap_leaves
 
 """
 
-'''
-    Information about this versioned file:
-        $LastChangedBy: mngauthier $
-        $LastChangedDate: 2019-01-09 14:10:09 +0100 (mer., 09 janv. 2019) $
-        $LastChangedRevision: 115 $
-        $URL: https://subversion.renater.fr/authscm/rbarillot/svn/fspm-wheat/trunk/fspmwheat/main.py $
-        $Id: main.py 115 2019-01-09 13:10:09Z mngauthier $
-'''
 
 random.seed(1234)
 np.random.seed(1234)
@@ -369,76 +361,72 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         # run the simulators
         current_time_of_the_system = time.time()
 
-        for t_caribu in range(start_time, stop_time, caribu_ts):
+        for t_farquharwheat in range(start_time, stop_time, farquharwheat_ts):
 
             # run Caribu
-            DOY = meteo.loc[t_caribu, ['DOY']].iloc[0]
-            hour = meteo.loc[t_caribu, ['hour']].iloc[0]
-            caribu_facade_.run(energy=1, DOY=DOY, hourTU=hour, latitude=48.85, sun_sky_option='sky', heterogeneous_canopy=heterogeneous_canopy, plant_density=PLANT_DENSITY[1])
+            DOY = meteo.loc[t_farquharwheat, ['DOY']].iloc[0]
+            hour = meteo.loc[t_farquharwheat, ['hour']].iloc[0]
+            PARi = meteo.loc[t_farquharwheat, ['PARi']].iloc[0]
+            PARi_MA4 = meteo.loc[t_farquharwheat, ['PARi_MA4']].iloc[0]
+
+            if t_farquharwheat % caribu_ts == 0:
+                print('t caribu is {}'.format(t_farquharwheat))
+                run_caribu = True
+                # caribu_facade_.run(run_caribu=run_caribu, energy=PARi_MA4, DOY=DOY, hourTU=hour, latitude=48.85, sun_sky_option='sky', heterogeneous_canopy=heterogeneous_canopy,
+                #                    plant_density=PLANT_DENSITY[1])
+            else:
+                run_caribu = False
+            caribu_facade_.run(run_caribu=run_caribu, energy=PARi, DOY=DOY, hourTU=hour, latitude=48.85, sun_sky_option='sky', heterogeneous_canopy=heterogeneous_canopy,
+                               plant_density=PLANT_DENSITY[1])
             # TODO: plant_density is not updated in case heterogeneous_canopy = False !
-            print('t caribu is {}'.format(t_caribu))
 
-            for t_senescwheat in range(t_caribu, t_caribu + caribu_ts, senescwheat_ts):
+            # get the meteo of the current step
+            Ta, ambient_CO2, RH, Ur = meteo.loc[t_farquharwheat, ['air_temperature', 'ambient_CO2', 'humidity', 'Wind']]
+            # run FarquharWheat
+            farquharwheat_facade_.run(Ta, ambient_CO2, RH, Ur)
 
-                # run SenescWheat
-                print('t senescwheat is {}'.format(t_senescwheat))
-                senescwheat_facade_.run()
+            for t_elongwheat in range(t_farquharwheat, t_farquharwheat + farquharwheat_ts, elongwheat_ts):
 
-                # Test for dead plant # TODO: adapt in case of multiple plants
-                if np.nansum(shared_elements_inputs_outputs_df.loc[shared_elements_inputs_outputs_df['element'].isin(['StemElement', 'LeafElement1']), 'green_area']) == 0:
-                    print('\n' '! Simulation stopped because all the emerged elements are fully senescent !')
+                # run ElongWheat
+                print('t elongwheat is {}'.format(t_elongwheat))
+                Tair, Tsoil = meteo.loc[t_elongwheat, ['air_temperature', 'soil_temperature']]
+                elongwheat_facade_.run(Tair, Tsoil, option_static=option_static)
 
-                    # append the inputs and outputs at current step to global lists
-                    all_simulation_steps.append(t_senescwheat)
-                    axes_all_data_list.append(shared_axes_inputs_outputs_df.copy())
-                    organs_all_data_list.append(shared_organs_inputs_outputs_df.copy())
-                    hiddenzones_all_data_list.append(shared_hiddenzones_inputs_outputs_df.copy())
-                    elements_all_data_list.append(shared_elements_inputs_outputs_df.copy())
-                    SAM_all_data_list.append(shared_SAM_inputs_outputs_df.copy())
-                    soils_all_data_list.append(shared_soils_inputs_outputs_df.copy())
+                # Update geometry
+                adel_wheat.update_geometry(g)
+                # adel_wheat.plot(g)
 
-                    break
+                for t_growthwheat in range(t_elongwheat, t_elongwheat + elongwheat_ts, growthwheat_ts):
 
-                # Run the rest of the model if the plant is alive
-                for t_farquharwheat in range(t_senescwheat, t_senescwheat + senescwheat_ts, farquharwheat_ts):
-                    # get the meteo of the current step
-                    PARi, Ta, ambient_CO2, RH, Ur = meteo.loc[t_farquharwheat, ['PARi', 'air_temperature', 'ambient_CO2', 'humidity', 'Wind']]
-                    # run FarquharWheat
-                    farquharwheat_facade_.run(PARi, Ta, ambient_CO2, RH, Ur)
+                    # run GrowthWheat
+                    print('t growthwheat is {}'.format(t_growthwheat))
+                    growthwheat_facade_.run()
 
-                    for t_elongwheat in range(t_farquharwheat, t_farquharwheat + farquharwheat_ts, elongwheat_ts):
+                    for t_cnwheat in range(t_growthwheat, t_growthwheat + growthwheat_ts, cnwheat_ts):
+                        if t_cnwheat > 0:
 
-                        # run ElongWheat
-                        print('t elongwheat is {}'.format(t_elongwheat))
-                        Tair, Tsoil = meteo.loc[t_elongwheat, ['air_temperature', 'soil_temperature']]
-                        elongwheat_facade_.run(Tair, Tsoil, option_static=option_static)
+                            # N fertilization if any
+                            if N_fertilizations is not None and len(N_fertilizations) > 0:
+                                if t_cnwheat in N_fertilizations.keys():
+                                    cnwheat_facade_.soils[(1, 'MS')].nitrates += N_fertilizations[t_cnwheat]
 
-                        # Update geometry
-                        adel_wheat.update_geometry(g)
-                        adel_wheat.plot(g)
+                            # run CNWheat
+                            print('t cnwheat is {}'.format(t_cnwheat))
+                            Tair = meteo.loc[t_elongwheat, 'air_temperature']
+                            Tsoil = meteo.loc[t_elongwheat, 'soil_temperature']
+                            cnwheat_facade_.run(Tair, Tsoil, tillers_replications)
 
-                        for t_growthwheat in range(t_elongwheat, t_elongwheat + elongwheat_ts, growthwheat_ts):
+                        for t_senescwheat in range(t_cnwheat, t_cnwheat + cnwheat_ts, senescwheat_ts):
+                            # run SenescWheat
+                            print('t senescwheat is {}'.format(t_senescwheat))
+                            senescwheat_facade_.run()
 
-                            # run GrowthWheat
-                            print('t growthwheat is {}'.format(t_growthwheat))
-                            growthwheat_facade_.run()
-
-                            for t_cnwheat in range(t_growthwheat, t_growthwheat + growthwheat_ts, cnwheat_ts):
-                                if t_cnwheat > 0:
-
-                                    # N fertilization if any
-                                    if N_fertilizations is not None and len(N_fertilizations) > 0:
-                                        if t_cnwheat in N_fertilizations.keys():
-                                            cnwheat_facade_.soils[(1, 'MS')].nitrates += N_fertilizations[t_cnwheat]
-
-                                    # run CNWheat
-                                    print('t cnwheat is {}'.format(t_cnwheat))
-                                    Tair = meteo.loc[t_elongwheat, 'air_temperature']
-                                    Tsoil = meteo.loc[t_elongwheat, 'soil_temperature']
-                                    cnwheat_facade_.run(Tair, Tsoil, tillers_replications)
+                            # Test for dead plant # TODO: adapt in case of multiple plants
+                            if np.nansum(shared_elements_inputs_outputs_df.loc[shared_elements_inputs_outputs_df['element'].isin(['StemElement', 'LeafElement1']), 'green_area']) == 0:
+                                print('\n' '! Simulation stopped because all the emerged elements are fully senescent !')
 
                                 # append the inputs and outputs at current step to global lists
-                                all_simulation_steps.append(t_cnwheat)
+                                all_simulation_steps.append(t_senescwheat)
                                 axes_all_data_list.append(shared_axes_inputs_outputs_df.copy())
                                 organs_all_data_list.append(shared_organs_inputs_outputs_df.copy())
                                 hiddenzones_all_data_list.append(shared_hiddenzones_inputs_outputs_df.copy())
@@ -446,11 +434,37 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                                 SAM_all_data_list.append(shared_SAM_inputs_outputs_df.copy())
                                 soils_all_data_list.append(shared_soils_inputs_outputs_df.copy())
 
-            else:
-                # Continue if SenescWheat loop wasn't broken because of dead plant.
-                continue
-            # SenescWheat loop was broken, break the Caribu loop.
-            break
+                                break
+
+                            # append the inputs and outputs at current step to global lists
+                            all_simulation_steps.append(t_senescwheat)
+                            axes_all_data_list.append(shared_axes_inputs_outputs_df.copy())
+                            organs_all_data_list.append(shared_organs_inputs_outputs_df.copy())
+                            hiddenzones_all_data_list.append(shared_hiddenzones_inputs_outputs_df.copy())
+                            elements_all_data_list.append(shared_elements_inputs_outputs_df.copy())
+                            SAM_all_data_list.append(shared_SAM_inputs_outputs_df.copy())
+                            soils_all_data_list.append(shared_soils_inputs_outputs_df.copy())
+            #             else:
+            #                 # Continue if SenescWheat loop wasn't broken because of dead plant.
+            #                 continue
+            #             # SenescWheat loop was broken, break the CN-Wheat loop.
+            #             break
+            #         else:
+            #             # Continue if SenescWheat loop wasn't broken because of dead plant.
+            #             continue
+            #         # SenescWheat loop was broken, break the growth-Wheat loop.
+            #         break
+            #     else:
+            #         # Continue if SenescWheat loop wasn't broken because of dead plant.
+            #         continue
+            #     # SenescWheat loop was broken, break the elong-Wheat loop.
+            #     break
+            # else:
+            #     # Continue if SenescWheat loop wasn't broken because of dead plant.
+            #     continue
+            # # SenescWheat loop was broken, break the Farqhuar loop.
+            # break
+
 
         execution_time = int(time.time() - current_time_of_the_system)
         print ('\n' 'Simulation run in {}'.format(str(datetime.timedelta(seconds=execution_time))))
@@ -969,7 +983,7 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
 
 if __name__ == '__main__':
-    main(2500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False,
+    main(2500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=True,
          option_static=False, tillers_replications={'T1': 0.5, 'T2': 0.5, 'T3': 0.5, 'T4': 0.5},
          heterogeneous_canopy=True, N_fertilizations={2016: 357143, 2520: 1000000},
          PLANT_DENSITY={1: 250}, update_parameters_all_models=None,
