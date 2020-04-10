@@ -1,6 +1,7 @@
 # -*- coding: latin-1 -*-
 
 import os
+import sys
 import inspect
 import itertools
 from math import sqrt
@@ -29,7 +30,7 @@ TT_since_sowing = 390  # °C.d
 PLANT_DENSITY = {1: 250}
 
 # directory with results of Ljutovac Simulation
-scenario_name = '2_PARi_MA4'
+scenario_name = ''
 scenario_dirpath = os.path.join(scenario_name)
 scenario_graphs_dirpath = os.path.join(scenario_dirpath, 'graphs')
 scenario_outputs_dirpath = os.path.join(scenario_dirpath, 'outputs')
@@ -1176,6 +1177,11 @@ RUE_shoot3_PAR = np.polyfit(PARint_BL_MJ_cum, sum_dry_mass_shoot_couvert.sum_dry
 RUE_plant = np.polyfit(RGa_cum, sum_dry_mass, 1)[0]
 RUE_plant2 = np.polyfit(RGa2_cum, sum_dry_mass, 1)[0]
 
+sys.stdout = open( os.path.join(scenario_dirpath,"RUE.txt"), "w")
+print 'RUE in g shoot per MJ of PARa is ', RUE_shoot2_PAR
+print 'RUE in g shoot per MJ of Rg (estimated from LAI with Beer-Lambert) is ', RUE_shoot3
+sys.stdout.close()
+
 ## Plot A
 fig, ax = plt.subplots(figsize=(4, 3))
 ax.plot(PARa2_cum, sum_dry_mass_shoot.sum_dry_mass_shoot, label='Shoot', color='g')
@@ -1405,7 +1411,7 @@ tutu_days = tutu.groupby(['day'], as_index=False).agg({'PARa_surface': 'sum',
                                                        'green_area': 'mean'})
 tutu_days = tutu_days.merge(out_sam_days, on='day').copy()
 
-tutu_days['ratio_PARa_PARi'] = tutu_days.PARa_surface / tutu_days.PARi_MA4
+tutu_days['ratio_PARa_PARi'] = tutu_days.PARa_surface / tutu_days.PARi
 
 tmp = titi[titi['element'].isin(['StemElement', 'LeafElement1'])]
 tutu2 = tmp.groupby(['t'], as_index=False).agg({'PARa_surface2': 'sum',
@@ -1463,7 +1469,7 @@ ax2.set_xlim(0, 700)
 ax2.set_ylim(0, 1)
 
 ax2.get_yaxis().set_label_coords(-0.08, 0.5)
-ax2.set_ylabel(u'Faction of incident PAR\nabsorbed by the canopy')
+ax2.set_ylabel(u'Fraction of incident PAR\nabsorbed by the canopy')
 yticks = ax2.yaxis.get_major_ticks()
 yticks[-1].label1.set_visible(False)
 
@@ -1700,6 +1706,8 @@ mask = ~np.isnan(df_corr.PTQ) & ~np.isnan(df_corr.Conc_Sucrose_phloem_smooth)
 slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(df_corr.PTQ[mask], df_corr.Conc_Sucrose_phloem_smooth[mask])
 scipy.stats.pearsonr(df_corr.PTQ[mask], df_corr.Conc_Sucrose_phloem_smooth[mask])
 
+sys.stdout = open(os.path.join(scenario_dirpath,"correlations.txt"), "w")
+
 print u'\n Correlation Sucrose_phloem vs. PTQ :'
 print 'R2 = ', r_value, ' p = ', p_value
 print u'\n'
@@ -1711,3 +1719,5 @@ scipy.stats.pearsonr(df_corr.PTQ[mask], df_corr.RUE_shoot[mask])
 print u'\n Correlation RUE shoot vs. PTQ :'
 print 'R2 = ', r_value, ' p = ', p_value
 print u'\n'
+
+sys.stdout.close()
