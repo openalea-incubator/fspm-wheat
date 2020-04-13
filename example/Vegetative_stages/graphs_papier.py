@@ -1037,6 +1037,13 @@ plt.close()
 
 ## ----------- SLN
 
+## Add a share of phloem content to each element
+df_phloem['amino_acids_phloem'] = df_phloem['amino_acids']
+df_elt = df_elt.merge(df_phloem[['t', 'amino_acids_phloem']], on=['t'], how='left')
+df_axe['mstruct_plant'] = df_axe['mstruct']
+df_elt = df_elt.merge(df_axe[['t', 'mstruct_plant']], on=['t'], how='left')
+df_elt['SLN_phloem'] = (df_elt.SLN * df_elt.green_area + df_elt.amino_acids_phloem * 1E-6 * 14 * df_elt.mstruct / df_elt.mstruct_plant) / df_elt.green_area
+
 fig = plt.figure(figsize=(4, 3))
 # set height ratios for sublots
 gs = gridspec.GridSpec(1, 1)
@@ -1045,9 +1052,9 @@ ax1 = plt.subplot(gs[0])
 for i in range(1, 10):
     tmp = df_elt[(df_elt.element == 'LeafElement1') & (df_elt.metamer == i) & (df_elt.is_growing == 0)]  #
     tmp2 = tmp.merge(out_elt[['element', 'metamer', 't', 'senesced_length_element']], on=['element', 'metamer', 't'], how='left')
-    SLA = tmp2[tmp2.senesced_length_element == 0].groupby(['day']).agg({'SLA': 'mean', 'SLN': 'mean'})
+    SLA = tmp2[tmp2.senesced_length_element == 0].groupby(['day']).agg({'SLA': 'mean', 'SLN': 'mean', 'SLN_phloem': 'mean'})
     SLA = SLA.merge(out_sam_days[['day', 'sum_TT', 'TT']], on='day').copy()
-    ax1.plot(SLA.sum_TT, SLA.SLN, linestyle='-', color=colors[i], label=i)
+    ax1.plot(SLA.sum_TT, SLA.SLN_phloem, linestyle='-', color=colors[i], label=i)
 ax1.get_yaxis().set_label_coords(-0.08, 0.5)
 ax1.set_ylabel(u'Surfacic Leaf Nitrogen (g m$^{-2}$)')
 ax1.set_ylim(0., 3.)
@@ -1066,6 +1073,13 @@ plt.savefig(os.path.join(scenario_graphs_dirpath, 'SLN.PNG'), format='PNG', bbox
 plt.close()
 
 ## ----------- SLA and  Lamina area
+
+## Add a share of phloem content to each element
+df_phloem['sucrose_phloem'] = df_phloem['sucrose']
+df_elt = df_elt.merge(df_phloem[['t', 'sucrose_phloem']], on=['t'], how='left')
+df_elt['SLA_phloem'] = df_elt.green_area / (df_elt.sum_dry_mass + (df_elt.sucrose_phloem * 1E-6 * 12 / 0.42 + df_elt.amino_acids_phloem * 1E-6 * 14 / 0.135) * df_elt.mstruct/df_elt.mstruct_plant) * 10**3
+
+
 fig = plt.figure(figsize=(4, 6))
 # set height ratios for sublots
 gs = gridspec.GridSpec(2, 1)
@@ -1087,9 +1101,9 @@ ax2 = plt.subplot(gs[1], sharex=ax0)
 for i in range(1, 10):
     tmp = df_elt[(df_elt.element == 'LeafElement1') & (df_elt.metamer == i) & (df_elt.is_growing == 0)]  #
     tmp2 = tmp.merge(out_elt[['element', 'metamer', 't', 'senesced_length_element']], on=['element', 'metamer', 't'], how='left')
-    SLA = tmp2[tmp2.senesced_length_element == 0].groupby(['day']).agg({'SLA': 'mean', 'SLN': 'mean'})
+    SLA = tmp2[tmp2.senesced_length_element == 0].groupby(['day']).agg({'SLA': 'mean', 'SLA_phloem': 'mean', 'SLN': 'mean'})
     SLA = SLA.merge(out_sam_days[['day', 'sum_TT', 'TT']], on='day').copy()
-    ax2.plot(SLA.sum_TT, SLA.SLA, linestyle='-', color=colors[i], label=i)
+    ax2.plot(SLA.sum_TT, SLA.SLA_phloem, linestyle='-', color=colors[i], label=i)
 ax2.set_xlim(0, 700)
 ax2.get_yaxis().set_label_coords(-0.08, 0.5)
 ax2.set_ylabel(u'Specific Leaf Area (m$^{2}$ kg$^{-1}$)')
@@ -1258,7 +1272,8 @@ ax.text(0.1, 0.9, 'B', ha='center', va='center', size=9, transform=ax.transAxes)
 ## Formatting
 ax.set_xlabel(x_label_TT)
 ax.set_xlim(0, 700)
-ax.set_ylim(0, 5)
+ax.set_ylim(0, 4)
+ax.set_yticks([0, 1, 2, 3, 4])
 ax.set_ylabel(u'Weekly Radiation Use Efficiency (g MJ$^{-1}$)')
 ax.legend(loc='center left', frameon=True, numpoints=1, bbox_to_anchor=(1, 0.5))
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'RUE_PAR_weekly.PNG'), format='PNG', bbox_inches='tight', dpi=600)
@@ -1295,7 +1310,8 @@ ax.plot(df_corr.PTQ, df_corr.RUE_plant, color='k', marker='o', linestyle='', mar
 ax.plot(df_corr.PTQ, df_corr.RUE_shoot, color='g', marker='o', linestyle='', markersize=3)
 
 ## Formatting
-ax.set_ylim(0, 5)
+ax.set_ylim(0, 4)
+ax.set_yticks([0, 1, 2, 3, 4])
 ax.set_xlim(0, 0.4)
 ax.set_ylabel(u'Weekly Radiation Use Efficiency (g MJ$^{-1}$)')
 ax.set_xlabel(u'Photothermal quotient (mol m$^{-2}$ d$^{-1}$ at 12°C)')
