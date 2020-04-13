@@ -7,23 +7,20 @@ import random
 import time
 import warnings
 
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
-
+import numpy as np
+import pandas as pd
 import statsmodels.api as sm
-
+from alinea.adel.adel_dynamic import AdelDyn
+from alinea.adel.echap_leaf import echap_leaves
+from elongwheat import parameters as elongwheat_parameters
 from fspmwheat import caribu_facade
 from fspmwheat import cnwheat_facade
 from fspmwheat import elongwheat_facade
 from fspmwheat import farquharwheat_facade
 from fspmwheat import growthwheat_facade
 from fspmwheat import senescwheat_facade
-from elongwheat import parameters as elongwheat_parameters
-
-from alinea.adel.adel_dynamic import AdelDyn
-from alinea.adel.echap_leaf import echap_leaves
 
 """
     main
@@ -39,7 +36,6 @@ from alinea.adel.echap_leaf import echap_leaves
     :license: see LICENSE for details.
 
 """
-
 
 random.seed(1234)
 np.random.seed(1234)
@@ -367,15 +363,13 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
             DOY = meteo.loc[t_farquharwheat, ['DOY']].iloc[0]
             hour = meteo.loc[t_farquharwheat, ['hour']].iloc[0]
             PARi = meteo.loc[t_farquharwheat, ['PARi']].iloc[0]
-            PARi_MA4 = meteo.loc[t_farquharwheat, ['PARi_MA4']].iloc[0]
 
             if t_farquharwheat % caribu_ts == 0:
                 print('t caribu is {}'.format(t_farquharwheat))
                 run_caribu = True
-                # caribu_facade_.run(run_caribu=run_caribu, energy=PARi_MA4, DOY=DOY, hourTU=hour, latitude=48.85, sun_sky_option='sky', heterogeneous_canopy=heterogeneous_canopy,
-                #                    plant_density=PLANT_DENSITY[1])
             else:
                 run_caribu = False
+
             caribu_facade_.run(run_caribu=run_caribu, energy=PARi, DOY=DOY, hourTU=hour, latitude=48.85, sun_sky_option='sky', heterogeneous_canopy=heterogeneous_canopy,
                                plant_density=PLANT_DENSITY[1])
             # TODO: plant_density is not updated in case heterogeneous_canopy = False !
@@ -444,27 +438,26 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
                             elements_all_data_list.append(shared_elements_inputs_outputs_df.copy())
                             SAM_all_data_list.append(shared_SAM_inputs_outputs_df.copy())
                             soils_all_data_list.append(shared_soils_inputs_outputs_df.copy())
-            #             else:
-            #                 # Continue if SenescWheat loop wasn't broken because of dead plant.
-            #                 continue
-            #             # SenescWheat loop was broken, break the CN-Wheat loop.
-            #             break
-            #         else:
-            #             # Continue if SenescWheat loop wasn't broken because of dead plant.
-            #             continue
-            #         # SenescWheat loop was broken, break the growth-Wheat loop.
-            #         break
-            #     else:
-            #         # Continue if SenescWheat loop wasn't broken because of dead plant.
-            #         continue
-            #     # SenescWheat loop was broken, break the elong-Wheat loop.
-            #     break
-            # else:
-            #     # Continue if SenescWheat loop wasn't broken because of dead plant.
-            #     continue
-            # # SenescWheat loop was broken, break the Farqhuar loop.
-            # break
-
+                        else:
+                            # Continue if SenescWheat loop wasn't broken because of dead plant.
+                            continue
+                        # SenescWheat loop was broken, break the CN-Wheat loop.
+                        break
+                    else:
+                        # Continue if SenescWheat loop wasn't broken because of dead plant.
+                        continue
+                    # SenescWheat loop was broken, break the growth-Wheat loop.
+                    break
+                else:
+                    # Continue if SenescWheat loop wasn't broken because of dead plant.
+                    continue
+                # SenescWheat loop was broken, break the elong-Wheat loop.
+                break
+            else:
+                # Continue if SenescWheat loop wasn't broken because of dead plant.
+                continue
+            # SenescWheat loop was broken, break the Farqhuar loop.
+            break
 
         execution_time = int(time.time() - current_time_of_the_system)
         print ('\n' 'Simulation run in {}'.format(str(datetime.timedelta(seconds=execution_time))))
@@ -607,14 +600,16 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         leaf_emergence = {}
         for group_name, data in grouped_df:
             plant, metamer = group_name[0], group_name[1]
-            if metamer == 3 or True not in data['leaf_is_emerged'].unique(): continue
-            leaf_emergence_t = data[data['leaf_is_emerged'] == True].iloc[0]['t']
+            if metamer == 3 or True not in data['leaf_is_emerged'].unique():
+                continue
+            leaf_emergence_t = data[data['leaf_is_emerged']].iloc[0]['t']
             leaf_emergence[(plant, metamer)] = leaf_emergence_t
 
         phyllochron = {'plant': [], 'metamer': [], 'phyllochron': []}
         for key, leaf_emergence_t in sorted(leaf_emergence.items()):
             plant, metamer = key[0], key[1]
-            if metamer == 4: continue
+            if metamer == 4:
+                continue
             phyllochron['plant'].append(plant)
             phyllochron['metamer'].append(metamer)
             prev_leaf_emergence_t = leaf_emergence[(plant, metamer - 1)]
@@ -779,13 +774,13 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
 
         # Estimate RER
         RER_sim = {}
-        for l in data_RER3.metamer.drop_duplicates():
-            Y = data_RER3.logL[data_RER3.metamer == l]
-            X = data_RER3.SumTimeEq[data_RER3.metamer == l]
+        for leaf in data_RER3.metamer.drop_duplicates():
+            Y = data_RER3.logL[data_RER3.metamer == leaf]
+            X = data_RER3.SumTimeEq[data_RER3.metamer == leaf]
             X = sm.add_constant(X)
             mod = sm.OLS(Y, X)
             fit_RER = mod.fit()
-            RER_sim[l] = fit_RER.params['SumTimeEq']
+            RER_sim[leaf] = fit_RER.params['SumTimeEq']
 
         # - Graph
         fig, (ax1) = plt.subplots(1)
@@ -897,8 +892,8 @@ def main(stop_time, forced_start_time=0, run_simu=True, run_postprocessing=True,
         C_usages['NS_other'] = C_NS_autre_init.reset_index(drop=True)
 
         # Total
-        C_usages['C_budget'] = (C_usages.Respi_roots + C_usages.Respi_shoot + C_usages.exudation + C_usages.Structure_roots + C_usages.Structure_shoot + C_usages.NS_phloem + C_usages.NS_other) / \
-                               C_usages.C_produced
+        C_usages['C_budget'] = (C_usages.Respi_roots + C_usages.Respi_shoot + C_usages.exudation +
+                                C_usages.Structure_roots + C_usages.Structure_shoot + C_usages.NS_phloem + C_usages.NS_other) / C_usages.C_produced
 
         # ----- Graph
         fig, ax = plt.subplots()
