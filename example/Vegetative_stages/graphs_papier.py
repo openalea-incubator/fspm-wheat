@@ -1177,7 +1177,7 @@ RUE_shoot3_PAR = np.polyfit(PARint_BL_MJ_cum, sum_dry_mass_shoot_couvert.sum_dry
 RUE_plant = np.polyfit(RGa_cum, sum_dry_mass, 1)[0]
 RUE_plant2 = np.polyfit(RGa2_cum, sum_dry_mass, 1)[0]
 
-sys.stdout = open( os.path.join(scenario_dirpath,"RUE.txt"), "w")
+sys.stdout = open(os.path.join(scenario_dirpath, "RUE.txt"), "w")
 print 'RUE in g shoot per MJ of PARa is ', RUE_shoot2_PAR
 print 'RUE in g shoot per MJ of Rg (estimated from LAI with Beer-Lambert) is ', RUE_shoot3
 sys.stdout.close()
@@ -1706,7 +1706,7 @@ mask = ~np.isnan(df_corr.PTQ) & ~np.isnan(df_corr.Conc_Sucrose_phloem_smooth)
 slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(df_corr.PTQ[mask], df_corr.Conc_Sucrose_phloem_smooth[mask])
 scipy.stats.pearsonr(df_corr.PTQ[mask], df_corr.Conc_Sucrose_phloem_smooth[mask])
 
-sys.stdout = open(os.path.join(scenario_dirpath,"correlations.txt"), "w")
+sys.stdout = open(os.path.join(scenario_dirpath, "correlations.txt"), "w")
 
 print u'\n Correlation Sucrose_phloem vs. PTQ :'
 print 'R2 = ', r_value, ' p = ', p_value
