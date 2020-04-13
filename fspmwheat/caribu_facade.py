@@ -1,13 +1,12 @@
 # -*- coding: latin-1 -*-
 
-import pandas as pd
-import numpy as np
 import warnings
 
+import numpy as np
+import pandas as pd
+import tools
 from alinea.caribu.CaribuScene import CaribuScene
 from alinea.caribu.sky_tools import GenSky, GetLight, Gensun, GetLightsSun, spitters_horaire
-
-import tools
 
 """
     fspmwheat.caribu_facade
@@ -24,7 +23,6 @@ import tools
 
     .. seealso:: Barillot et al. 2016.
 """
-
 
 #: the columns which define the topology in the elements scale dataframe shared between all models
 SHARED_ELEMENTS_INPUTS_OUTPUTS_INDEXES = ['plant', 'axis', 'metamer', 'organ', 'element']
@@ -54,6 +52,7 @@ class CaribuFacade(object):
         self._shared_mtg = shared_mtg  #: the MTG shared between all models
         self._shared_elements_inputs_outputs_df = shared_elements_inputs_outputs_df  #: the dataframe at elements scale shared between all models
         self._geometrical_model = geometrical_model  #: the model which deals with geometry
+        self._alea_canopy = pd.DataFrame()  #: alea table to generate the heterogeneous canopy
 
     def run(self, run_caribu, sun_sky_option='mix', energy=1, DOY=1, hourTU=12, latitude=48.85, diffuse_model='soc', azimuts=4, zenits=5, heterogeneous_canopy=False,
             plant_density=250., inter_row=0.15, plot_3D_scene=False, t_caribu=None):
@@ -72,20 +71,22 @@ class CaribuFacade(object):
         :param bool heterogeneous_canopy: Whether to create a duplicated heterogeneous canopy from the initial mtg.
         :param float plant_density: Number of plant per m2 in the stand (plant m-2).
         :param float inter_row: Inter-row spacing in the stand (m).
+        :param bool plot_3D_scene: it 'True', a picture of the 3D scene will be saved in the 'video' directory at each run of Caribu
+        :param int t_caribu: Time step of Caribu model, used to stored picture of the 3D scene
         """
-        c_scene_sky, c_scene_sun, Erel_input = self._initialize_model(run_caribu, 1, diffuse_model, azimuts, zenits, DOY, hourTU, latitude, heterogeneous_canopy, plant_density, inter_row, plot_3D_scene)
+        c_scene_sky, c_scene_sun, Erel_input = self._initialize_model(run_caribu, 1, diffuse_model, azimuts, zenits, DOY, hourTU, latitude, heterogeneous_canopy, plant_density, inter_row)
 
         if run_caribu:
             #: Diffuse light
             if sun_sky_option == 'sky':
                 _, aggregated_sky = c_scene_sky.run(direct=True, infinite=True)
                 if plot_3D_scene:
-                    from openalea.plantgl.all import Scene as pglScene, Viewer
+                    from openalea.plantgl.all import Viewer
                     c_scene_sky.plot()
                     Viewer.camera.setPosition([0, 1, 0])
-                    Viewer.frameGL.saveImage('video/scene_{}.png'.format(t_caribu))
+                    Viewer.frameGL.saveImage('video/scene_%.4d.png' % t_caribu)
                 Erel_sky = aggregated_sky['par']['Eabs']  #: Erel is the relative surfacic absorbed energy per organ
-                PARa_sky = {k: v*energy for k,v in Erel_sky.iteritems()}
+                PARa_sky = {k: v * energy for k, v in Erel_sky.iteritems()}
                 Erel_output = Erel_sky
                 PARa_output = PARa_sky
 
@@ -93,7 +94,7 @@ class CaribuFacade(object):
             elif sun_sky_option == 'sun':
                 _, aggregated_sun = c_scene_sun.run(direct=True, infinite=True)
                 Erel_sun = aggregated_sun['par']['Eabs']  #: Erel is the relative surfacic absorbed energy per organ
-                PARa_sun = {k: v*energy for k,v in Erel_sun.iteritems()}
+                PARa_sun = {k: v * energy for k, v in Erel_sun.iteritems()}
                 Erel_output = Erel_sun
                 PARa_output = PARa_sun
 
@@ -121,14 +122,14 @@ class CaribuFacade(object):
             # Ouputs
             outputs = {'PARa': PARa_output, 'Erel': Erel_output}
         else:
-            PARa_output = {k: v*energy for k, v in Erel_input.iteritems()}
+            PARa_output = {k: v * energy for k, v in Erel_input.iteritems()}
             outputs = {'PARa': PARa_output}
 
         # Updates
         self.update_shared_MTG(outputs)
         self.update_shared_dataframes(outputs)
 
-    def _initialize_model(self, run_caribu, energy, diffuse_model, azimuts, zenits, DOY, hourTU, latitude, heterogeneous_canopy, plant_density, inter_row, plot_3D_scene):
+    def _initialize_model(self, run_caribu, energy, diffuse_model, azimuts, zenits, DOY, hourTU, latitude, heterogeneous_canopy, plant_density, inter_row):
         """
         Initialize the inputs of the model from the MTG shared
 
@@ -141,7 +142,6 @@ class CaribuFacade(object):
         :param int hourTU: Hour to be used for solar sources (Universal Time)
         :param float latitude: latitude to be used for solar sources (°)
         :param bool heterogeneous_canopy: Whether to create a duplicated heterogeneous canopy from the initial mtg.
-
 
         :return: A tuple of Caribu scenes instantiated for sky and sun sources, respectively, and a dictionary with Erel value per vertex id.
         :rtype: (CaribuScene, CaribuScene, dict)
@@ -184,7 +184,7 @@ class CaribuFacade(object):
                 c_scene_sky = CaribuScene(scene=self._shared_mtg, light=sky, pattern=self._geometrical_model.domain, opt=opt)
                 c_scene_sun = CaribuScene(scene=self._shared_mtg, light=sun, pattern=self._geometrical_model.domain, opt=opt)
             else:
-                duplicated_scene, domain = self._create_heterogeneous_canopy(plant_density=plant_density, inter_row=inter_row, plot_3D_scene=plot_3D_scene)
+                duplicated_scene, domain = self._create_heterogeneous_canopy(plant_density=plant_density, inter_row=inter_row)
                 c_scene_sky = CaribuScene(scene=duplicated_scene, light=sky, pattern=domain, opt=opt)
                 c_scene_sun = CaribuScene(scene=duplicated_scene, light=sun, pattern=domain, opt=opt)
 
@@ -194,7 +194,7 @@ class CaribuFacade(object):
         return c_scene_sky, c_scene_sun, Erel
 
     def _create_heterogeneous_canopy(self, nplants=50, var_plant_position=0.03, var_leaf_inclination=0.157, var_leaf_azimut=1.57, var_stem_azimut=0.157,
-                                     plant_density=250, inter_row=0.15, plot_3D_scene=False):
+                                     plant_density=250, inter_row=0.15):
         """
         Duplicate a plant in order to obtain a heterogeneous canopy.
 
@@ -220,17 +220,15 @@ class CaribuFacade(object):
 
         random.seed(1234)
 
-        # The following is made only when we want to plot the 3D scene to prevent from "shakings"
-        # it is time consuming and does not change the simulation result
-        if plot_3D_scene:
-            # Built alea table
+        # Built alea table if does not exist yet
+        if self._alea_canopy.empty:
             elements_vid_list = []
             for mtg_plant_vid in self._shared_mtg.components_iter(self._shared_mtg.root):
                 for mtg_axis_vid in self._shared_mtg.components_iter(mtg_plant_vid):
                     for mtg_metamer_vid in self._shared_mtg.components_iter(mtg_axis_vid):
                         for mtg_organ_vid in self._shared_mtg.components_iter(mtg_metamer_vid):
                             for mtg_element_vid in self._shared_mtg.components_iter(mtg_organ_vid):
-                                if self._shared_mtg.label(mtg_element_vid) in ['LeafElement1', 'StemElement']:
+                                if self._shared_mtg.label(mtg_element_vid) == 'LeafElement1':
                                     elements_vid_list.append(mtg_element_vid)
             elements_vid_df = pd.DataFrame({'vid': elements_vid_list, 'tmp': 1})
             positions_df = pd.DataFrame({'pos': range(len(positions)),
@@ -243,58 +241,41 @@ class CaribuFacade(object):
                 np.random.seed(vid)
                 alea.loc[alea['vid'] == vid, 'azimut_leaf'] = np.random.uniform(-var_leaf_azimut, var_leaf_azimut, size=len(positions))
                 alea.loc[alea['vid'] == vid, 'inclination_leaf'] = np.random.uniform(-var_leaf_inclination, var_leaf_inclination, size=len(positions))
+            self._alea_canopy = alea
 
-            # Duplication and heterogeneity
-            duplicated_scene = plantgl.Scene()
-            position_number = 0
-            for pos in positions:
-                azimut_stem = random.uniform(-var_stem_azimut, var_stem_azimut)
-                for shp in initial_scene:
-                    if self._shared_mtg.label(shp.id) == 'StemElement':
-                        rotated_geometry = plantgl.EulerRotated(azimut_stem, 0, 0, shp.geometry)
-                        translated_geometry = plantgl.Translated(plantgl.Vector3(pos), rotated_geometry)
-                        new_shape = plantgl.Shape(translated_geometry, appearance=shp.appearance, id=shp.id)
-                        duplicated_scene += new_shape
-                    elif self._shared_mtg.label(shp.id) == 'LeafElement1':
-                        # Translation to origin
-                        anchor_point = self._shared_mtg.get_vertex_property(shp.id)['anchor_point']
-                        trans_to_origin = plantgl.Translated(-anchor_point, shp.geometry)
-                        # Rotation variability
-                        azimut = alea.loc[(alea.pos == position_number) & (alea.vid == shp.id), 'azimut_leaf'].values[0] #random.uniform(-var_leaf_azimut, var_leaf_azimut)
-                        inclination = alea.loc[(alea.pos == position_number) & (alea.vid == shp.id),'inclination_leaf'].values[0] #random.uniform(-var_leaf_inclination, var_leaf_inclination)
-                        rotated_geometry = plantgl.EulerRotated(azimut, inclination, 0, trans_to_origin)
-                        # Restore leaf base at initial anchor point
-                        translated_geometry = plantgl.Translated(anchor_point, rotated_geometry)
-                        # Translate leaf to new plant position
-                        translated_geometry = plantgl.Translated(pos, translated_geometry)
-                        new_shape = plantgl.Shape(translated_geometry, appearance=shp.appearance, id=shp.id)
-                        duplicated_scene += new_shape
-                position_number += 1
-        else:
-            # Duplication and heterogeneity
-            duplicated_scene = plantgl.Scene()
-            for pos in positions:
-                azimut_stem = random.uniform(-var_stem_azimut, var_stem_azimut)
-                for shp in initial_scene:
-                    if self._shared_mtg.label(shp.id) == 'StemElement':
-                        rotated_geometry = plantgl.EulerRotated(azimut_stem, 0, 0, shp.geometry)
-                        translated_geometry = plantgl.Translated(plantgl.Vector3(pos), rotated_geometry)
-                        new_shape = plantgl.Shape(translated_geometry, appearance=shp.appearance, id=shp.id)
-                        duplicated_scene += new_shape
-                    elif self._shared_mtg.label(shp.id) == 'LeafElement1':
-                        # Translation to origin
-                        anchor_point = self._shared_mtg.get_vertex_property(shp.id)['anchor_point']
-                        trans_to_origin = plantgl.Translated(-anchor_point, shp.geometry)
-                        # Rotation variability
-                        azimut = random.uniform(-var_leaf_azimut, var_leaf_azimut)
-                        inclination = random.uniform(-var_leaf_inclination, var_leaf_inclination)
-                        rotated_geometry = plantgl.EulerRotated(azimut, inclination, 0, trans_to_origin)
-                        # Restore leaf base at initial anchor point
-                        translated_geometry = plantgl.Translated(anchor_point, rotated_geometry)
-                        # Translate leaf to new plant position
-                        translated_geometry = plantgl.Translated(pos, translated_geometry)
-                        new_shape = plantgl.Shape(translated_geometry, appearance=shp.appearance, id=shp.id)
-                        duplicated_scene += new_shape
+        # Duplication and heterogeneity
+        duplicated_scene = plantgl.Scene()
+        position_number = 0
+        for pos in positions:
+            azimut_stem = random.uniform(-var_stem_azimut, var_stem_azimut)
+            for shp in initial_scene:
+                if self._shared_mtg.label(shp.id) == 'StemElement':
+                    rotated_geometry = plantgl.EulerRotated(azimut_stem, 0, 0, shp.geometry)
+                    translated_geometry = plantgl.Translated(plantgl.Vector3(pos), rotated_geometry)
+                    new_shape = plantgl.Shape(translated_geometry, appearance=shp.appearance, id=shp.id)
+                    duplicated_scene += new_shape
+                elif self._shared_mtg.label(shp.id) == 'LeafElement1':
+                    # Add shp.id in alea_canopy if not in yet:
+                    if shp.id not in list(self._alea_canopy['vid']):
+                        new_vid_df = pd.DataFrame({'vid': shp.id, 'pos': range(len(positions))})
+                        np.random.seed(shp.id)
+                        new_vid_df['azimut_leaf'] = np.random.uniform(-var_leaf_azimut, var_leaf_azimut, size=len(positions))
+                        new_vid_df['inclination_leaf'] = np.random.uniform(-var_leaf_inclination, var_leaf_inclination, size=len(positions))
+                        self._alea_canopy.append(new_vid_df)
+                    # Translation to origin
+                    anchor_point = self._shared_mtg.get_vertex_property(shp.id)['anchor_point']
+                    trans_to_origin = plantgl.Translated(-anchor_point, shp.geometry)
+                    # Rotation variability
+                    azimut = self._alea_canopy.loc[(self._alea_canopy.pos == position_number) & (self._alea_canopy.vid == shp.id), 'azimut_leaf'].values[0]  # random.uniform(-var_leaf_azimut, var_leaf_azimut)
+                    inclination = self._alea_canopy.loc[(self._alea_canopy.pos == position_number) & (self._alea_canopy.vid == shp.id), 'inclination_leaf'].values[0]  # random.uniform(-var_leaf_inclination, var_leaf_inclination)
+                    rotated_geometry = plantgl.EulerRotated(azimut, inclination, 0, trans_to_origin)
+                    # Restore leaf base at initial anchor point
+                    translated_geometry = plantgl.Translated(anchor_point, rotated_geometry)
+                    # Translate leaf to new plant position
+                    translated_geometry = plantgl.Translated(pos, translated_geometry)
+                    new_shape = plantgl.Shape(translated_geometry, appearance=shp.appearance, id=shp.id)
+                    duplicated_scene += new_shape
+            position_number += 1
 
         return duplicated_scene, domain
 
@@ -325,7 +306,7 @@ class CaribuFacade(object):
             for vid in sorted(aggregated_outputs[param].keys()):
                 if not ids_lidt_built:
                     ind = int(self._shared_mtg.index(self._shared_mtg.complex_at_scale(vid, 1))), self._shared_mtg.label(self._shared_mtg.complex_at_scale(vid, 2)), \
-                      int(self._shared_mtg.index(self._shared_mtg.complex_at_scale(vid, 3))), self._shared_mtg.label(self._shared_mtg.complex_at_scale(vid, 4)), self._shared_mtg.label(vid)
+                          int(self._shared_mtg.index(self._shared_mtg.complex_at_scale(vid, 3))), self._shared_mtg.label(self._shared_mtg.complex_at_scale(vid, 4)), self._shared_mtg.label(vid)
                     ids.append(ind)
                 aggregated_outputs_list[param].append(aggregated_outputs[param][vid])
             ids_lidt_built = True
