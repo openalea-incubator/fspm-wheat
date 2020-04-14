@@ -8,14 +8,10 @@ from math import sqrt
 import pandas as pd
 import numpy as np
 import scipy.stats
-from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 from matplotlib import gridspec
-import matplotlib.image as mpimg
-from cnwheat import parameters
-from cnwheat import tools
 from elongwheat import parameters as elongwheat_parameters
 import fspmwheat
 
@@ -152,7 +148,7 @@ def add_subplot_axes(ax, rect, axisbg='w'):
     x = infig_position[0]
     y = infig_position[1]
     width *= rect[2]
-    height *= rect[3]  # <= Typo was here
+    height *= rect[3]
     subax = fig.add_axes([x, y, width, height], axisbg=axisbg)
     x_labelsize = subax.get_xticklabels()[0].get_size()
     y_labelsize = subax.get_yticklabels()[0].get_size()
@@ -167,9 +163,9 @@ def add_subplot_axes(ax, rect, axisbg='w'):
 ## -----------  GRAPHS
 ## ---------------------------------------------------------------------------------------------------------------------------------------
 
-## ----------- Meteo and N soil
+## ----------- Wheather data and N soil
 
-## -- 0) Meteo DAILY + N soil
+## -- 0) Wheather DAILY + N soil
 out_sam_days_prec = out_sam_days.copy()
 out_sam_days_prec['day_next'] = out_sam_days_prec.index + 1
 out_sam_days_prec['sum_TT_prec'] = out_sam_days_prec.sum_TT
@@ -212,7 +208,7 @@ ax0.set_ylabel(u'Temperature (°C)')
 plt.setp(ax0.get_xticklabels(), visible=False)
 ax0.get_yaxis().set_label_coords(-0.08, 0.5)
 
-## -- SumTT
+## -- Sum Thermal Time
 # ax00 =  plt.subplot(gs[1])
 ax00 = ax0.twinx()
 ax00.set_xlim(0, 2500. / 24)
@@ -361,15 +357,17 @@ grouped_df = df_hz[df_hz['axis'] == 'MS'].groupby(['plant', 'metamer'])[['t', 'l
 leaf_emergence = {}
 for group_name, data in grouped_df:
     plant, metamer = group_name[0], group_name[1]
-    if metamer == 3 or True not in data['leaf_is_emerged'].unique(): continue
-    leaf_emergence_t = data[data['leaf_is_emerged'] == True].iloc[0]['t']
+    if metamer == 3 or True not in data['leaf_is_emerged'].unique():
+        continue
+    leaf_emergence_t = data[data['leaf_is_emerged']].iloc[0]['t']
     leaf_emergence[(plant, metamer)] = leaf_emergence_t
 
 phyllochron = {'plant': [], 'metamer': [], 'phyllochron': []}
 leaf_emergence_dd = {'plant': [], 'metamer': [], 'leaf_emergence': []}
 for key, leaf_emergence_t in sorted(leaf_emergence.items()):
     plant, metamer = key[0], key[1]
-    if metamer == 4: continue
+    if metamer == 4:
+        continue
     phyllochron['plant'].append(plant)
     phyllochron['metamer'].append(metamer)
     leaf_emergence_dd['plant'].append(plant)
@@ -383,10 +381,22 @@ for key, leaf_emergence_t in sorted(leaf_emergence.items()):
     phyllochron['phyllochron'].append(phyllo_DD)
     leaf_emergence_dd['leaf_emergence'].append(leaf_emergence_dd_i)
 
+Y = leaf_emergence_dd['metamer']
+X = leaf_emergence_dd['leaf_emergence']
+X = sm.add_constant(X)
+mod = sm.OLS(Y, X)
+fit_phyllo = mod.fit()
+
+sys.stdout = open(os.path.join(scenario_dirpath, "phyllochron.txt"), "w")
+print(fit_phyllo.summary())
+print 'phyllochron is ', 1/fit_phyllo.params[1], 'degree days'
+print 'confidence interval is', 1/fit_phyllo.conf_int(0.05)[1]
+sys.stdout.close()
+
 ## -- Graph
 pos_x_1row = -0.14
 pos_x_2row = -0.125
-## Longueurs
+## Lengths
 fig = plt.figure(figsize=(4, 11))
 # set height ratios for sublots
 gs = gridspec.GridSpec(5, 1, height_ratios=[1.5, 1, 1, 1, 1])
@@ -434,7 +444,7 @@ ax2.set_ylabel(u'Lamina width (cm)')
 yticks = ax2.yaxis.get_major_ticks()
 yticks[-1].label1.set_visible(False)
 
-## rapport Width/length lamina
+## ratio Width/length lamina
 bchmk['lamina_W_Lg'] = bchmk.lamina_Wmax / bchmk.lamina_Lmax
 ax20 = ax2.twinx()
 ax20.set_xlim(2, 10)
@@ -445,7 +455,7 @@ ax20.plot(res.metamer, res.lamina_W_Lg, linestyle='--', color='r')
 # ax20.get_yaxis().set_label_coords(1.12,0.5)
 ax20.set_ylabel(u'Width:Length\nlamina ratio')
 
-## Masses surfaciques limbes
+## Specific Lamina Mass
 ax3 = plt.subplot(gs[3], sharex=ax0)
 ax3.set_xlim(2, 10)
 ax3.set_ylim(10., 30.)
@@ -458,7 +468,7 @@ ax3.set_ylabel(u'Specific Structural Lamina\nMass (g m$^{-2}$)')
 yticks = ax3.yaxis.get_major_ticks()
 yticks[-1].label1.set_visible(False)
 
-## Masse linéaire de gaine
+## Linear sheath mass
 ax30 = ax3.twinx()
 ax30.set_xlim(2, 10)
 ax30.set_ylim(0.0, 1)
@@ -699,6 +709,11 @@ ax5.text(0.08, 0.9, 'F', ha='center', va='center', size=9, transform=ax5.transAx
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'Leaf_Metabolism_C.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
+sys.stdout = open(os.path.join(scenario_dirpath, "Structural_Growth_C.txt"), "w")
+print 'Structural growth cost leaf 5', max(Growth_Costs_C5_days.Growth_Costs_C_cum )
+print 'Structural growth cost leaf 8', max(Growth_Costs_C8_days.Growth_Costs_C_cum )
+sys.stdout.close()
+
 ## -----------   Leaf Metabolism N
 
 fig = plt.figure(figsize=(8, 9))
@@ -920,6 +935,8 @@ df_vis_elt = df_elt[(df_elt['element'].isin(['LeafElement1', 'StemElement'])) & 
 df_unload['import_elt'] = df_vis_elt.groupby(['day'], as_index=False).agg({'import_sucrose': 'sum'}).import_sucrose
 df_unload['import_hz'] = df_load_hz.groupby(['day'], as_index=False).agg({'import_sucrose': 'sum'}).import_sucrose
 df_unload['import_photosynthetic'] = df_unload['import_elt'] + df_unload['import_hz']
+
+C_usages_days.to_csv( os.path.join(scenario_postprocessing_dirpath, 'C_usages.csv'), header=True, index=False)
 
 ## ---  Graph_C_source_sink
 
@@ -1549,7 +1566,7 @@ ax1.plot(shoot_roots_days.sum_TT, shoot_roots_days.sum_dry_mass_shoot_MS * 250 *
 ax1.plot(shoot_roots_days.sum_TT, shoot_roots_days.sum_dry_mass_roots * 250 * 10 ** -2, color='r')
 
 ax00 = ax1.twinx()
-ax00.set_ylim(0, 3)
+ax00.set_ylim(0, 2.5)
 ax00.plot(shoot_roots_days.sum_TT, shoot_roots_days.shoot_roots_ratio, color='k')
 
 ax00.get_yaxis().set_label_coords(1.1, 0.5)
@@ -1632,10 +1649,10 @@ ax2.errorbar(dt_RB_Ns_TT[2:], dt_RB_Ns[2:], yerr=dt_RB_Ns_confint[2:], marker='o
 
 ax2.set_xlabel(x_label_TT)
 ax2.set_xlim(0, 700)
-ax2.set_ylim(bottom=0., top=5.5)
+ax2.set_ylim(bottom=0., top=5.)
 ax2.set_ylabel('Nitrogen fraction (% dry mass)')
 
-rect = [0.55, 0.35, 0.40, 0.30]
+rect = [0.55, 0.33, 0.40, 0.30]
 ax1 = add_subplot_axes(ax2, rect)
 ax1.plot(DM_t_ha[N_shoot_days.day], N_shoot_days.N_content_shoot, color='g')
 ax1.plot(ref_DM, ref_N_crit, color='k', linestyle='--')
