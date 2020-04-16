@@ -96,7 +96,7 @@ meteo_days = meteo.groupby(['day']).agg({'PARi': 'sum',
 # Observed value from Ljutovac 2002
 data_obs = pd.read_csv(os.path.join('Data_Ljutovac', 'Ljutovac2002.csv'))
 
-# Unloadings => These results were generated seperatly 
+# Unloadings => These results were generated seperatly from the intermediate calculation of the solver in CN-Wheat in order to ass the fluxes integrated over each simulation time step.
 scenario_unloadings_dirpath = os.path.join('all_integration_unloadings.csv')
 df_load = pd.read_csv(scenario_unloadings_dirpath, sep=',')
 df_load5 = df_load[df_load.metamer == 5].copy()
@@ -123,15 +123,18 @@ plt.rc('axes', labelsize=8, titlesize=10)  #
 plt.rc('legend', fontsize=8, frameon=False)  #
 plt.rc('lines', markersize=6)
 
+
 ## Functions
 
 def confint(sd, nb):
     1.96 * sd / sqrt(nb)
 
+
 def expand_grid(data_dict):
     """Create a dataframe from every combination of given values."""
     rows = itertools.product(*data_dict.values())
     return pd.DataFrame.from_records(rows, columns=data_dict.keys())
+
 
 def add_subplot_axes(ax, rect, axisbg='w'):
     """.Add inset chart into a chart """
@@ -154,6 +157,7 @@ def add_subplot_axes(ax, rect, axisbg='w'):
     subax.xaxis.set_tick_params(labelsize=x_labelsize)
     subax.yaxis.set_tick_params(labelsize=y_labelsize)
     return subax
+
 
 ## ---------------------------------------------------------------------------------------------------------------------------------------
 ## -----------  GRAPHS
@@ -384,8 +388,8 @@ fit_phyllo = mod.fit()
 
 sys.stdout = open(os.path.join(scenario_dirpath, "phyllochron.txt"), "w")
 print(fit_phyllo.summary())
-print 'phyllochron is ', 1/fit_phyllo.params[1], 'degree days'
-print 'confidence interval is', 1/fit_phyllo.conf_int(0.05)[1]
+print 'phyllochron is ', 1 / fit_phyllo.params[1], 'degree days'
+print 'confidence interval is', 1 / fit_phyllo.conf_int(0.05)[1]
 sys.stdout.close()
 
 ## -- Graph
@@ -706,8 +710,8 @@ plt.savefig(os.path.join(scenario_graphs_dirpath, 'Leaf_Metabolism_C.PNG'), form
 plt.close()
 
 sys.stdout = open(os.path.join(scenario_dirpath, "Structural_Growth_C.txt"), "w")
-print 'Structural growth cost leaf 5', max(Growth_Costs_C5_days.Growth_Costs_C_cum )
-print 'Structural growth cost leaf 8', max(Growth_Costs_C8_days.Growth_Costs_C_cum )
+print 'Structural growth cost leaf 5', max(Growth_Costs_C5_days.Growth_Costs_C_cum)
+print 'Structural growth cost leaf 8', max(Growth_Costs_C8_days.Growth_Costs_C_cum)
 sys.stdout.close()
 
 ## -----------   Leaf Metabolism N
@@ -932,7 +936,7 @@ df_unload['import_elt'] = df_vis_elt.groupby(['day'], as_index=False).agg({'impo
 df_unload['import_hz'] = df_load_hz.groupby(['day'], as_index=False).agg({'import_sucrose': 'sum'}).import_sucrose
 df_unload['import_photosynthetic'] = df_unload['import_elt'] + df_unload['import_hz']
 
-C_usages_days.to_csv( os.path.join(scenario_postprocessing_dirpath, 'C_usages.csv'), header=True, index=False)
+C_usages_days.to_csv(os.path.join(scenario_postprocessing_dirpath, 'C_usages.csv'), header=True, index=False)
 
 ## ---  Graph_C_source_sink
 
@@ -1090,8 +1094,8 @@ plt.close()
 ## Add a share of phloem content to each element
 df_phloem['sucrose_phloem'] = df_phloem['sucrose']
 df_elt = df_elt.merge(df_phloem[['t', 'sucrose_phloem']], on=['t'], how='left')
-df_elt['SLA_phloem'] = df_elt.green_area / (df_elt.sum_dry_mass + (df_elt.sucrose_phloem * 1E-6 * 12 / 0.42 + df_elt.amino_acids_phloem * 1E-6 * 14 / 0.135) * df_elt.mstruct/df_elt.mstruct_plant) * 10**3
-
+df_elt['SLA_phloem'] = df_elt.green_area / (
+            df_elt.sum_dry_mass + (df_elt.sucrose_phloem * 1E-6 * 12 / 0.42 + df_elt.amino_acids_phloem * 1E-6 * 14 / 0.135) * df_elt.mstruct / df_elt.mstruct_plant) * 10 ** 3
 
 fig = plt.figure(figsize=(4, 6))
 # set height ratios for sublots
