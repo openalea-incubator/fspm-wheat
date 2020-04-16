@@ -19,15 +19,6 @@ import tools
     .. seealso:: Barillot et al. 2016.
 """
 
-"""
-    Information about this versioned file:
-        $LastChangedBy$
-        $LastChangedDate$
-        $LastChangedRevision$
-        $URL$
-        $Id$
-"""
-
 
 LEAF_LABELS = ['blade', 'sheath']
 

@@ -42,7 +42,6 @@ class FarquharWheatFacade(object):
     shared between all models.
 
     Use :meth:`run` to run the model.
-
     """
 
     def __init__(self, shared_mtg,
@@ -54,6 +53,7 @@ class FarquharWheatFacade(object):
         :param pandas.DataFrame model_elements_inputs_df: the inputs of the model at elements scale.
         :param pandas.DataFrame model_SAMs_inputs_df: the inputs of the model at SAM scale.
         :param pandas.DataFrame shared_elements_inputs_outputs_df: the dataframe of inputs and outputs at elements scale shared between all models.
+
         """
         self._shared_mtg = shared_mtg  #: the MTG shared between all models
 

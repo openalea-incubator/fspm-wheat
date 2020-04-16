@@ -19,13 +19,13 @@ import fspmwheat
 ## ----------- IMPORT DATA
 ## ---------------------------------------------------------------------------------------------------------------------------------------
 
-# TT entre semis et initialisation du modele
+# Thermal time between sowing and the date of model initialization
 TT_since_sowing = 390  # °C.d
 
 # Define plant density (culm m-2)
 PLANT_DENSITY = {1: 250}
 
-# directory with results of Ljutovac Simulation
+# directory with the simulation results
 scenario_name = ''
 scenario_dirpath = os.path.join(scenario_name)
 scenario_graphs_dirpath = os.path.join(scenario_dirpath, 'graphs')
@@ -96,7 +96,7 @@ meteo_days = meteo.groupby(['day']).agg({'PARi': 'sum',
 # Observed value from Ljutovac 2002
 data_obs = pd.read_csv(os.path.join('Data_Ljutovac', 'Ljutovac2002.csv'))
 
-# Unloadings
+# Unloadings => These results were generated seperatly 
 scenario_unloadings_dirpath = os.path.join('all_integration_unloadings.csv')
 df_load = pd.read_csv(scenario_unloadings_dirpath, sep=',')
 df_load5 = df_load[df_load.metamer == 5].copy()
@@ -123,21 +123,18 @@ plt.rc('axes', labelsize=8, titlesize=10)  #
 plt.rc('legend', fontsize=8, frameon=False)  #
 plt.rc('lines', markersize=6)
 
-
 ## Functions
 
 def confint(sd, nb):
     1.96 * sd / sqrt(nb)
-
 
 def expand_grid(data_dict):
     """Create a dataframe from every combination of given values."""
     rows = itertools.product(*data_dict.values())
     return pd.DataFrame.from_records(rows, columns=data_dict.keys())
 
-
-# Function : add inset chart into a chart
 def add_subplot_axes(ax, rect, axisbg='w'):
+    """.Add inset chart into a chart """
     fig = plt.gcf()
     box = ax.get_position()
     width = box.width
@@ -158,14 +155,13 @@ def add_subplot_axes(ax, rect, axisbg='w'):
     subax.yaxis.set_tick_params(labelsize=y_labelsize)
     return subax
 
-
 ## ---------------------------------------------------------------------------------------------------------------------------------------
 ## -----------  GRAPHS
 ## ---------------------------------------------------------------------------------------------------------------------------------------
 
 ## ----------- Wheather data and N soil
 
-## -- 0) Wheather DAILY + N soil
+## -- Wheather DAILY + N soil
 out_sam_days_prec = out_sam_days.copy()
 out_sam_days_prec['day_next'] = out_sam_days_prec.index + 1
 out_sam_days_prec['sum_TT_prec'] = out_sam_days_prec.sum_TT
@@ -174,12 +170,12 @@ out_sam_days['day'] = out_sam_days.index
 out_sam_days['TT'] = out_sam_days.sum_TT - out_sam_days.sum_TT_prec
 meteo_days = meteo_days.merge(out_sam_days[['day', 'sum_TT_prec', 'sum_TT', 'TT']], left_on='day', right_on='day').copy()
 
-## PTQ2 using s at 12°c
+## -- Photothermal quotient using seconds at 12°c (PTQ2)
 meteo_days['PTQ2'] = meteo_days.PARi * 3600 * 10 ** -6 / meteo_days.TT / 12
 meteo_days.loc[meteo_days.air_temperature < 1, 'PTQ2'] = np.nan
 meteo_days.loc[103, 'PTQ2'] = np.nan
 
-## PTQ2 using s at 12°c smooth
+# Weekly values
 meteo_days['TT'] = meteo_days.sum_TT - meteo_days.sum_TT_prec
 meteo_days['TT7'] = meteo_days['TT'].rolling(7, min_periods=1).sum()
 meteo_days['Tair7'] = meteo_days['air_temperature'].rolling(7, min_periods=1).mean()
@@ -219,8 +215,7 @@ ax00.get_yaxis().set_label_coords(1.12, 0.5)
 ax00.set_ylabel(u'Time since leaf 4 emergence (°Cd)')
 # plt.setp(ax00.get_xticklabels(), visible=False)
 
-
-## -- PAR
+## -- Photosynthetical Active Radiation (PAR)
 ax1 = plt.subplot(gs[1], sharex=ax0)
 ax1.set_xlim(0, 2500. / 24)
 ax1.set_ylim(0, 40.)
@@ -304,7 +299,7 @@ last_value_idx = res_IN.groupby(['metamer'])['t'].transform(max) == res_IN['t']
 res_IN = res_IN[last_value_idx].copy()
 res = res[res.metamer <= 8].copy()
 
-# Ljutovac observed data
+# Ljutovac 2002 observed data
 bchmk = data_obs
 bchmk = bchmk[(bchmk.metamer <= 8) & (bchmk.metamer >= 3)].copy()
 bchmk2 = pd.read_csv(os.path.join('Data_Ljutovac', 'Ljutovac2002_ind.csv'))
@@ -314,17 +309,17 @@ bchmk2['L_confint'] = 1.96 * bchmk2.L_SD / np.sqrt(bchmk2.L_nb)
 bchmk2['Lg_confint'] = 1.96 * bchmk2.Lg_SD / np.sqrt(bchmk2.Lg_nb)
 
 ## -- Leaf RER during the exponentiel-like phase
+
 ## RER parameters
 rer_param = dict((k, v) for k, v in elongwheat_parameters.RERmax.iteritems() if k < 9)
 
 ## Simulated RER
-
 # import simulation outputs
 data_RER = out_hz[(out_hz.metamer >= 4)].copy()
 data_RER.sort_values(['t', 'metamer'], inplace=True)
 data_teq = out_sam.copy()
 
-## Time previous leaf emergence
+# Time previous leaf emergence
 tmp = data_RER[data_RER.leaf_is_emerged]
 leaf_em = tmp.groupby('metamer', as_index=False)['t'].min()
 leaf_em['t_em'] = leaf_em.t
@@ -334,11 +329,11 @@ prev_leaf_em.metamer = leaf_em.metamer + 1
 data_RER2 = pd.merge(data_RER, prev_leaf_em[['metamer', 't_em']], on='metamer')
 data_RER2 = data_RER2[data_RER2.t <= data_RER2.t_em]
 
-## SumTimeEq
+# SumTimeEq
 data_teq['SumTimeEq'] = np.cumsum(data_teq.delta_teq)
 data_RER3 = pd.merge(data_RER2, data_teq[['t', 'SumTimeEq']], on='t')
 
-## logL
+# logL
 data_RER3['logL'] = np.log(data_RER3.leaf_L)
 
 ## Estimate RER
@@ -396,6 +391,7 @@ sys.stdout.close()
 ## -- Graph
 pos_x_1row = -0.14
 pos_x_2row = -0.125
+
 ## Lengths
 fig = plt.figure(figsize=(4, 11))
 # set height ratios for sublots
@@ -848,7 +844,7 @@ plt.close()
 
 ## -----------   Source/sink relationships
 
-## -- Table C usages relatif to Net Photosynthesis
+## -- Table C usages relative to Net Photosynthesis
 
 AMINO_ACIDS_C_RATIO = 4.15  #: Mean number of mol of C in 1 mol of the major amino acids of plants (Glu, Gln, Ser, Asp, Ala, Gly)
 AMINO_ACIDS_N_RATIO = 1.25  #: Mean number of mol of N in 1 mol of the major amino acids of plants (Glu, Gln, Ser, Asp, Ala, Gly)
@@ -1052,7 +1048,7 @@ ax.set_ylim(bottom=0, top=100.)
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'C_usages_cumulated_bis2.PNG'), dpi=600, format='PNG', bbox_inches='tight')
 plt.close()
 
-## ----------- SLN
+## ----------- Surfacic Leaf Nitrogen (SLN)
 
 ## Add a share of phloem content to each element
 df_phloem['amino_acids_phloem'] = df_phloem['amino_acids']
@@ -1089,7 +1085,7 @@ plt.subplots_adjust(hspace=.0)
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'SLN.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## ----------- SLA and  Lamina area
+## ----------- Specific Leaf Area (SLA) and  Lamina area
 
 ## Add a share of phloem content to each element
 df_phloem['sucrose_phloem'] = df_phloem['sucrose']
@@ -1143,7 +1139,7 @@ ax2.text(0.08, 0.9, 'B', ha='center', va='center', size=9, transform=ax2.transAx
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'Dynamic_laminae2.PNG'), dpi=600, format='PNG', bbox_inches='tight')
 plt.close()
 
-## ---------- RUE
+## ---------- Radiation Use Efficiency (RUE)
 
 # We use PARa by element but green_area from MS (NA for tillers)
 df_elt_all['cohort'] = df_elt_all.metamer
@@ -1227,7 +1223,7 @@ ax.set_ylabel('Dry mass (g)')
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'RUE.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## ---------- Graphe de RUE weekly
+## ---------- Graph of weekly RUE
 sum_dry_mass = df_axe.groupby(['day'], as_index=False)['sum_dry_mass'].agg('max')
 tmp_prec7 = sum_dry_mass.copy()
 tmp_prec7['day_prec7'] = tmp_prec7.day + 7
@@ -1296,7 +1292,7 @@ ax.legend(loc='center left', frameon=True, numpoints=1, bbox_to_anchor=(1, 0.5))
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'RUE_PAR_weekly.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## --- Join 2 RUE graphs
+## --- Join both RUE graphs
 
 # fig, axs = plt.subplots(1,2, figsize = (8,3) )
 #
@@ -1335,9 +1331,9 @@ ax.set_xlabel(u'Photothermal quotient (mol m$^{-2}$ d$^{-1}$ at 12°C)')
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'RUE_both_vs_PTQ.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## ----------  GLN / GAI / fermeture couvert / surfacic PARa
+## ----------  GLN / GAI / canopy closure / surfacic PARa
 
-## -- Surfaces senescentes
+## -- Senescing area
 leaf_ligulation = df_elt[(df_elt.element == 'LeafElement1') & (df_elt.is_growing == 0)].groupby('metamer').agg({'t': 'min'})
 leaf_ligulation = leaf_ligulation.t.to_dict()
 
@@ -1374,7 +1370,7 @@ for i in tmp3.index:
             tmp3.at[i, 'senesc_area_all_rep'] = tmp3.at[i, 'senesc_area_rep']
             tmp3.at[i, 'senesc_area_all'] = tmp3.at[i, 'senesc_area']
 
-# Pourcentage de vert : FAUX pour les feuilles qui ne se ligulent pas au cours de la simulation
+# Percentage of green area (only true for leaves that get ligulated during the simulation)
 tmp3['Pge_green_MS'] = tmp3.green_area / tmp3.green_area_max
 tmp3['Pge_green_rep'] = tmp3.green_area_rep / tmp3.green_area_rep_max
 
@@ -1391,10 +1387,7 @@ LAI_all = df_LAI.groupby(['day']).agg({'LAI_all': 'mean'})
 LAI = LAI.merge(out_sam_days[['day', 'sum_TT', 'TT']], on='day').copy()
 LAI_all = LAI_all.merge(out_sam_days[['day', 'sum_TT', 'TT']], on='day').copy()
 
-## -- GAI
-
-## pb de gaines : lorsque gaine 1 est sénescente, gaine 2 est toujours majoritairement cachée
-## pour le GAI, la surface considérée = 50% surface du cylindre
+## -- Green Area Index (GAI)
 
 tmp = df_elt[(df_elt.organ == 'sheath')].groupby(['t', 'metamer'], as_index=False).agg({'green_area_rep': 'sum'})
 S_gaines = tmp.groupby(['t'], as_index=False).agg({'green_area_rep': 'sum'})
@@ -1404,34 +1397,34 @@ S_gaines_days = S_gaines.groupby(['day'], as_index=False).agg({'S_GAI': 'mean'})
 GAI = LAI.merge(S_gaines_days, on='day')
 GAI['GAI'] = GAI.LAI + GAI.S_GAI
 
-TT_Mariem9 = [570.79, 593.26, 719.1, 768.54, 1006.74, 1020.22]
-GAI_Mariem9 = [0.4127, 0.5137, 0.6687, 0.7377, 3.9999, 4.2039]
+TT_Abichou9 = [570.79, 593.26, 719.1, 768.54, 1006.74, 1020.22]
+GAI_Abichou9 = [0.4127, 0.5137, 0.6687, 0.7377, 3.9999, 4.2039]
 
-TT_Mariem10 = [560.15, 587.45, 709.55, 763.86, 1024.72, 1024.82, 1025.18, 1297.87, 1302.11, 1306.58, 1640.39, 1649.14, 1649.73]
-GAI_Mariem10 = [0.3575, 0.484, 0.6576, 0.7794, 3.9037, 3.9049, 4.3055, 5.9101, 5.9272, 5.6305, 5.3831, 5.3654, 5.3641]
+TT_Abichou10 = [560.15, 587.45, 709.55, 763.86, 1024.72, 1024.82, 1025.18, 1297.87, 1302.11, 1306.58, 1640.39, 1649.14, 1649.73]
+GAI_Abichou10 = [0.3575, 0.484, 0.6576, 0.7794, 3.9037, 3.9049, 4.3055, 5.9101, 5.9272, 5.6305, 5.3831, 5.3654, 5.3641]
 
-TT_Mariem8 = [265.72, 335.37, 387.63, 439.85, 518.14, 631.16, 835.52, 900.7, 1022.51, 1104.92, 1405]
-GAI_Mariem8 = [0.1457, 0.2526, 0.3064, 0.4307, 0.6964, 1.1917, 1.9883, 2.3066, 2.6788, 3.3675, 4.4124]
+TT_Abichou8 = [265.72, 335.37, 387.63, 439.85, 518.14, 631.16, 835.52, 900.7, 1022.51, 1104.92, 1405]
+GAI_Abichou8 = [0.1457, 0.2526, 0.3064, 0.4307, 0.6964, 1.1917, 1.9883, 2.3066, 2.6788, 3.3675, 4.4124]
 
 ## -- GLN
-GLN_Mariem_TT = [246, 299, 357, 383, 456, 498, 559, 704, 792, 846, 903, 1010, 1083, 1186, 1290, 1378, 1469, 1565, 1672, 1806, 1947]
-GLN_Mariem_GLN = [1.1, 1.7, 1.9, 2.8, 3.8, 4.3, 5, 3.8, 3.7, 3.8, 3.4, 3.8, 4.3, 4, 3.8, 3.3, 2.9, 2.8, 2.3, 1.7, 0.9]
+GLN_Abichou_TT = [246, 299, 357, 383, 456, 498, 559, 704, 792, 846, 903, 1010, 1083, 1186, 1290, 1378, 1469, 1565, 1672, 1806, 1947]
+GLN_Abichou_GLN = [1.1, 1.7, 1.9, 2.8, 3.8, 4.3, 5, 3.8, 3.7, 3.8, 3.4, 3.8, 4.3, 4, 3.8, 3.3, 2.9, 2.8, 2.3, 1.7, 0.9]
 
-GLN_Mariem_TT2 = [238, 295, 341, 451, 485, 561, 705, 796, 834, 890, 1008, 1076, 1186, 1289, 1380, 1466, 1602, 1712, 1871, 1958]
-GLN_Mariem_GLN2 = [1.1, 1.8, 2.6, 3.6, 4.4, 5, 4.7, 3.9, 3.7, 3.9, 3.8, 4.4, 5, 5, 4.8, 4.1, 3.6, 2.9, 2.4, 2.1]
+GLN_Abichou_TT2 = [238, 295, 341, 451, 485, 561, 705, 796, 834, 890, 1008, 1076, 1186, 1289, 1380, 1466, 1602, 1712, 1871, 1958]
+GLN_Abichou_GLN2 = [1.1, 1.8, 2.6, 3.6, 4.4, 5, 4.7, 3.9, 3.7, 3.9, 3.8, 4.4, 5, 5, 4.8, 4.1, 3.6, 2.9, 2.4, 2.1]
 
-GLN_Mariem_TT3 = [154, 204, 250, 258, 292, 380, 411, 442, 488, 534, 576, 603, 667, 727, 810, 989, 1065, 1275, 1362, 1524, 1835]
-GLN_Mariem_GLN3 = [0.3, 0.7, 1.2, 1.4, 1.7, 2.5, 2.7, 3.1, 3.5, 3.8, 4.3, 4.4, 4.3, 4.2, 3.5, 4, 4.5, 5.6, 5.3, 4.7, 2.5]
+GLN_Abichou_TT3 = [154, 204, 250, 258, 292, 380, 411, 442, 488, 534, 576, 603, 667, 727, 810, 989, 1065, 1275, 1362, 1524, 1835]
+GLN_Abichou_GLN3 = [0.3, 0.7, 1.2, 1.4, 1.7, 2.5, 2.7, 3.1, 3.5, 3.8, 4.3, 4.4, 4.3, 4.2, 3.5, 4, 4.5, 5.6, 5.3, 4.7, 2.5]
 
-GLN_Mariem_TT4 = [393, 488, 548, 598, 659, 700, 829, 898, 970, 1038, 1122, 1372, 1440, 1524, 1782, 1972, 2192]
-GLN_Mariem_GLN4 = [2.8, 3.7, 4.3, 4.5, 5.4, 5, 3.6, 3.8, 4.5, 5.2, 5.4, 5.5, 5.6, 5.4, 4.5, 2.5, 0]
+GLN_Abichou_TT4 = [393, 488, 548, 598, 659, 700, 829, 898, 970, 1038, 1122, 1372, 1440, 1524, 1782, 1972, 2192]
+GLN_Abichou_GLN4 = [2.8, 3.7, 4.3, 4.5, 5.4, 5, 3.6, 3.8, 4.5, 5.2, 5.4, 5.5, 5.6, 5.4, 4.5, 2.5, 0]
 
 df_senesc_tot = df_senesc_tot.merge(out_sam[['t', 'sum_TT']], left_on='t', right_on='t').copy()
 tmp = df_senesc_tot[(df_senesc_tot.t < leaf_emergence[(1, 9)]) & (df_senesc_tot.Pge_green_MS != 0.)].copy()  # only valid before emergence of lamina 9 because we don't knpw its final length
 
 df_gln = tmp
 
-## -- Part rayonnement absrobé par les surfaces vertes de la plante
+## -- Ratio of incident PAR that is absorbed by the plant
 titi['PARa_surface'] = titi.PARa * titi.green_area * 250
 titi['PARa_surface2'] = titi.PARa * titi.green_area
 titi_caribu = titi[(titi.t % 4 == 0) & (titi['element'].isin(['StemElement', 'LeafElement1']))]
@@ -1468,10 +1461,10 @@ gs = gridspec.GridSpec(4, 1, height_ratios=[1, 1, 1, 1])
 # the fisrt subplot
 ax0 = plt.subplot(gs[0])
 ax0.plot(df_gln.sum_TT, df_gln.Pge_green_MS, linestyle='-', color='k')
-ax0.plot(np.array(GLN_Mariem_TT) - TT_since_sowing, GLN_Mariem_GLN, marker='o', color='k', linestyle='')
-ax0.plot(np.array(GLN_Mariem_TT2) - TT_since_sowing, GLN_Mariem_GLN2, marker='o', mfc='none', color='k', linestyle='')
-ax0.plot(np.array(GLN_Mariem_TT3) - TT_since_sowing, GLN_Mariem_GLN3, marker='D', color='k', linestyle='')
-ax0.plot(np.array(GLN_Mariem_TT4) - TT_since_sowing, GLN_Mariem_GLN4, marker='^', color='k', linestyle='')
+ax0.plot(np.array(GLN_Abichou_TT) - TT_since_sowing, GLN_Abichou_GLN, marker='o', color='k', linestyle='')
+ax0.plot(np.array(GLN_Abichou_TT2) - TT_since_sowing, GLN_Abichou_GLN2, marker='o', mfc='none', color='k', linestyle='')
+ax0.plot(np.array(GLN_Abichou_TT3) - TT_since_sowing, GLN_Abichou_GLN3, marker='D', color='k', linestyle='')
+ax0.plot(np.array(GLN_Abichou_TT4) - TT_since_sowing, GLN_Abichou_GLN4, marker='^', color='k', linestyle='')
 ax0.set_xlim(0, 700)
 ax0.set_ylim(bottom=0, top=6)
 
@@ -1482,9 +1475,9 @@ ax0.set_ylabel(u'Green Leaf Number')
 # the second subplot
 ax1 = plt.subplot(gs[1], sharex=ax0)
 ax1.plot(GAI.sum_TT, GAI.GAI, linestyle='-', color='k')
-ax1.plot(np.array(TT_Mariem8) - TT_since_sowing, GAI_Mariem8, marker='^', color='k', linestyle='')
-ax1.plot(np.array(TT_Mariem9) - TT_since_sowing, GAI_Mariem9, marker='o', color='k', linestyle='')
-ax1.plot(np.array(TT_Mariem10) - TT_since_sowing, GAI_Mariem10, marker='o', mfc='none', color='k', linestyle='')
+ax1.plot(np.array(TT_Abichou8) - TT_since_sowing, GAI_Abichou8, marker='^', color='k', linestyle='')
+ax1.plot(np.array(TT_Abichou9) - TT_since_sowing, GAI_Abichou9, marker='o', color='k', linestyle='')
+ax1.plot(np.array(TT_Abichou10) - TT_since_sowing, GAI_Abichou10, marker='o', mfc='none', color='k', linestyle='')
 ax1.set_xlim(0, 700)
 ax1.set_ylim(0, 5)
 
@@ -1593,7 +1586,7 @@ ax1.set_ylim(bottom=0.)
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'Shoot_roots_TT_tha.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## ----------- N content
+## ----------- N fraction
 
 dt_RB_N = [1.2, 1.2, 1.7, 1.0]
 dt_RB_N_confint = [0.11, 0.12, 0.19, 0.10]
@@ -1627,7 +1620,7 @@ N_shoot_days = N_shoot_days.merge(out_sam_days, on='day').copy()
 N_roots_days = N_roots_days.merge(out_sam_days, on='day').copy()
 N_shoot_MS_days = N_shoot_MS_days.merge(out_sam_days, on='day').copy()
 
-## NNc
+## Nitrogen dilution curve (Justes 1994)
 sum_dry_mass_shoot_days = df_axe.groupby(['day'])['sum_dry_mass_shoot'].mean()
 DM_t_ha = sum_dry_mass_shoot_days * 250 * 10 ** -2  # convert from g.plant-1 to t.ha-1
 N_content_critical = np.where(DM_t_ha < 1.55, 4.4, 5.35 * DM_t_ha ** -0.442)  # from Justes 1994 : valid at field scale from Feekes 3 i.e. mid tillering
@@ -1684,7 +1677,7 @@ ax1.axvline(x=0.86, linestyle=':', color='grey')
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'N_content_inset_TT.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## -----------  Conc phloem
+## -----------  Concentration of sucrose and AA in the phloem
 
 df_phloem_day = df_phloem.groupby(['day'], as_index=False).agg({'sucrose': 'mean', 'amino_acids': 'mean',
                                                                 'Conc_Sucrose': 'mean', 'Conc_Amino_Acids': 'mean'})

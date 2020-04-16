@@ -22,14 +22,6 @@ import tools
 
 """
 
-"""
-    Information about this versioned file:
-        $LastChangedBy$
-        $LastChangedDate$
-        $LastChangedRevision$
-        $URL$
-        $Id$
-"""
 
 SHARED_SAM_INPUTS_OUTPUTS_INDEXES = ['plant', 'axis']
 
