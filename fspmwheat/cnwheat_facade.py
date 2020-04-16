@@ -1,14 +1,12 @@
 # -*- coding: latin-1 -*-
 
-from respiwheat import model as respiwheat_model
-
-from cnwheat import model as cnwheat_model, simulation as cnwheat_simulation, \
-    converter as cnwheat_converter, postprocessing as cnwheat_postprocessing, parameters as cnwheat_parameters
-
-from fspmwheat import tools
+import math
 
 import numpy as np
-import math
+from cnwheat import model as cnwheat_model, simulation as cnwheat_simulation, \
+    converter as cnwheat_converter, postprocessing as cnwheat_postprocessing, parameters as cnwheat_parameters
+from fspmwheat import tools
+from respiwheat import model as respiwheat_model
 
 """
     fspmwheat.cnwheat_facade
@@ -24,7 +22,6 @@ import math
     :license: see LICENSE for details.
 
 """
-
 
 #: the mapping of CNWheat organ classes to the attributes in axis and phytomer which represent an organ
 CNWHEAT_ATTRIBUTES_MAPPING = {cnwheat_model.Internode: 'internode', cnwheat_model.Lamina: 'lamina',

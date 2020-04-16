@@ -1,23 +1,24 @@
 # -*- coding: latin-1 -*-
 
-import os
-import sys
 import inspect
 import itertools
+import os
+import sys
 from math import sqrt
-import pandas as pd
-import numpy as np
-import scipy.stats
-import statsmodels.api as sm
+
+import fspmwheat
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
-from matplotlib import gridspec
+import numpy as np
+import pandas as pd
+import scipy.stats
+import statsmodels.api as sm
 from elongwheat import parameters as elongwheat_parameters
-import fspmwheat
+from matplotlib import gridspec
 
-## ---------------------------------------------------------------------------------------------------------------------------------------
-## ----------- IMPORT DATA
-## ---------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# ----------- IMPORT DATA
+# ---------------------------------------------------------------------------------------------------------------------------------------
 
 # Thermal time between sowing and the date of model initialization
 TT_since_sowing = 390  # °C.d
@@ -102,9 +103,9 @@ df_load = pd.read_csv(scenario_unloadings_dirpath, sep=',')
 df_load5 = df_load[df_load.metamer == 5].copy()
 df_load8 = df_load[df_load.metamer == 8].copy()
 
-## ---------------------------------------------------------------------------------------------------------------------------------------
-## -----------  USEFULL
-## ---------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# -----------  USEFULL
+# ---------------------------------------------------------------------------------------------------------------------------------------
 
 ## Graph parameters
 
@@ -159,13 +160,13 @@ def add_subplot_axes(ax, rect, axisbg='w'):
     return subax
 
 
-## ---------------------------------------------------------------------------------------------------------------------------------------
-## -----------  GRAPHS
-## ---------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# -----------  GRAPHS
+# ---------------------------------------------------------------------------------------------------------------------------------------
 
-## ----------- Wheather data and N soil
+# ----------- Wheather data and N soil
 
-## -- Wheather DAILY + N soil
+# -- Wheather DAILY + N soil
 out_sam_days_prec = out_sam_days.copy()
 out_sam_days_prec['day_next'] = out_sam_days_prec.index + 1
 out_sam_days_prec['sum_TT_prec'] = out_sam_days_prec.sum_TT
@@ -174,7 +175,7 @@ out_sam_days['day'] = out_sam_days.index
 out_sam_days['TT'] = out_sam_days.sum_TT - out_sam_days.sum_TT_prec
 meteo_days = meteo_days.merge(out_sam_days[['day', 'sum_TT_prec', 'sum_TT', 'TT']], left_on='day', right_on='day').copy()
 
-## -- Photothermal quotient using seconds at 12°c (PTQ2)
+# -- Photothermal quotient using seconds at 12°c (PTQ2)
 meteo_days['PTQ2'] = meteo_days.PARi * 3600 * 10 ** -6 / meteo_days.TT / 12
 meteo_days.loc[meteo_days.air_temperature < 1, 'PTQ2'] = np.nan
 meteo_days.loc[103, 'PTQ2'] = np.nan
@@ -196,7 +197,7 @@ soil_days['Unite_N'] = soil_days.nitrates * 14 * 10 ** -6  # kgN/ha
 fig = plt.figure(figsize=(4, 12))
 gs = gridspec.GridSpec(5, 1, height_ratios=[1, 0.7, 0.7, 0.7, 0.7])
 
-## -- Temperatures
+# -- Temperatures
 ax0 = plt.subplot(gs[0])
 ax0.set_xlim(0, 2500. / 24)
 ax0.plot(meteo_days.index, meteo_days.air_temperature, label=r'Air')
@@ -208,7 +209,7 @@ ax0.set_ylabel(u'Temperature (°C)')
 plt.setp(ax0.get_xticklabels(), visible=False)
 ax0.get_yaxis().set_label_coords(-0.08, 0.5)
 
-## -- Sum Thermal Time
+# -- Sum Thermal Time
 # ax00 =  plt.subplot(gs[1])
 ax00 = ax0.twinx()
 ax00.set_xlim(0, 2500. / 24)
@@ -219,7 +220,7 @@ ax00.get_yaxis().set_label_coords(1.12, 0.5)
 ax00.set_ylabel(u'Time since leaf 4 emergence (°Cd)')
 # plt.setp(ax00.get_xticklabels(), visible=False)
 
-## -- Photosynthetical Active Radiation (PAR)
+# -- Photosynthetical Active Radiation (PAR)
 ax1 = plt.subplot(gs[1], sharex=ax0)
 ax1.set_xlim(0, 2500. / 24)
 ax1.set_ylim(0, 40.)
@@ -230,7 +231,7 @@ plt.setp(ax1.get_xticklabels(), visible=False)
 yticks = ax1.yaxis.get_major_ticks()
 yticks[-1].label1.set_visible(False)
 
-## -- PTQ
+# -- PTQ
 ax2 = plt.subplot(gs[2], sharex=ax0)
 ax2.set_xlim(0, 2500. / 24)
 ax2.set_ylim(0, 0.4)
@@ -242,7 +243,7 @@ yticks[-1].label1.set_visible(False)
 plt.setp(ax2.get_xticklabels(), visible=False)
 ax2.set_yticks([0, 0.1, 0.2, 0.3])
 
-## -- Humidity
+# -- Humidity
 ax3 = plt.subplot(gs[3], sharex=ax0)
 ax3.set_ylim(0, 1)
 ax3.set_xlim(0, 2500. / 24)
@@ -253,7 +254,7 @@ yticks = ax3.yaxis.get_major_ticks()
 yticks[-1].label1.set_visible(False)
 plt.setp(ax3.get_xticklabels(), visible=False)
 
-## -- soil N
+# -- soil N
 ax4 = plt.subplot(gs[4], sharex=ax0)
 ax4.set_ylim(bottom=0, top=10)
 ax4.set_xlim(0, 2500. / 24)
@@ -290,9 +291,9 @@ ax30.spines['bottom'].set_position(('outward', 36))
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'Meteo_Nsoil_days.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## -----------  Leaf traits
+# -----------  Leaf traits
 
-## -- Final dimensions vs. Ljutovac 2002
+# -- Final dimensions vs. Ljutovac 2002
 res = out_hz[~np.isnan(out_hz.leaf_Lmax)].copy()
 res_IN = res[~ np.isnan(res.internode_Lmax)]
 last_value_idx = res.groupby(['metamer'])['t'].transform(max) == res['t']
@@ -312,7 +313,7 @@ bchmk2 = bchmk2[(bchmk2.Phytomer <= 8) & (bchmk2.Phytomer >= 3)].copy()
 bchmk2['L_confint'] = 1.96 * bchmk2.L_SD / np.sqrt(bchmk2.L_nb)
 bchmk2['Lg_confint'] = 1.96 * bchmk2.Lg_SD / np.sqrt(bchmk2.Lg_nb)
 
-## -- Leaf RER during the exponentiel-like phase
+# -- Leaf RER during the exponentiel-like phase
 
 ## RER parameters
 rer_param = dict((k, v) for k, v in elongwheat_parameters.RERmax.iteritems() if k < 9)
@@ -351,7 +352,7 @@ for l in data_RER3.metamer.drop_duplicates():
         fit_RER = mod.fit()
         RER_sim[l] = fit_RER.params['SumTimeEq']
 
-## -- Phyllochron
+# -- Phyllochron
 grouped_df = df_hz[df_hz['axis'] == 'MS'].groupby(['plant', 'metamer'])[['t', 'leaf_is_emerged']]
 leaf_emergence = {}
 for group_name, data in grouped_df:
@@ -392,7 +393,7 @@ print 'phyllochron is ', 1 / fit_phyllo.params[1], 'degree days'
 print 'confidence interval is', 1 / fit_phyllo.conf_int(0.05)[1]
 sys.stdout.close()
 
-## -- Graph
+# -- Graph
 pos_x_1row = -0.14
 pos_x_2row = -0.125
 
@@ -508,9 +509,9 @@ ax4.text(0.08, 0.9, 'E', ha='center', va='center', size=9, transform=ax4.transAx
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'Leaf_traits.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## -----------  Leaf Metabolism Carbon
+# -----------  Leaf Metabolism Carbon
 
-## -- Times
+# -- Times
 t_end_5_pif = 57
 t_end_8_pif = 97
 
@@ -529,7 +530,7 @@ t_em_9 = min(df_hz[(df_hz.metamer == 9) & (df_hz.leaf_is_emerged)].t)
 t_end_5 = min(out_elt[(out_elt.metamer == 5) & (out_elt.organ == 'sheath') & (out_elt.is_growing == 0)].t)
 t_end_8 = min(out_elt[(out_elt.metamer == 8) & (out_elt.organ == 'blade') & (out_elt.is_growing == 0)].t)  # TODO: run longer simulation
 
-## -- Loadings
+# -- Loadings
 df_load5['day'] = df_load5['t_sim'] // 24 + 1
 df_load5_days = df_load5.groupby(['day']).agg({'unloading_sucrose_int': 'sum',
                                                'unloading_aa_int': 'sum'})
@@ -545,7 +546,7 @@ ga5_days = ga5.groupby(['day'])['green_area'].mean()
 ga8 = df_elt[(df_elt.element == 'LeafElement1') & (df_elt.metamer == 8)]
 ga8_days = ga8.groupby(['day'])['green_area'].mean()
 
-## -- Growth costs
+# -- Growth costs
 df_elt['sum_respi_tillers'] = df_elt['sum_respi'] * df_elt['nb_replications']
 df_elt['Net_Photosynthesis_tillers'] = df_elt['Photosynthesis'] * df_elt['nb_replications'] - df_elt['sum_respi_tillers']
 df_hz['Respi_growth_tillers'] = df_hz['Respi_growth'] * df_hz['nb_replications']
@@ -581,7 +582,7 @@ Growth_Costs_C8_days = Growth_Costs_C[Growth_Costs_C.metamer == 8].groupby(['day
 Growth_Costs_N5_days = Growth_Costs_C[Growth_Costs_C.metamer == 5].groupby(['day']).agg({'Growth_Costs_N_cum': 'max'})
 Growth_Costs_N8_days = Growth_Costs_C[Growth_Costs_C.metamer == 8].groupby(['day']).agg({'Growth_Costs_N_cum': 'max'})
 
-## -- Storage
+# -- Storage
 df_hz_5['day'] = df_hz_5['t'].copy(deep=True) // 24 + 1
 df_hz_5_days = df_hz_5.groupby(['day']).agg({'Cont_Proteins_DM': 'mean',
                                              'Cont_Fructan_DM': 'mean',
@@ -592,7 +593,7 @@ df_hz_8_days = df_hz_8.groupby(['day']).agg({'Cont_Proteins_DM': 'mean',
                                              'Cont_Fructan_DM': 'mean',
                                              'internode_L': 'max',
                                              'leaf_L': 'max'})
-## -- Graph Metabolism C
+# -- Graph Metabolism C
 
 fig = plt.figure(figsize=(8, 9))
 # set height ratios for sublots
@@ -714,7 +715,7 @@ print 'Structural growth cost leaf 5', max(Growth_Costs_C5_days.Growth_Costs_C_c
 print 'Structural growth cost leaf 8', max(Growth_Costs_C8_days.Growth_Costs_C_cum)
 sys.stdout.close()
 
-## -----------   Leaf Metabolism N
+# -----------   Leaf Metabolism N
 
 fig = plt.figure(figsize=(8, 9))
 # set height ratios for sublots
@@ -846,9 +847,9 @@ ax5.text(0.08, 0.9, 'F', ha='center', va='center', size=9, transform=ax5.transAx
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'Leaf_Metabolism_N.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## -----------   Source/sink relationships
+# -----------   Source/sink relationships
 
-## -- Table C usages relative to Net Photosynthesis
+# -- Table C usages relative to Net Photosynthesis
 
 AMINO_ACIDS_C_RATIO = 4.15  #: Mean number of mol of C in 1 mol of the major amino acids of plants (Glu, Gln, Ser, Asp, Ala, Gly)
 AMINO_ACIDS_N_RATIO = 1.25  #: Mean number of mol of N in 1 mol of the major amino acids of plants (Glu, Gln, Ser, Asp, Ala, Gly)
@@ -910,7 +911,7 @@ C_usages['C_budget'] = (C_usages.Respi_roots + C_usages.Respi_shoot + C_usages.e
 C_usages['day'] = C_usages['t'] // 24 + 1
 C_usages_days = C_usages.groupby(['day'], as_index=False).mean()
 
-## --- Comparison C fluxes vs. phloem content and vs. photosynthesis
+# --- Comparison C fluxes vs. phloem content and vs. photosynthesis
 Tillers_Photosynthesis_Ag_day = df_elt.groupby(['day'], as_index=False).agg({'Photosynthesis_tillers': 'sum'})
 df_unload = pd.DataFrame({'day': Tillers_Photosynthesis_Ag_day['day']})
 df_unload['Tillers_Photosynthesis_Ag'] = Tillers_Photosynthesis_Ag_day.Photosynthesis_tillers
@@ -938,7 +939,7 @@ df_unload['import_photosynthetic'] = df_unload['import_elt'] + df_unload['import
 
 C_usages_days.to_csv(os.path.join(scenario_postprocessing_dirpath, 'C_usages.csv'), header=True, index=False)
 
-## ---  Graph_C_source_sink
+# ---  Graph_C_source_sink
 
 fig = plt.figure(figsize=(4, 9))
 # set height ratios for sublots
@@ -1033,7 +1034,7 @@ ax2.text(0.08, 0.85, 'C', ha='center', va='center', size=9, transform=ax2.transA
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'C_source_sink_bis.PNG'), dpi=600, format='PNG', bbox_inches='tight')
 plt.close()
 
-## ----------- C usages cumulated vs. photosynthesis - shoot respiration
+# ----------- C usages cumulated vs. photosynthesis - shoot respiration
 
 fig, ax = plt.subplots(figsize=(4, 3))
 ax.plot(C_usages_days.day, (C_usages_days.Structure_shoot + C_usages_days.NS_shoot) / (C_usages_days.C_produced - C_usages_days.Respi_shoot) * 100,
@@ -1052,7 +1053,7 @@ ax.set_ylim(bottom=0, top=100.)
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'C_usages_cumulated_bis2.PNG'), dpi=600, format='PNG', bbox_inches='tight')
 plt.close()
 
-## ----------- Surfacic Leaf Nitrogen (SLN)
+# ----------- Surfacic Leaf Nitrogen (SLN)
 
 ## Add a share of phloem content to each element
 df_phloem['amino_acids_phloem'] = df_phloem['amino_acids']
@@ -1089,13 +1090,13 @@ plt.subplots_adjust(hspace=.0)
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'SLN.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## ----------- Specific Leaf Area (SLA) and  Lamina area
+# ----------- Specific Leaf Area (SLA) and  Lamina area
 
 ## Add a share of phloem content to each element
 df_phloem['sucrose_phloem'] = df_phloem['sucrose']
 df_elt = df_elt.merge(df_phloem[['t', 'sucrose_phloem']], on=['t'], how='left')
 df_elt['SLA_phloem'] = df_elt.green_area / (
-            df_elt.sum_dry_mass + (df_elt.sucrose_phloem * 1E-6 * 12 / 0.42 + df_elt.amino_acids_phloem * 1E-6 * 14 / 0.135) * df_elt.mstruct / df_elt.mstruct_plant) * 10 ** 3
+        df_elt.sum_dry_mass + (df_elt.sucrose_phloem * 1E-6 * 12 / 0.42 + df_elt.amino_acids_phloem * 1E-6 * 14 / 0.135) * df_elt.mstruct / df_elt.mstruct_plant) * 10 ** 3
 
 fig = plt.figure(figsize=(4, 6))
 # set height ratios for sublots
@@ -1143,7 +1144,7 @@ ax2.text(0.08, 0.9, 'B', ha='center', va='center', size=9, transform=ax2.transAx
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'Dynamic_laminae2.PNG'), dpi=600, format='PNG', bbox_inches='tight')
 plt.close()
 
-## ---------- Radiation Use Efficiency (RUE)
+# ---------- Radiation Use Efficiency (RUE)
 
 # We use PARa by element but green_area from MS (NA for tillers)
 df_elt_all['cohort'] = df_elt_all.metamer
@@ -1227,7 +1228,7 @@ ax.set_ylabel('Dry mass (g)')
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'RUE.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## ---------- Graph of weekly RUE
+# ---------- Graph of weekly RUE
 sum_dry_mass = df_axe.groupby(['day'], as_index=False)['sum_dry_mass'].agg('max')
 tmp_prec7 = sum_dry_mass.copy()
 tmp_prec7['day_prec7'] = tmp_prec7.day + 7
@@ -1296,7 +1297,7 @@ ax.legend(loc='center left', frameon=True, numpoints=1, bbox_to_anchor=(1, 0.5))
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'RUE_PAR_weekly.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## --- Join both RUE graphs
+# --- Join both RUE graphs
 
 # fig, axs = plt.subplots(1,2, figsize = (8,3) )
 #
@@ -1315,7 +1316,7 @@ plt.close()
 # plt.close()
 
 
-## ---------- RUE vs. PTQ
+# ---------- RUE vs. PTQ
 
 df_corr = pd.DataFrame({'PTQ': meteo_days.PTQ2_smooth,
                         'RUE_plant': RUE_plant_week.RUE7_PAR,
@@ -1335,9 +1336,9 @@ ax.set_xlabel(u'Photothermal quotient (mol m$^{-2}$ d$^{-1}$ at 12°C)')
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'RUE_both_vs_PTQ.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## ----------  GLN / GAI / canopy closure / surfacic PARa
+# ----------  GLN / GAI / canopy closure / surfacic PARa
 
-## -- Senescing area
+# -- Senescing area
 leaf_ligulation = df_elt[(df_elt.element == 'LeafElement1') & (df_elt.is_growing == 0)].groupby('metamer').agg({'t': 'min'})
 leaf_ligulation = leaf_ligulation.t.to_dict()
 
@@ -1391,7 +1392,7 @@ LAI_all = df_LAI.groupby(['day']).agg({'LAI_all': 'mean'})
 LAI = LAI.merge(out_sam_days[['day', 'sum_TT', 'TT']], on='day').copy()
 LAI_all = LAI_all.merge(out_sam_days[['day', 'sum_TT', 'TT']], on='day').copy()
 
-## -- Green Area Index (GAI)
+# -- Green Area Index (GAI)
 
 tmp = df_elt[(df_elt.organ == 'sheath')].groupby(['t', 'metamer'], as_index=False).agg({'green_area_rep': 'sum'})
 S_gaines = tmp.groupby(['t'], as_index=False).agg({'green_area_rep': 'sum'})
@@ -1410,7 +1411,7 @@ GAI_Abichou10 = [0.3575, 0.484, 0.6576, 0.7794, 3.9037, 3.9049, 4.3055, 5.9101, 
 TT_Abichou8 = [265.72, 335.37, 387.63, 439.85, 518.14, 631.16, 835.52, 900.7, 1022.51, 1104.92, 1405]
 GAI_Abichou8 = [0.1457, 0.2526, 0.3064, 0.4307, 0.6964, 1.1917, 1.9883, 2.3066, 2.6788, 3.3675, 4.4124]
 
-## -- GLN
+# -- GLN
 GLN_Abichou_TT = [246, 299, 357, 383, 456, 498, 559, 704, 792, 846, 903, 1010, 1083, 1186, 1290, 1378, 1469, 1565, 1672, 1806, 1947]
 GLN_Abichou_GLN = [1.1, 1.7, 1.9, 2.8, 3.8, 4.3, 5, 3.8, 3.7, 3.8, 3.4, 3.8, 4.3, 4, 3.8, 3.3, 2.9, 2.8, 2.3, 1.7, 0.9]
 
@@ -1428,7 +1429,7 @@ tmp = df_senesc_tot[(df_senesc_tot.t < leaf_emergence[(1, 9)]) & (df_senesc_tot.
 
 df_gln = tmp
 
-## -- Ratio of incident PAR that is absorbed by the plant
+# -- Ratio of incident PAR that is absorbed by the plant
 titi['PARa_surface'] = titi.PARa * titi.green_area * 250
 titi['PARa_surface2'] = titi.PARa * titi.green_area
 titi_caribu = titi[(titi.t % 4 == 0) & (titi['element'].isin(['StemElement', 'LeafElement1']))]
@@ -1456,7 +1457,7 @@ tutu2_days = tutu2_days.merge(out_sam_days, on='day').copy()
 tutu2_days['PARa_surfacique'] = tutu2_days.PARa_surface2 / tutu2_days.green_area
 tutu2_days['PARa_mol_m2_d'] = tutu2_days['PARa_surfacique'] * 3600 * 10 ** -6
 
-## -- Graph
+# -- Graph
 
 fig = plt.figure(figsize=(4, 12))
 # set height ratios for sublots
@@ -1543,7 +1544,7 @@ ax3.text(0.08, 0.9, 'D', ha='center', va='center', size=9, transform=ax3.transAx
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'Couvert.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## ---------- Shoot/ Roots
+# ---------- Shoot/ Roots
 df_axe['sum_dry_mass_phloem_shoot'] = df_axe.dry_mass_phloem * shoot_plant_mstruct_ratio
 df_axe['sum_dry_mass_shoot_MS'] = df_axe.sum_dry_mass_phloem_shoot + \
                                   df_hz.groupby(['t', 'plant', 'axis'])['sum_dry_mass'].agg('sum').values + \
@@ -1590,7 +1591,7 @@ ax1.set_ylim(bottom=0.)
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'Shoot_roots_TT_tha.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## ----------- N fraction
+# ----------- N fraction
 
 dt_RB_N = [1.2, 1.2, 1.7, 1.0]
 dt_RB_N_confint = [0.11, 0.12, 0.19, 0.10]
@@ -1681,14 +1682,14 @@ ax1.axvline(x=0.86, linestyle=':', color='grey')
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'N_content_inset_TT.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## -----------  Concentration of sucrose and AA in the phloem
+# -----------  Concentration of sucrose and AA in the phloem
 
 df_phloem_day = df_phloem.groupby(['day'], as_index=False).agg({'sucrose': 'mean', 'amino_acids': 'mean',
                                                                 'Conc_Sucrose': 'mean', 'Conc_Amino_Acids': 'mean'})
 df_phloem_day['Conc_Sucrose_smooth'] = df_phloem_day.Conc_Sucrose.rolling(7).mean()
 df_phloem_day['Conc_AA_smooth'] = df_phloem_day.Conc_Amino_Acids.rolling(7).mean()
 
-## -- Graph
+# -- Graph
 fig, (ax) = plt.subplots(1, figsize=(4, 3))
 ax.plot(df_phloem_day.day, df_phloem_day.Conc_Sucrose, label=u'Sucrose (µmol)', color='b')
 ax.plot(df_phloem_day.day, df_phloem_day.Conc_Amino_Acids, label=u'Amino acids (µmol N)', color='r')
@@ -1715,7 +1716,7 @@ ax2.spines['bottom'].set_position(('outward', 36))
 plt.savefig(os.path.join(scenario_graphs_dirpath, 'Conc_phloem_TT_d.PNG'), format='PNG', bbox_inches='tight', dpi=600)
 plt.close()
 
-## --------- Internode length
+# --------- Internode length
 
 fig, (ax1) = plt.subplots(1, figsize=(4, 3))
 for i in range(1, 10):

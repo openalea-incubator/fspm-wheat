@@ -266,8 +266,10 @@ class CaribuFacade(object):
                     anchor_point = self._shared_mtg.get_vertex_property(shp.id)['anchor_point']
                     trans_to_origin = plantgl.Translated(-anchor_point, shp.geometry)
                     # Rotation variability
-                    azimut = self._alea_canopy.loc[(self._alea_canopy.pos == position_number) & (self._alea_canopy.vid == shp.id), 'azimut_leaf'].values[0]  # random.uniform(-var_leaf_azimut, var_leaf_azimut)
-                    inclination = self._alea_canopy.loc[(self._alea_canopy.pos == position_number) & (self._alea_canopy.vid == shp.id), 'inclination_leaf'].values[0]  # random.uniform(-var_leaf_inclination, var_leaf_inclination)
+                    azimut = self._alea_canopy.loc[(self._alea_canopy.pos == position_number) & (self._alea_canopy.vid == shp.id), 'azimut_leaf'].values[
+                        0]  # random.uniform(-var_leaf_azimut, var_leaf_azimut)
+                    inclination = self._alea_canopy.loc[(self._alea_canopy.pos == position_number) & (self._alea_canopy.vid == shp.id), 'inclination_leaf'].values[
+                        0]  # random.uniform(-var_leaf_inclination, var_leaf_inclination)
                     rotated_geometry = plantgl.EulerRotated(azimut, inclination, 0, trans_to_origin)
                     # Restore leaf base at initial anchor point
                     translated_geometry = plantgl.Translated(anchor_point, rotated_geometry)

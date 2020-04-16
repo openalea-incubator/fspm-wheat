@@ -1,7 +1,7 @@
 # -*- coding: latin-1 -*-
 
-from growthwheat import converter, simulation, parameters
 import tools
+from growthwheat import converter, simulation, parameters
 
 """
     fspmwheat.growthwheat_facade
@@ -18,7 +18,6 @@ import tools
 
     .. seealso:: Barillot et al. 2016.
 """
-
 
 LEAF_LABELS = ['blade', 'sheath']
 
@@ -176,7 +175,8 @@ class GrowthWheatFacade(object):
                                             mtg_element_input = parameters.OrganInit().__dict__[growthwheat_element_input_name]
                                         growthwheat_element_inputs_dict[growthwheat_element_input_name] = mtg_element_input
                                         if remobilisation:
-                                            growthwheat_element_inputs_dict['green_area'] = mtg_element_properties.get('area')  # Needed later on for CN Wheat calculation. TODO: Should it be in elongwheat_facade instead ? (MG)
+                                            growthwheat_element_inputs_dict['green_area'] = mtg_element_properties.get(
+                                                'area')  # Needed later on for CN Wheat calculation. TODO: Should it be in elongwheat_facade instead ? (MG)
                                     all_growthwheat_elements_inputs_dict[element_id] = growthwheat_element_inputs_dict
 
         self._simulation.initialize({'hiddenzone': all_growthwheat_hiddenzones_inputs_dict, 'elements': all_growthwheat_elements_inputs_dict,

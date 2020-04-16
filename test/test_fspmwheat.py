@@ -19,20 +19,10 @@
     .. seealso:: Barillot et al. 2016.
 """
 
-"""
-    Information about this versioned file:
-        $LastChangedBy$
-        $LastChangedDate$
-        $LastChangedRevision$
-        $URL$
-        $Id$
-"""
-
 import os
 
 import pandas as pd
-
-from cnwheat import simulation, tools, converter, model
+from cnwheat import simulation, tools, converter
 
 INPUTS_DIRPATH = 'inputs'
 
@@ -67,14 +57,13 @@ ACTUAL_ELEMENTS_OUTPUTS_FILENAME = 'actual_elements_outputs.csv'
 ACTUAL_SOILS_OUTPUTS_FILENAME = 'actual_soils_outputs.csv'
 
 
-
 def test_run():
-
     # create the simulation
     simulation_ = simulation.Simulation(delta_t=3600)
     # read inputs from Pandas dataframes
     inputs_dataframes = {}
-    for inputs_filename in (PLANTS_INPUTS_FILENAME, AXES_INPUTS_FILENAME, METAMERS_INPUTS_FILENAME, ORGANS_INPUTS_FILENAME, HIDDENZONES_INPUTS_FILENAME, ELEMENTS_INPUTS_FILENAME, SOILS_INPUTS_FILENAME):
+    for inputs_filename in (
+    PLANTS_INPUTS_FILENAME, AXES_INPUTS_FILENAME, METAMERS_INPUTS_FILENAME, ORGANS_INPUTS_FILENAME, HIDDENZONES_INPUTS_FILENAME, ELEMENTS_INPUTS_FILENAME, SOILS_INPUTS_FILENAME):
         inputs_dataframes[inputs_filename] = pd.read_csv(os.path.join(INPUTS_DIRPATH, inputs_filename))
 
     # convert inputs to a population of plants and a dictionary of soils
@@ -92,9 +81,9 @@ def test_run():
     formatted_inputs_dataframes[HIDDENZONES_INPUTS_FILENAME], \
     formatted_inputs_dataframes[ELEMENTS_INPUTS_FILENAME], \
     formatted_inputs_dataframes[SOILS_INPUTS_FILENAME] = converter.to_dataframes(population, soils)
-##    # compare inputs
-##    for inputs_filename, inputs_df in formatted_inputs_dataframes.iteritems():
-##        tools.compare_actual_to_desired(INPUTS_DIRPATH, inputs_df, inputs_filename)
+    ##    # compare inputs
+    ##    for inputs_filename, inputs_df in formatted_inputs_dataframes.iteritems():
+    ##        tools.compare_actual_to_desired(INPUTS_DIRPATH, inputs_df, inputs_filename)
 
     # Get photosynthesis data
     photosynthesis_elements_data_filepath = os.path.join(INPUTS_DIRPATH, PHOTOSYNTHESIS_ELEMENTS_DATA_FILENAME)
@@ -146,7 +135,7 @@ def test_run():
                             element.__dict__.update(photosynthesis_elements_data_to_use)
 
         # run the model of CN exchanges ; the population is internally updated by the model
-        simulation_.run(start_time=t, stop_time=t+time_step, number_of_output_steps=time_step+1)
+        simulation_.run(start_time=t, stop_time=t + time_step, number_of_output_steps=time_step + 1)
 
         # run post-processings
         all_plants_df, all_axes_df, all_metamers_df, all_organs_df, all_hiddenzones_df, all_elements_df, all_soils_df = simulation_.postprocessings()
@@ -186,6 +175,7 @@ def test_run():
     global_soils_df = pd.concat(all_soils_df_list, ignore_index=True)
     global_soils_df.drop_duplicates(subset=simulation.Simulation.SOILS_OUTPUTS_INDEXES, inplace=True)
     tools.compare_actual_to_desired(OUTPUTS_DIRPATH, global_soils_df, DESIRED_SOILS_OUTPUTS_FILENAME, ACTUAL_SOILS_OUTPUTS_FILENAME)
+
 
 if __name__ == '__main__':
     test_run()

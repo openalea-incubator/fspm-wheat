@@ -1,5 +1,6 @@
 # -*- coding: latin-1 -*-
 import logging
+
 """
     fspmwheat
     ~~~~~~~
@@ -11,15 +12,6 @@ import logging
     :copyright: Copyright 2014-2015 INRA-ECOSYS, see AUTHORS.
     :license: see LICENSE for details.
 
-"""
-
-"""
-    Information about this versioned file:
-        $LastChangedBy$
-        $LastChangedDate$
-        $LastChangedRevision$
-        $URL$
-        $Id$
 """
 
 __version__ = '2.0'

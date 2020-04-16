@@ -1,10 +1,8 @@
 # -*- coding: latin-1 -*-
 
 import numpy as np
-
-from senescwheat import converter, simulation
-
 import tools
+from senescwheat import converter, simulation
 
 """
     fspmwheat.senescwheat_facade
@@ -20,7 +18,6 @@ import tools
     :license: see LICENSE for details.
 
 """
-
 
 #: the name of the photosynthetic organs modeled by SenescWheat
 PHOTOSYNTHETIC_ORGANS_NAMES = {'internode', 'blade', 'sheath', 'peduncle', 'ear'}
@@ -209,8 +206,8 @@ class SenescWheatFacade(object):
                                 # Temporaire avant de trouver une solution pour :
                                 # 1) piloter la senescence des feuilles par green_area plutot que par senesced_length,
                                 # 2) updater les organes à partir des éléments et non l'inverse.
-                                if senescwheat_element_data_name == 'senesced_length_element' and mtg_element_label in ['LeafElement1','StemElement']:
-                                    self._shared_mtg.property('senesced_length')[mtg_organ_vid] =  np.nan_to_num(self._shared_mtg.property(senescwheat_element_data_name).get(mtg_element_vid, 0.))
+                                if senescwheat_element_data_name == 'senesced_length_element' and mtg_element_label in ['LeafElement1', 'StemElement']:
+                                    self._shared_mtg.property('senesced_length')[mtg_organ_vid] = np.nan_to_num(self._shared_mtg.property(senescwheat_element_data_name).get(mtg_element_vid, 0.))
 
     def _update_shared_dataframes(self, senescwheat_roots_data_df, senescwheat_SAM_data_df, senescwheat_elements_data_df):
         """

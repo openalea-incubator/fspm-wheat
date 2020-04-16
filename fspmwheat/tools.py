@@ -2,13 +2,12 @@
 
 import os
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy import stats
-import matplotlib.pyplot as plt
-
 from alinea.adel.mtg import to_plantgl
 from openalea.plantgl.all import Viewer, Vector3
+from scipy import stats
 
 """
     fspmwheat.tools
@@ -79,8 +78,8 @@ def combine_dataframes_inplace(model_dataframe, shared_column_indexes, shared_da
     for column in new_shared_dataframe.columns:
         shared_dataframe_to_update[column] = new_shared_dataframe[column]
     shared_dataframe_to_update.reset_index(0, drop=True, inplace=True)
-    
-    
+
+
 def plot_linear_regression(x_array, y_array, x_label='x', y_label='y', plot_filepath=None):
     """Perform a linear regression of `x_array` vs `y_array`
     and create a plot showing the fit against the original data.
@@ -116,7 +115,7 @@ def plot_linear_regression(x_array, y_array, x_label='x', y_label='y', plot_file
 
     # Create a string, showing the form of the equation (with fitted coefficients) and r squared value.
     # Coefficients are rounded to two decimal places.
-    equation = 'y = {} x + {} (R$^2$ = {})'.format(round(aCoeff, 2), round(bCoeff, 2), round(rVal**2, 2))
+    equation = 'y = {} x + {} (R$^2$ = {})'.format(round(aCoeff, 2), round(bCoeff, 2), round(rVal ** 2, 2))
 
     plt.figure()
 
@@ -138,15 +137,14 @@ def plot_linear_regression(x_array, y_array, x_label='x', y_label='y', plot_file
     else:
         plt.savefig(plot_filepath, dpi=200, format='PNG')
         plt.close()
-        
+
 
 def color_MTG_Nitrogen(g, df, t, SCREENSHOT_DIRPATH):
-    
     def color_map(N):
         if 0 <= N <= 0.5:  # TODO: organe senescent (prendre prop)
             vid_colors = [150, 100, 0]
         elif 0.5 < N < 5:  # Fvertes
-            vid_colors = [int(255 - N*51), int(255 - N * 20), 50]
+            vid_colors = [int(255 - N * 51), int(255 - N * 20), 50]
         else:
             vid_colors = [0, 155, 0]
         return vid_colors
@@ -185,4 +183,4 @@ def color_MTG_Nitrogen(g, df, t, SCREENSHOT_DIRPATH):
     Viewer.add(s)
     Viewer.camera.setPosition(Vector3(83.883, 12.3239, 93.4706))
     Viewer.camera.lookAt(Vector3(0., 0, 50))
-    Viewer.saveSnapshot(os.path.join(SCREENSHOT_DIRPATH, 'Day_{}.png'.format(t/24+1)))
+    Viewer.saveSnapshot(os.path.join(SCREENSHOT_DIRPATH, 'Day_{}.png'.format(t / 24 + 1)))

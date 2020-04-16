@@ -1,12 +1,9 @@
 # -*- coding: latin-1 -*-
 
-from farquharwheat import converter, simulation
-
-import tools
-
-from alinea.astk.plantgl_utils import get_height  # for height calculation
-
 import numpy as np
+import tools
+from alinea.astk.plantgl_utils import get_height  # for height calculation
+from farquharwheat import converter, simulation
 
 """
     fspmwheat.farquharwheat_facade
@@ -22,7 +19,6 @@ import numpy as np
     : see LICENSE for details.
 
 """
-
 
 #: the name of the organs modeled by FarquharWheat
 FARQUHARWHEAT_ORGANS_NAMES = {'internode', 'blade', 'sheath', 'peduncle', 'ear'}

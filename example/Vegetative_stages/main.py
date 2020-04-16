@@ -108,7 +108,7 @@ def main(simulation_length, forced_start_time=0, run_simu=True, run_postprocessi
 
     # Length of the simulation (in hours)
     SIMULATION_LENGTH = simulation_length
-    
+
     # define the time step in hours for each simulator
     CARIBU_TIMESTEP = 4
     SENESCWHEAT_TIMESTEP = 1
@@ -412,8 +412,9 @@ def main(simulation_length, forced_start_time=0, run_simu=True, run_postprocessi
             DOY = meteo.loc[t_farquharwheat, ['DOY']].iloc[0]
             hour = meteo.loc[t_farquharwheat, ['hour']].iloc[0]
             PARi = meteo.loc[t_farquharwheat, ['PARi']].iloc[0]
+            PARi_next_hours = meteo.loc[range(t_farquharwheat,t_farquharwheat+CARIBU_TIMESTEP), ['PARi']].sum().values[0]
 
-            if t_farquharwheat % CARIBU_TIMESTEP == 0:
+            if (t_farquharwheat % CARIBU_TIMESTEP == 0) and (PARi_next_hours > 0) :
                 print('t caribu is {}'.format(t_farquharwheat))
                 run_caribu = True
             else:
@@ -571,7 +572,6 @@ def main(simulation_length, forced_start_time=0, run_simu=True, run_postprocessi
                                 HIDDENZONES_STATES_FILEPATH,
                                 ELEMENTS_STATES_FILEPATH,
                                 SOILS_STATES_FILEPATH):
-
             # assert states_filepaths were not opened during simulation run meaning that other filenames were saved
             path, filename = os.path.split(states_filepath)
             filename = os.path.splitext(filename)[0]
@@ -1036,7 +1036,6 @@ def main(simulation_length, forced_start_time=0, run_simu=True, run_postprocessi
 
 
 if __name__ == '__main__':
-
     # Run the simulation
     main(2500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False,
          option_static=False, tillers_replications={'T1': 0.5, 'T2': 0.5, 'T3': 0.5, 'T4': 0.5},
