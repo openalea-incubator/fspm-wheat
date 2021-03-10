@@ -18,11 +18,8 @@ Notes:
 ez_setup.use_setuptools()
 
 if sys.version_info < (2, 7):
-    print('ERROR: FSPM-Wheat requires at least Python 2.7 to run.')
+    print('ERROR: CN-Wheat requires at least Python 2.7 to run.')
     sys.exit(1)
-
-if sys.version_info >= (3, 0):
-    print('WARNING: FSPM-Wheat has not been tested with Python 3.')
 
 setup(
     name="FSPM-Wheat",
