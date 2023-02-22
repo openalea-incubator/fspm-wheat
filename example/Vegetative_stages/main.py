@@ -64,7 +64,8 @@ def main(simulation_length, forced_start_time=0, run_simu=True, run_postprocessi
          option_static=False, show_3Dplant=True, tillers_replications=None, heterogeneous_canopy=True,
          N_fertilizations=None, PLANT_DENSITY=None, update_parameters_all_models=None,
          INPUTS_DIRPATH='inputs', METEO_FILENAME='meteo.csv',
-         OUTPUTS_DIRPATH='outputs', POSTPROCESSING_DIRPATH='postprocessing', GRAPHS_DIRPATH='graphs'):
+         OUTPUTS_DIRPATH='outputs', POSTPROCESSING_DIRPATH='postprocessing', GRAPHS_DIRPATH='graphs', isolated_roots=False,
+         cnwheat_roots=True):
     """
     Run a simulation of fspmwheat with coupling to several models
 
@@ -310,7 +311,8 @@ def main(simulation_length, forced_start_time=0, run_simu=True, run_postprocessi
                                                                shared_axes_inputs_outputs_df,
                                                                shared_elements_inputs_outputs_df,
                                                                update_parameters_senescwheat,
-                                                               update_shared_df=UPDATE_SHARED_DF)
+                                                               update_shared_df=UPDATE_SHARED_DF,
+                                                               cnwheat_roots=cnwheat_roots)
 
     # -- FARQUHARWHEAT --
     # Initial states    
@@ -369,7 +371,8 @@ def main(simulation_length, forced_start_time=0, run_simu=True, run_postprocessi
                                                                shared_elements_inputs_outputs_df,
                                                                shared_axes_inputs_outputs_df,
                                                                update_parameters_growthwheat,
-                                                               update_shared_df=UPDATE_SHARED_DF)
+                                                               update_shared_df=UPDATE_SHARED_DF,
+                                                               cnwheat_roots=cnwheat_roots)
 
     # -- CNWHEAT --
     # Initial states    
@@ -391,6 +394,10 @@ def main(simulation_length, forced_start_time=0, run_simu=True, run_postprocessi
     else:
         update_parameters_cnwheat = {}
 
+    # Force solver separation if a different root model has been chosen
+    if not cnwheat_roots:
+        isolated_roots = True
+
     # Facade initialisation
     cnwheat_facade_ = cnwheat_facade.CNWheatFacade(g,
                                                    CNWHEAT_TIMESTEP * HOUR_TO_SECOND_CONVERSION_FACTOR,
@@ -405,7 +412,9 @@ def main(simulation_length, forced_start_time=0, run_simu=True, run_postprocessi
                                                    shared_hiddenzones_inputs_outputs_df,
                                                    shared_elements_inputs_outputs_df,
                                                    shared_soils_inputs_outputs_df,
-                                                   update_shared_df=UPDATE_SHARED_DF)
+                                                   update_shared_df=UPDATE_SHARED_DF,
+                                                   isolated_roots=isolated_roots,
+                                                   cnwheat_roots=cnwheat_roots)
 
     # Run cnwheat with constant nitrates concentration in the soil if specified
     if N_fertilizations is not None and 'constant_Conc_Nitrates' in N_fertilizations.keys():
@@ -929,28 +938,28 @@ def main(simulation_length, forced_start_time=0, run_simu=True, run_postprocessi
         C_usages['NS_other'] = C_NS_autre_init.reset_index(drop=True)
 
         # Total
-        C_usages['C_budget'] = (C_usages.Respi_roots + C_usages.Respi_shoot + C_usages.exudation + C_usages.Structure_roots + C_usages.Structure_shoot + C_usages.NS_phloem + C_usages.NS_other) / \
-                               C_usages.C_produced
+        #C_usages['C_budget'] = (C_usages.Respi_roots + C_usages.Respi_shoot + C_usages.exudation + C_usages.Structure_roots + C_usages.Structure_shoot + C_usages.NS_phloem + C_usages.NS_other) / \
+        #                       C_usages.C_produced
 
         # ----- Graph
-        fig, ax = plt.subplots()
-        ax.plot(C_usages.t, C_usages.Structure_shoot / C_usages.C_produced * 100,
-                label=u'Structural mass - Shoot', color='g')
-        ax.plot(C_usages.t, C_usages.Structure_roots / C_usages.C_produced * 100,
-                label=u'Structural mass - Roots', color='r')
-        ax.plot(C_usages.t, (C_usages.NS_phloem + C_usages.NS_other) / C_usages.C_produced * 100, label=u'Non-structural C', color='darkorange')
-        ax.plot(C_usages.t, (C_usages.Respi_roots + C_usages.Respi_shoot) / C_usages.C_produced * 100, label=u'C loss by respiration', color='b')
-        ax.plot(C_usages.t, C_usages.exudation / C_usages.C_produced * 100, label=u'C loss by exudation', color='c')
-
-        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-        ax.set_xlabel('Time (h)')
-        ax.set_ylabel(u'Carbon usages : Photosynthesis (%)')
-        ax.set_ylim(bottom=0, top=100.)
-
-        fig.suptitle(u'Total cumulated usages are ' + str(round(C_usages.C_budget.tail(1) * 100, 0)) + u' % of Photosynthesis')
-
-        plt.savefig(os.path.join(GRAPHS_DIRPATH, 'C_usages_cumulated.PNG'), format='PNG', bbox_inches='tight')
-        plt.close()
+        # fig, ax = plt.subplots()
+        # ax.plot(C_usages.t, C_usages.Structure_shoot / C_usages.C_produced * 100,
+        #         label=u'Structural mass - Shoot', color='g')
+        # ax.plot(C_usages.t, C_usages.Structure_roots / C_usages.C_produced * 100,
+        #         label=u'Structural mass - Roots', color='r')
+        # ax.plot(C_usages.t, (C_usages.NS_phloem + C_usages.NS_other) / C_usages.C_produced * 100, label=u'Non-structural C', color='darkorange')
+        # #ax.plot(C_usages.t, (C_usages.Respi_roots + C_usages.Respi_shoot) / C_usages.C_produced * 100, label=u'C loss by respiration', color='b')
+        # ax.plot(C_usages.t, C_usages.exudation / C_usages.C_produced * 100, label=u'C loss by exudation', color='c')
+        #
+        # ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        # ax.set_xlabel('Time (h)')
+        # ax.set_ylabel(u'Carbon usages : Photosynthesis (%)')
+        # ax.set_ylim(bottom=0, top=100.)
+        #
+        # fig.suptitle(u'Total cumulated usages are ' + str(round(C_usages.C_budget.tail(1) * 100, 0)) + u' % of Photosynthesis')
+        #
+        # plt.savefig(os.path.join(GRAPHS_DIRPATH, 'C_usages_cumulated.PNG'), format='PNG', bbox_inches='tight')
+        # plt.close()
 
         # 6) RUE
         df_elt['PARa_MJ'] = df_elt['PARa'] * df_elt['green_area'] * df_elt['nb_replications'] * 3600 / 4.6 * 10 ** -6  # Il faudrait idealement utiliser les calculcs green_area et PARa des talles
@@ -1016,8 +1025,8 @@ def main(simulation_length, forced_start_time=0, run_simu=True, run_postprocessi
 
 
 if __name__ == '__main__':
-    main(2500, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False,
+    main(100, forced_start_time=0, run_simu=True, run_postprocessing=True, generate_graphs=True, run_from_outputs=False,
          show_3Dplant=False,
          option_static=False, tillers_replications={'T1': 0.5, 'T2': 0.5, 'T3': 0.5, 'T4': 0.5},
          heterogeneous_canopy=True, N_fertilizations={2016: 357143, 2520: 1000000},
-         PLANT_DENSITY={1: 250}, METEO_FILENAME='meteo_Ljutovac2002.csv')
+         PLANT_DENSITY={1: 250}, METEO_FILENAME='meteo_Ljutovac2002.csv', isolated_roots=True, cnwheat_roots=True)

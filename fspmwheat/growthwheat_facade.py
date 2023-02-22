@@ -55,7 +55,8 @@ class GrowthWheatFacade(object):
                  shared_elements_inputs_outputs_df,
                  shared_axes_inputs_outputs_df,
                  update_parameters=None,
-                 update_shared_df=True):
+                 update_shared_df=True,
+                 cnwheat_roots=True):
 
         """
         :param openalea.mtg.mtg.MTG shared_mtg: The MTG shared between all models.
@@ -76,7 +77,7 @@ class GrowthWheatFacade(object):
 
         self._shared_mtg = shared_mtg  #: the MTG shared between all models
 
-        self._simulation = simulation.Simulation(delta_t=delta_t, update_parameters=update_parameters)  #: the simulator to use to run the model
+        self._simulation = simulation.Simulation(delta_t=delta_t, update_parameters=update_parameters, cnwheat_roots=cnwheat_roots)  #: the simulator to use to run the model
 
         all_growthwheat_inputs_dict = converter.from_dataframes(model_hiddenzones_inputs_df, model_elements_inputs_df, model_roots_inputs_df, model_axes_inputs_df)
 

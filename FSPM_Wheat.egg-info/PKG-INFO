@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: FSPM-Wheat
+Version: 2.0
+Summary: A Functional Structural Plant Model of Wheat
+Home-page: https://sourcesup.renater.fr/projects/fspm-wheat/
+Download-URL: 
+Author: C.Chambon, M.Gauthier, R.Barillot
+Author-email: camille.chambon@inra.fr, romain.barillot@inra.fr
+License: CeCILL-C
+Keywords: functional-structural plant model,wheat,metabolism,resource acquisition and allocation,model coupling,OpenAlea,MTG
+License-File: LICENSE
+License-File: AUTHORS
+
+An example of model coupling for building a Functional Structural Plant Model of Wheat

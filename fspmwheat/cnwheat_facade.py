@@ -79,7 +79,9 @@ class CNWheatFacade(object):
                  shared_hiddenzones_inputs_outputs_df,
                  shared_elements_inputs_outputs_df,
                  shared_soils_inputs_outputs_df,
-                 update_shared_df=True):
+                 update_shared_df=True,
+                 isolated_roots=False,
+                 cnwheat_roots=True):
         """
         :param openalea.mtg.mtg.MTG shared_mtg: The MTG shared between all models.
         :param int delta_t: The delta between two runs, in seconds.
@@ -100,7 +102,7 @@ class CNWheatFacade(object):
 
         self._shared_mtg = shared_mtg  #: the MTG shared between all models
 
-        self._simulation = cnwheat_simulation.Simulation(respiration_model=respiwheat_model, delta_t=delta_t, culm_density=culm_density)
+        self._simulation = cnwheat_simulation.Simulation(respiration_model=respiwheat_model, delta_t=delta_t, culm_density=culm_density, isolated_roots=isolated_roots, cnwheat_roots=cnwheat_roots)
 
         self.population, self.soils = cnwheat_converter.from_dataframes(model_organs_inputs_df, model_hiddenzones_inputs_df, model_elements_inputs_df, model_soils_inputs_df)
 
@@ -121,6 +123,8 @@ class CNWheatFacade(object):
                                            cnwheat_hiddenzones_data_df=model_hiddenzones_inputs_df,
                                            cnwheat_elements_data_df=model_elements_inputs_df,
                                            cnwheat_soils_data_df=model_soils_inputs_df)
+
+        self.isolated_roots = isolated_roots
 
     def run(self, Tair=12, Tsoil=12, tillers_replications=None, update_shared_df=None):
         """
@@ -251,7 +255,11 @@ class CNWheatFacade(object):
                     mtg_axis_properties = self._shared_mtg.get_vertex_property(mtg_axis_vid)
                     if mtg_organ_label in mtg_axis_properties:
                         mtg_organ_properties = mtg_axis_properties[mtg_organ_label]
-                        cnwheat_organ_data_names = set(cnwheat_simulation.Simulation.ORGANS_STATE).intersection(cnwheat_organ.__dict__)
+                        access_mtg_names = cnwheat_simulation.Simulation.ORGANS_STATE
+                        if cnwheat_organ_class == cnwheat_model.Roots and self.isolated_roots:
+                            access_mtg_names += cnwheat_simulation.Simulation.ORGANS_FLUXES[:3]
+                        cnwheat_organ_data_names = set(access_mtg_names).intersection(cnwheat_organ.__dict__)
+
                         if set(mtg_organ_properties).issuperset(cnwheat_organ_data_names):
                             cnwheat_organ_data_dict = {}
                             for cnwheat_organ_data_name in cnwheat_organ_data_names:
@@ -262,7 +270,7 @@ class CNWheatFacade(object):
                                     print('Missing variable', cnwheat_organ_data_name, 'for vertex id', mtg_axis_vid, 'which is', mtg_organ_label)
 
                             cnwheat_organ.__dict__.update(cnwheat_organ_data_dict)
-
+                            # cnwheat_organ.Export_Nitrates =
                             # Update parameters if specified
                             if mtg_organ_label in self._update_parameters:
                                 cnwheat_organ.PARAMETERS.__dict__.update(self._update_parameters[mtg_organ_label])
