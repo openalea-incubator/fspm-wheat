@@ -270,7 +270,7 @@ class CNWheatFacade(object):
                                     print('Missing variable', cnwheat_organ_data_name, 'for vertex id', mtg_axis_vid, 'which is', mtg_organ_label)
 
                             cnwheat_organ.__dict__.update(cnwheat_organ_data_dict)
-                            # cnwheat_organ.Export_Nitrates =
+
                             # Update parameters if specified
                             if mtg_organ_label in self._update_parameters:
                                 cnwheat_organ.PARAMETERS.__dict__.update(self._update_parameters[mtg_organ_label])
