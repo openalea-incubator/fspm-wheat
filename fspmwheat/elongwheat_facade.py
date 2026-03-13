@@ -82,19 +82,18 @@ class ElongWheatFacade(object):
         if self._update_shared_df:
             self._update_shared_dataframes(model_hiddenzones_inputs_df, model_elements_inputs_df, model_axes_inputs_df)
 
-    def run(self, Tair, Tsoil, Zsowing=0.025, option_static=False, optimal_growth_option=False, update_shared_df=None):
+    def run(self, Tair, Tsoil, option_static=False, optimal_growth_option=False, update_shared_df=None):
         """
         Run the model and update the MTG and the dataframes shared between all models.
 
         :param float Tair: Air temperature at t (degree Celsius)
         :param float Tsoil: Soil temperature at t (degree Celsius)
-        :param float Zsowing: Sowing depth (m)
         :param bool option_static: Whether the model should be run for a static plant architecture
         :param bool optimal_growth_option: if True the model will assume optimal growth conditions
         :param bool update_shared_df: if 'True', update the shared dataframes at this time step.
         """
         self._initialize_model()
-        self._simulation.run(Tair, Tsoil, Zsowing, optimal_growth_option)
+        self._simulation.run(Tair, Tsoil, optimal_growth_option)
         self._update_shared_MTG(self._simulation.outputs['hiddenzone'], self._simulation.outputs['elements'], self._simulation.outputs['axes'], option_static)
 
         if update_shared_df or (update_shared_df is None and self._update_shared_df):
